@@ -51,11 +51,10 @@ For example, in large genomes such as barley, several chromosomes (*2H=665.59Mb,
 * Centromere coordinates (BED file)  
 
 
-##### "HOW-TO" tutorials: [How to modify GTF using scShardSplitRef](vignettes/my-vignette.Rmd)  
-vignettes/my-vignette.Rmd
+##### "HOW-TO" tutorials: [How to modify GTF using scShardSplitRef](vignettes/my-vignette.md)  
 
-## **Example Workflow**  
-A toy example workflow walks through the [step-by-step using toy files](example).  
+##### **Example Workflow**  
+A toy example workflow walks through the [step-by-step using toy files](vignettes/my-vignette2.md).  
 
 
 ## **Installation** 
@@ -89,5 +88,6 @@ Please clearly outline the feature(s) you think should be added. As the tool dev
 Remember that improving tools is important, but keeping them neat and not over-complicated is just as essential. 
 
 
-
+## **Acknowledgements**  
+This work was supported by resources provided by the [Pawsey Supercomputing Research Centres](https://pawsey.org.au/) Nimbus Research Cloud (https://doi.org/10.48569/v0j3-qd51), with funding from the Australian Government and the Government of Western Australia.
 

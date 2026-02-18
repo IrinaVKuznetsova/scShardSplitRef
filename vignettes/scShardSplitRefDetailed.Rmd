@@ -1,0 +1,347 @@
+---
+title: "scShardSplitRef"
+author: "Irina Kuznetsova"
+output: rmarkdown::md_document    ####html_vignette
+vignette: >
+  %\VignetteIndexEntry{scShardSplitRef}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+
+## 1. Purpose  
+This toy dataset provides a minimal example to demonstrate the logic of the algorithm that prepares reference files (GTF and FASTA) for cellranger‑arc mkref. It allows users to test the workflow without needing large genome files and helps confirm that the proposed workflow is functioning correctly. It also provides an example of how to use it.
+
+
+
+## 2. Installation  
+Start by loading required packages:  
+
+```{r}
+library("dplyr"); library("stringr"); library("utils")
+``` 
+
+
+
+## 3. Step-by-step workflow
+
+## **Step 1: "Check if gene features are overlapping with the centromere position"**
+## **I. Check if gene features are overlapping with the centromere position**
+
+#### 1.1) Input files:  
+GTF:  *A3_toy_all_scenarios_2chr.gtf* - minimal annotation file with a all possible examples of gene features cooridnates.  
+
+```
+1H	source	gene	0	20	.	+	.	gene_id "gene1"; gene_name "gene1";
+1H	source	transcript	0	20	.	+	.	gene_id "gene1"; transcript_id "gene1.t1";
+1H	source	exon	0	10	.	+	.	gene_id "gene1"; transcript_id "gene1.t1"; exon_number "1";
+1H	source	exon	11	20	.	+	.	gene_id "gene1"; transcript_id "gene1.t1"; exon_number "2";
+1H	source	gene	20	40	.	-	.	gene_id "gene2"; gene_name "gene2";
+1H	source	transcript	20	40	.	-	.	gene_id "gene2"; transcript_id "gene2.t1";
+1H	source	exon	20	28	.	-	.	gene_id "gene2"; transcript_id "gene2.t1"; exon_number "1";
+1H	source	exon	29	40	.	-	.	gene_id "gene2"; transcript_id "gene2.t1"; exon_number "2";
+1H	source	gene	80	100	.	+	.	gene_id "gene3"; gene_name "gene3"; note "ends_at_centromere";
+1H	source	transcript	80	100	.	+	.	gene_id "gene3"; transcript_id "gene3.t1";
+1H	source	exon	80	90	.	+	.	gene_id "gene3"; transcript_id "gene3.t1"; exon_number "1";
+1H	source	exon	91	100	.	+	.	gene_id "gene3"; transcript_id "gene3.t1"; exon_number "2";
+1H	source	gene	90	110	.	+	.	gene_id "gene8"; gene_name "gene8"; note "overlaps_gene3_gene4_gene7";
+1H	source	transcript	90	110	.	+	.	gene_id "gene8"; transcript_id "gene8.t1";
+1H	source	exon	90	100	.	+	.	gene_id "gene8"; transcript_id "gene8.t1"; exon_number "1";
+1H	source	exon	101	110	.	+	.	gene_id "gene8"; transcript_id "gene8.t1"; exon_number "2";
+1H	source	gene	100	120	.	+	.	gene_id "gene4"; gene_name "gene4"; note "starts_at_centromere";
+1H	source	transcript	100	120	.	+	.	gene_id "gene4"; transcript_id "gene4.t1";
+1H	source	exon	100	110	.	+	.	gene_id "gene4"; transcript_id "gene4.t1"; exon_number "1";
+1H	source	exon	111	120	.	+	.	gene_id "gene4"; transcript_id "gene4.t1"; exon_number "2";
+1H	source	gene	120	140	.	-	.	gene_id "gene5"; gene_name "gene5";
+1H	source	transcript	120	140	.	-	.	gene_id "gene5"; transcript_id "gene5.t1";
+1H	source	exon	120	130	.	-	.	gene_id "gene5"; transcript_id "gene5.t1"; exon_number "1";
+1H	source	exon	131	140	.	-	.	gene_id "gene5"; transcript_id "gene5.t1"; exon_number "2";
+1H	source	gene	180	200	.	+	.	gene_id "gene6"; gene_name "gene6"; note "ends_at_chromosome_end";
+1H	source	transcript	180	200	.	+	.	gene_id "gene6"; transcript_id "gene6.t1";
+1H	source	exon	180	190	.	+	.	gene_id "gene6"; transcript_id "gene6.t1"; exon_number "1";
+1H	source	exon	191	200	.	+	.	gene_id "gene6"; transcript_id "gene6.t1"; exon_number "2";
+1H	source	gene	90	110	.	+	.	gene_id "gene7"; gene_name "gene7"; note "overlaps_gene3_and_gene4";
+1H	source	transcript	90	110	.	+	.	gene_id "gene7"; transcript_id "gene7.t1";
+1H	source	exon	90	98	.	+	.	gene_id "gene7"; transcript_id "gene7.t1"; exon_number "1";
+1H	source	exon	99	110	.	+	.	gene_id "gene7"; transcript_id "gene7.t1"; exon_number "2";
+2H	source	gene	140	160	.	+	.	gene_id "gene2H_1"; gene_name "gene2H_1"; note "overlaps_centromere";
+2H	source	transcript	140	160	.	+	.	gene_id "gene2H_1"; transcript_id "gene2H_1.t1";
+2H	source	exon	140	150	.	+	.	gene_id "gene2H_1"; transcript_id "gene2H_1.t1"; exon_number "1";
+2H	source	exon	151	160	.	+	.	gene_id "gene2H_1"; transcript_id "gene2H_1.t1"; exon_number "2";
+2H	source	gene	55	78	.	-	.	gene_id "gene2H_2"; gene_name "gene2H_2"; note "overlaps_centromere";
+2H	source	transcript	55	78	.	-	.	gene_id "gene2H_2"; transcript_id "gene2H_2.t1";
+2H	source	exon	70	78	.	-	.	gene_id "gene2H_2"; transcript_id "gene2H_2.t1"; exon_number "1";
+2H	source	exon	55	62	.	-	.	gene_id "gene2H_2"; transcript_id "gene2H_2.t1"; exon_number "2";
+2H	source	gene	260	275	.	+	.	gene_id "gene2H_3"; gene_name "gene2H_3"; note "non_overlapping";
+2H	source	transcript	260	275	.	+	.	gene_id "gene2H_3"; transcript_id "gene2H_3.t1";
+2H	source	exon	268	275	.	+	.	gene_id "gene2H_3"; transcript_id "gene2H_3.t1"; exon_number "1";
+CAJHDD010000004.1	IPK	gene	5	20	.	+	.	gene_id "CONTIG1";
+CAJHDD010000001.1	IPK	gene	10	30	.	+	.	gene_id "CONTIG2";
+Mt	IPK	gene	2	10	.	+	.	gene_id "MT1";
+Pt	IPK	gene	1	5	.	+	.	gene_id "PT1";
+
+```
+
+Centromere:  *IN0_toy_centromeres_for_gtf.bed* - simplified centromere coordinates for GTF splitting  
+Note that the coordinates in this BED file are the same as those in the BED for the FASTA, but the formatting is different. Each chromosome appears on its own row; the second column shows the centromere coordinate, and for organelles and uncharacterised regions (contigs), this value is set to zero; the third column shows the end coordinate of the chromosome and organelles and contigs.
+
+```
+1H	100	200
+2H	150	300
+CAJHDD010000004.1	0	50
+CAJHDD010000001.1	0	40
+Mt	0	20
+Pt	0	10
+```
+
+
+#### 1.2) Use `prepare_centromere_split(gtf_path, centromere_path, out_path)` from the `sc_ShardSplitRef()` R script to check the genome for the rare case in which a gene feature overlaps with a centromere position.  
+Note that the ```prepare_centromere_split()``` function automatically generates the output file name; only the path needs to be specified.  
+
+```
+prepare_centromere_split(
+  gtf_path = "/.../.../A3_toy_all_scenarios_2chr.gtf",
+  centromere_path = "/.../.../IN0_toy_centromeres_for_gtf.bed",
+  out_path = "/.../.../toy_output",
+  contig_prefix = "CAJHDD", 
+  mt_name = "Mt", 
+  pt_name = "Pt"
+)
+```
+
+#### 1.3) Output:  
+BED for GTF: *RECAL1_FINAL_SPLIT_coord_for_GTF.bed*    
+Note that for chromosome 1H, the split position (second column) has been re‑calculated.  
+
+```
+1H	120	200
+2H	150	300
+CAJHDD010000004.1	0	50
+CAJHDD010000001.1	0	40
+Mt	0	20
+Pt	0	10
+```
+
+BED for FASTA: *RECAL1_FINAL_SPLIT_coord_for_FASTA.bed*  
+Note that chromosome 1H (2H ...) appears in two rows. The first row contains information from the chromosome start position (0) to the centromere/split coordinate. The second row begins at the centromere/split coordinate and ends at the chromosome end coordinate.  
+
+```
+1H	0	120
+1H	120	200
+2H	0	150
+2H	150	300
+CAJHDD010000004.1	0	50
+CAJHDD010000001.1	0	40
+Mt	0	20
+Pt	0	10
+```  
+
+#### 1.4) Visual representation of gene‑feature locations in relation to the centromere on the chromosome 
+![Visual representation of gene‑feature locations in relation to the centromere on the chromosome](..man/figures/algorithmexplained.png)
+
+
+
+
+## **Step 2 "Incorporate centromere positions information into gtf file"**  
+## **II. Incorporate centromere positions information into gtf file**
+
+#### 2.1) Input files:  
+GTF: *A3_toy_all_scenarios_2chr.gtf* - minimal annotation file with a few example features  
+
+**Note that you need to use the correct BED file as the input for the process_gtf() function. Please check the message.**  
+BED (for rare cases): *RECAL1_FINAL_SPLIT_coord_for_GTF.bed* - file generated by the prepare_centromere_split function.
+**OR**  
+BED (original):  *IN0_toy_centromeres_for_gtf.bed* - original minimal annotation file with a all possible examples of gene features cooridnates.  
+
+
+#### 2.2) Modify GTF file accounting for centromere/split coordinates.  
+
+```
+gtf_path0="/.../.../A3_toy_all_scenarios_2chr.gtf" 
+centromere_path0="/.../.../RECAL1_FINAL_SPLIT_coord_for_GTF.bed"
+
+result <- process_gtf(
+    gtf_path =gtf_path0 ,
+    centromere_path = centromere_path0,
+    unchar_region = "^CAJHDD",   #### "^ChrUn"
+    mito = "^Mt$",               #### "^ChrM$" 
+    chloro = "^Pt$"              #### "^ChrC$" "^NA$" # if geenome has no chloroplast(mammalian) )
+)
+```
+
+#### 2.3) Output:   
+
+GTF:  *B3_all-chr2_FINAL_MODIFIED_GTF_BarleyMOREXV3_toy_v51_ENSEMBL.gtf* - a file that contains the modified 1st column (Chr) and the modified 9th column (attributes).  
+
+```
+1H-0-120	source	gene	0	20	.	+	.	gene_id "gene1"; gene_name "gene1";;
+1H-0-120	source	transcript	0	20	.	+	.	gene_id "gene1"; transcript_id "gene1.t1";;
+1H-0-120	source	exon	0	10	.	+	.	gene_id "gene1"; transcript_id "gene1.t1";
+1H-0-120	source	exon	11	20	.	+	.	gene_id "gene1"; transcript_id "gene1.t1";
+1H-0-120	source	gene	20	40	.	-	.	gene_id "gene2"; gene_name "gene2";;
+1H-0-120	source	transcript	20	40	.	-	.	gene_id "gene2"; transcript_id "gene2.t1";;
+1H-0-120	source	exon	20	28	.	-	.	gene_id "gene2"; transcript_id "gene2.t1";
+1H-0-120	source	exon	29	40	.	-	.	gene_id "gene2"; transcript_id "gene2.t1";
+1H-0-120	source	gene	80	100	.	+	.	gene_id "gene3"; gene_name "gene3";
+1H-0-120	source	transcript	80	100	.	+	.	gene_id "gene3"; transcript_id "gene3.t1";;
+1H-0-120	source	exon	80	90	.	+	.	gene_id "gene3"; transcript_id "gene3.t1";
+1H-0-120	source	exon	91	100	.	+	.	gene_id "gene3"; transcript_id "gene3.t1";
+1H-0-120	source	gene	90	110	.	+	.	gene_id "gene8"; gene_name "gene8";
+1H-0-120	source	transcript	90	110	.	+	.	gene_id "gene8"; transcript_id "gene8.t1";;
+1H-0-120	source	exon	90	100	.	+	.	gene_id "gene8"; transcript_id "gene8.t1";
+1H-0-120	source	exon	101	110	.	+	.	gene_id "gene8"; transcript_id "gene8.t1";
+1H-0-120	source	gene	100	120	.	+	.	gene_id "gene4"; gene_name "gene4";
+1H-0-120	source	transcript	100	120	.	+	.	gene_id "gene4"; transcript_id "gene4.t1";;
+1H-0-120	source	exon	100	110	.	+	.	gene_id "gene4"; transcript_id "gene4.t1";
+1H-0-120	source	exon	111	120	.	+	.	gene_id "gene4"; transcript_id "gene4.t1";
+1H-120-200	source	gene	0	20	.	-	.	gene_id "gene5"; gene_name "gene5";;
+1H-120-200	source	transcript	0	20	.	-	.	gene_id "gene5"; transcript_id "gene5.t1";;
+1H-120-200	source	exon	0	10	.	-	.	gene_id "gene5"; transcript_id "gene5.t1";
+1H-120-200	source	exon	11	20	.	-	.	gene_id "gene5"; transcript_id "gene5.t1";
+1H-120-200	source	gene	60	80	.	+	.	gene_id "gene6"; gene_name "gene6";
+1H-120-200	source	transcript	60	80	.	+	.	gene_id "gene6"; transcript_id "gene6.t1";;
+1H-120-200	source	exon	60	70	.	+	.	gene_id "gene6"; transcript_id "gene6.t1";
+1H-120-200	source	exon	71	80	.	+	.	gene_id "gene6"; transcript_id "gene6.t1";
+1H-0-120	source	gene	90	110	.	+	.	gene_id "gene7"; gene_name "gene7";
+1H-0-120	source	transcript	90	110	.	+	.	gene_id "gene7"; transcript_id "gene7.t1";;
+1H-0-120	source	exon	90	98	.	+	.	gene_id "gene7"; transcript_id "gene7.t1";
+1H-0-120	source	exon	99	110	.	+	.	gene_id "gene7"; transcript_id "gene7.t1";
+2H-0-170	source	gene	140	160	.	+	.	gene_id "gene2H_1"; gene_name "gene2H_1";
+2H-0-170	source	transcript	140	160	.	+	.	gene_id "gene2H_1"; transcript_id "gene2H_1.t1";;
+2H-0-170	source	exon	140	150	.	+	.	gene_id "gene2H_1"; transcript_id "gene2H_1.t1";
+2H-0-170	source	exon	151	160	.	+	.	gene_id "gene2H_1"; transcript_id "gene2H_1.t1";
+2H-0-170	source	gene	55	78	.	-	.	gene_id "gene2H_2"; gene_name "gene2H_2";
+2H-0-170	source	transcript	55	78	.	-	.	gene_id "gene2H_2"; transcript_id "gene2H_2.t1";;
+2H-0-170	source	exon	70	78	.	-	.	gene_id "gene2H_2"; transcript_id "gene2H_2.t1";
+2H-0-170	source	exon	55	62	.	-	.	gene_id "gene2H_2"; transcript_id "gene2H_2.t1";
+2H-170-300	source	gene	90	105	.	+	.	gene_id "gene2H_3"; gene_name "gene2H_3";
+2H-170-300	source	transcript	90	105	.	+	.	gene_id "gene2H_3"; transcript_id "gene2H_3.t1";;
+2H-170-300	source	exon	98	105	.	+	.	gene_id "gene2H_3"; transcript_id "gene2H_3.t1";
+CAJHDD010000004.1-0-50	IPK	gene	5	20	.	+	.	gene_id "CONTIG1";;
+CAJHDD010000001.1-0-40	IPK	gene	10	30	.	+	.	gene_id "CONTIG2";;
+Mt-0-20	IPK	gene	2	10	.	+	.	gene_id "MT1";;
+Pt-0-10	IPK	gene	1	5	.	+	.	gene_id "PT1";;
+
+```
+
+#### Validation 
+##### Check the number of lines in the GTF file.  
+Note that the GTF downloaded from the ENSEMBL database contains a five‑row header, which can be added back to the final modified GTF later.  
+```
+wc -l B3_all-chr2_FINAL_MODIFIED_GTF_BarleyMOREXV3_toy_v51_ENSEMBL.gtf
+```
+
+##### Use `head` to check the first 10 lines of the file.  
+```
+head B3_all-chr2_FINAL_MODIFIED_GTF_BarleyMOREXV3_toy_v51_ENSEMBL.gtf
+
+1H-0-120        source  gene    0       20      .       +       .       gene_id "gene1"; gene_name "gene1";;
+1H-0-120        source  transcript      0       20      .       +       .       gene_id "gene1"; transcript_id "gene1.t1";;
+1H-0-120        source  exon    0       10      .       +       .       gene_id "gene1"; transcript_id "gene1.t1";
+1H-0-120        source  exon    11      20      .       +       .       gene_id "gene1"; transcript_id "gene1.t1";
+1H-0-120        source  gene    20      40      .       -       .       gene_id "gene2"; gene_name "gene2";;
+1H-0-120        source  transcript      20      40      .       -       .       gene_id "gene2"; transcript_id "gene2.t1";;
+1H-0-120        source  exon    20      28      .       -       .       gene_id "gene2"; transcript_id "gene2.t1";
+1H-0-120        source  exon    29      40      .       -       .       gene_id "gene2"; transcript_id "gene2.t1";
+1H-0-120        source  gene    80      100     .       +       .       gene_id "gene3"; gene_name "gene3";
+1H-0-120        source  transcript      80      100     .       +       .       gene_id "gene3"; transcript_id "gene3.t1";;
+
+```
+
+
+
+
+## **Step 3 "Split the FASTA sequences based on the centromere coordinates"**
+
+## **III. Split the FASTA sequences based on the centromere coordinates**
+
+#### 3.1) Input files:
+*B1_toy.fasta* - small artificial sequences representing chromosomes and organelles.  
+
+<div style="font-size: 8px; line-height: 0.9;">
+  
+| Sequence ID              | Length (bp) |
+|--------------------------|-------------|
+| 1H                       | 200         |
+| 2H                       | 300         |
+| CAJHDD010000004.1        | 50          |
+| CAJHDD010000001.1        | 40          |
+| Mt                       | 20          |
+| Pt                       | 10          |
+
+ </div>
+
+*B1_toy_centromeres_for_Fa.bed* - simplified centromere coordinates for FASTA splitting
+Make sure you’re using the correct BED file. If Step 1 shows that a gene feature overlaps with the centromere coordinate, use the re‑calculated BED file; otherwise, stick with the original. Also ensure the BED file is formatted properly for this step: each chromosome must appear on two rows. In the first row, the second column gives the chromosome start (always zero) and the third column gives the centromere (or split) position. In the second row for that chromosome, the second column gives the centromere (or split) position and the third column gives the chromosome end coordinate. 
+
+```
+1H	0	120
+1H	120	200
+2H	0	150
+2H	150	300
+CAJHDD010000004.1	0	50
+CAJHDD010000001.1	0	40
+Mt	0	20
+Pt	0	10  
+```
+
+#### 3.2) Split FASTA by centromere coordinate by using `bedtools getfasta`:
+```
+INFATOY = /.../.../B1_toy.fasta  
+INBEDTOY = /.../.../RECAL1_FINAL_SPLIT_coord_for_FASTA.bed  
+OUTPATH = /.../.../C1_toy_Fa_SPLIT.fasta  
+bedtools getfasta -fi ${INFATOY} -bed ${INBEDTOY} -fo ${OUTPATH}/C1_toy_Fa_SPLIT.fasta
+```  
+
+
+#### 3.3) Output:   
+FASTA file in which each chromosome is split into smaller chunks. The sequence length of each chunk is shown in the table below.
+
+#####  Validation:  
+
+```
+awk '/^>/ {if (seqlen){print seqlen}; print; seqlen=0; next} {seqlen+=length($0)} END{print seqlen}' ${OUTPATH}/C1_toy_Fa_SPLIT.fasta
+```  
+
+
+<div style="font-size: 8px; line-height: 0.9;">
+
+| Sequence ID              | Length (bp) |
+|--------------------------|-------------|
+| 1H:0–120                 | 120         |
+| 1H:120–200               | 80         |
+| 2H:0–150                 | 150         |
+| 2H:150–300               | 150         |
+| CAJHDD010000004.1:0–50   | 50          |
+| CAJHDD010000001.1:0–40   | 40          |
+| Mt:0–20                  | 20          |
+| Pt:0–10                  | 10          |
+
+</div>
+
+
+
+
+<br>  
+
+
+
+## 4. Session Info  
+
+```{r session-info}
+sessionInfo()
+```
+
+
+
+## 5. Acknowledgements  
+
+This work was supported by resources provided by the Pawsey Supercomputing Research Centres Nimbus Research Cloud (https://doi.org/10.48569/v0j3-qd51), with funding from the Australian Government and the Government of Western Australia.
