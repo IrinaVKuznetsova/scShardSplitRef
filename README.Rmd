@@ -15,7 +15,7 @@ knitr::opts_chunk$set(
 
 
 ## **scShardSplitRef**  
-is designed for researchers working with single-cell data from species that require building a custom reference genome, particularly when one or more contigs in the reference FASTA exceed the Cell Ranger limit of 536.8Mb (2^29 bases). *scShardSplitRef* automates this splitting process, generating contig fragments that comply with *Cell Ranger* requirements. The software outputs FASTA and GTF files containing the split contigs, which can be directly processed by <code>cellranger-arc mkref</code>.
+is designed for researchers working with single-cell data from species that require building a custom reference genome, particularly when one or more contigs in the reference FASTA exceed the Cell Ranger limit of 536.8Mb (2^29 bases). *scShardSplitRef* automates this splitting process, generating contig fragments that comply with *Cell Ranger* requirements. The software outputs FASTA and GTF files containing the split contigs, which can be directly processed by `cellranger-arc mkref`.
 
 
 
@@ -52,7 +52,7 @@ For example, in large genomes such as barley, several chromosomes (*2H=665.59Mb,
 
 
 ##### "HOW-TO" tutorials: [How to modify GTF using scShardSplitRef](vignettes/my-vignette.Rmd)  
-
+vignettes/my-vignette.Rmd
 
 ## **Example Workflow**  
 A toy example workflow walks through the [step-by-step using toy files](example).  
@@ -75,16 +75,16 @@ Please note that this package has been developed for use with diploid organisms.
 ## **Citation**   
 Please cite this tool if you use it
 Author's list: Irina Kuznetsova, Luke Pembleton, Pasquale Luca Curci, Adam Sparks  
-Curtin University, lpembleton, CNR Institute of Biosciences and BioResources, Curtin University
+Curtin University, Barenbrug, CNR Institute of Biosciences and BioResources, Curtin University
 
 
 ## **License**  
-This project is licensed under the [GPL-3.0 license](LICENSE).  
+This project is licensed under the [GPL-3.0 license](LICENSE.md).  
 
 
 
 ## **Contributing**  
-If you?d like to help improve this tool, please send your suggestions via email.  
+If you'd like to help improve this tool, please send your suggestions via email.  
 Please clearly outline the feature(s) you think should be added. As the tool develops, new features can be added as separate package functions and contributed back to the project.    
 Remember that improving tools is important, but keeping them neat and not over-complicated is just as essential. 
 

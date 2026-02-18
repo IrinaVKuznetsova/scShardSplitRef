@@ -9,8 +9,8 @@ or more contigs in the reference FASTA exceed the Cell Ranger limit of
 536.8Mb (2^29 bases). *scShardSplitRef* automates this splitting
 process, generating contig fragments that comply with *Cell Ranger*
 requirements. The software outputs FASTA and GTF files containing the
-split contigs, which can be directly processed by <code>cellranger-arc
-mkref</code>.
+split contigs, which can be directly processed by
+`cellranger-arc mkref`.
 
 ## **Problem overview**
 
@@ -87,16 +87,16 @@ organisms. What the tool does not do.
 
 Please cite this tool if you use it Author’s list: Irina Kuznetsova,
 Luke Pembleton, Pasquale Luca Curci, Adam Sparks  
-Curtin University, lpembleton, CNR Institute of Biosciences and
+Curtin University, Barenbrug, CNR Institute of Biosciences and
 BioResources, Curtin University
 
 ## **License**
 
-This project is licensed under the [GPL-3.0 license](LICENSE).
+This project is licensed under the [GPL-3.0 license](LICENSE.md).
 
 ## **Contributing**
 
-If you?d like to help improve this tool, please send your suggestions
+If you’d like to help improve this tool, please send your suggestions
 via email.  
 Please clearly outline the feature(s) you think should be added. As the
 tool develops, new features can be added as separate package functions
