@@ -64,9 +64,8 @@ without manual intervention.
 ##### “HOW-TO” tutorials: [How to modify GTF using scShardSplitRef](vignettes/my-vignette.md)
 
 ##### **Example Workflow**
-
 A toy example workflow walks through the [step-by-step using toy
-files](vignettes/my-vignette2.md).
+files](vignettes/scShardSplitRefQuickStart.md).
 
 ## **Installation**
 
