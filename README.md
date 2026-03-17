@@ -61,11 +61,11 @@ without manual intervention.
 - Gene annotations (GTF from ENSEMBL)  
 - Centromere coordinates (BED file)
 
-##### “HOW-TO” tutorials: [How to modify GTF using scShardSplitRef](vignettes/my-vignette.md)
+##### “HOW-TO” tutorials: [How to modify GTF using scShardSplitRef](vignettes/scShardSplitRefQuickStart.Rmd)
 
 ##### **Example Workflow**
 A toy example workflow walks through the [step-by-step using toy
-files](vignettes/scShardSplitRefQuickStart.md).
+files](vignettes/scShardSplitRefDetailed.Rmd).
 
 ## **Installation**
 
