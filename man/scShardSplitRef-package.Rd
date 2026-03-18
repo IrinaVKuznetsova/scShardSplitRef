@@ -17,5 +17,10 @@ Authors:
   \item Adam H. Sparks \email{adamhsparks@gmail.com} (\href{https://orcid.org/0000-0002-0061-8359}{ORCID})
 }
 
+Other contributors:
+\itemize{
+  \item Grains Research and Development Corporation (\href{https://ror.org/02xwr1996}{ROR}) (GRDC Project CUR2210-005OPX (AAGI-CU)) [funder, copyright holder]
+}
+
 }
 \keyword{internal}
