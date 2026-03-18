@@ -71,13 +71,15 @@ Please note that this package has been developed for use with diploid organisms.
 
 
 
-## **Citation**   
+## **Citation**
 Please cite this tool if you use it
-Author's list: Irina Kuznetsova, Luke Pembleton, Pasquale Luca Curci, Adam Sparks  
-Curtin University, Barenbrug, CNR Institute of Biosciences and BioResources, Curtin University
 
+```{r citation}
+library("scShardSplitRef")
+citation("scShardSplitRef")
+```
 
-## **License**  
+## **License**
 This project is licensed under the [GPL-3.0 license](LICENSE.md).  
 
 
