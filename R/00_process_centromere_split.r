@@ -2,10 +2,14 @@
 #'
 #' Converts a BED file to a format suitable for splitting GTF files
 #'
-#' @param df A data frame containing centromere coordinates with columns "Chr", "CentrStart", and "ChrEND".
-#' @param contig_prefix A string prefix to identify contigs in the chromosome names (
-#' @param mt_name A string representing the name of the mitochondrial chromosome (e.g., "Mt").
-#' @param pt_name A string representing the name of the plastid chromosome (e.g., "Pt").
+#' @param df A data frame containing centromere coordinates with columns "Chr",
+#'  "CentrStart", and "ChrEND".
+#' @param contig_prefix A string prefix to identify contigs in the chromosome
+#'  names.
+#' @param mt_name A string representing the name of the mitochondrial chromosome
+#'  (*e.g.*, "Mt").
+#' @param pt_name A string representing the name of the plastid chromosome
+#'  (*e.g.*, "Pt").
 #'
 #' @import dplyr
 #' @import stringr
