@@ -7,13 +7,17 @@
 prepare_centromere_BED(df, contig_prefix, mt_name, pt_name)
 }
 \arguments{
-\item{df}{A data frame containing centromere coordinates with columns "Chr", "CentrStart", and "ChrEND".}
+\item{df}{A data frame containing centromere coordinates with columns "Chr",
+"CentrStart", and "ChrEND".}
 
-\item{contig_prefix}{A string prefix to identify contigs in the chromosome names (}
+\item{contig_prefix}{A string prefix to identify contigs in the chromosome
+names.}
 
-\item{mt_name}{A string representing the name of the mitochondrial chromosome (e.g., "Mt").}
+\item{mt_name}{A string representing the name of the mitochondrial chromosome
+(\emph{e.g.}, "Mt").}
 
-\item{pt_name}{A string representing the name of the plastid chromosome (e.g., "Pt").}
+\item{pt_name}{A string representing the name of the plastid chromosome
+(\emph{e.g.}, "Pt").}
 }
 \description{
 Converts a BED file to a format suitable for splitting GTF files
