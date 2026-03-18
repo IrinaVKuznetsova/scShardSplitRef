@@ -14,6 +14,7 @@ Provides utilities that enable researchers to build custom references for the Mu
 Authors:
 \itemize{
   \item Luke Pembleton \email{lpembleton@barenbrug.com.au} (\href{https://orcid.org/0000-0002-3555-4586}{ORCID})
+  \item Luca Curci \email{pasqualeluca.curci@cnr.it} (\href{https://orcid.org/0000-0002-5780-3029}{ORCID})
   \item Adam H. Sparks \email{adamhsparks@gmail.com} (\href{https://orcid.org/0000-0002-0061-8359}{ORCID})
 }
 
