@@ -2,3 +2,4 @@
 ^README\.Rmd$
 ^doc$
 ^Meta$
+^man/prepare_centromere_BED.Rd
