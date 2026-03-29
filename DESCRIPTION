@@ -21,6 +21,7 @@ Description: Provides utilities that enable researchers to build custom
     large-genome species without manual intervention.
 License: GPL (>= 3)
 Imports: 
+    cli,
     dplyr,
     stringr,
     utils
