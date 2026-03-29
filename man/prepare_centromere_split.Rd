@@ -28,18 +28,12 @@ files will be saved.}
 \item{pt_name}{A string representing the name of the plastid chromosome
 (\emph{e.g.}, "Pt").}
 }
+\value{
+A XXXX file.
+}
 \description{
 Check if GTF file has overlapping gene features with centromere coordinates
 and prepare new split coordinates if that's the case.
-}
-\examples{
-prep_centromere_split(gtf_path = "/data/02_PROJECTS/sc_ShardSplitRef/01_Working_R_scripts/Toy_validate_GTF_script/toy_input/A0_toy_all_scenarios_2chr.gtf,   #A0_toy_all_scenarios.gtf",     ###/A0_toy_all_scenarios.gtf",
-                      centromere_path = "/data/02_PROJECTS/sc_ShardSplitRef/01_Working_R_scripts/Toy_validate_GTF_script/toy_input/A0_toy_centromeres_for_gtf.bed",
-                      out_path = "/data/02_PROJECTS/sc_ShardSplitRef/01_Working_R_scripts/Toy_validate_GTF_script/toy_input/",
-                      contig_prefix = "CAJHDD",
-                      mt_name = "Mt",
-                      pt_name = "Pt")
-
 }
 \author{
 Irina Kuznetsova, \email{irina.Kuznetsova@curtin.edu.au}
