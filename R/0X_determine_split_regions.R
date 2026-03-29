@@ -28,6 +28,8 @@
 #'   limit = 30,
 #'   shift_by = 1
 #' )
+#' @autoglobal
+#' @export
 determine_split_regions <- function(
   regions_bed,
   genes_gft,
@@ -291,4 +293,3 @@ merge_overlapping_gene_ranges <- function(chr_genes) {
   merged_ranges[[out_idx]] <- data.frame(start = merged_start, end = merged_end)
   do.call(rbind, merged_ranges[seq_len(out_idx)])
 }
-
