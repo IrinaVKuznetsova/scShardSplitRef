@@ -1,4 +1,5 @@
 #' @importFrom utils read.table write.table
+#' @autoglobal
 #' @dev
 
 # Helper: check TAB-delimited structure (outside main function, for reuse)
@@ -12,7 +13,7 @@ check_tab_file <- function(
   lines <- suppressWarnings(readLines(path))
   lines <- lines[!startsWith(lines, "#")]
   if (length(lines) == 0L) {
-    return(invisible())
+    return(invisible(NULL))
   }
   split_lines <- strsplit(lines, "\t", fixed = TRUE)
   field_counts <- vapply(split_lines, length, integer(1))
@@ -44,8 +45,9 @@ check_tab_file <- function(
   invisible()
 }
 
+#' @autoglobal
 validate_inputs <- function(gtf_path, centromere_path) {
-  # --- ERROR 0: Check file paths -------------------------------------------------
+  # --- ERROR 0: Check file paths ----------------------------------------------
   if (!file.exists(gtf_path)) {
     cli::cli_abort("ERROR 0: GTF file does not exist. Check: {gtf_path}")
   }
@@ -55,21 +57,21 @@ validate_inputs <- function(gtf_path, centromere_path) {
     )
   }
 
-  # --- ERROR 2: Validate GTF -----------------------------------------------------
+  # --- ERROR 2: Validate GTF --------------------------------------------------
   check_tab_file(
     path = gtf_path,
     min_fields = 9,
     max_fields = NA_integer_,
     label = "GTF",
-    error_num = 2
+    error_num = 2L
   )
   # --- ERROR 3: Validate BED -----------------------------------------------------
   check_tab_file(
     path = centromere_path,
-    min_fields = 3,
-    max_fields = 3,
+    min_fields = 3L,
+    max_fields = 3L,
     label = "BED",
-    error_num = 3
+    error_num = 3L
   )
 
   # --- Read validated files ------------------------------------------------------

@@ -20,6 +20,7 @@
 #'                        pt_name = "Pt")
 #'
 #' @author Irina Kuznetsova, \email{irina.Kuznetsova@@curtin.edu.au}
+#' @autoglobal
 #' @dev
 #'
 ################################################################################
@@ -89,6 +90,7 @@ prepare_centromere_BED = function(df, contig_prefix, mt_name, pt_name) {
 #'                       pt_name = "Pt")
 #'
 #' @author Irina Kuznetsova, \email{irina.Kuznetsova@@curtin.edu.au}
+#' @autoglobal
 #' @export
 prepare_centromere_split <- function(
   gtf_path,
