@@ -11,8 +11,6 @@
 #' @param pt_name A string representing the name of the plastid chromosome
 #'  (*e.g.*, "Pt").
 #'
-#' @importFrom utils read.table write.table
-#'
 #' @examples
 #' prepare_centromere_BED(df,
 #'                        contig_prefix = "CAJHDD",
@@ -79,7 +77,6 @@ prepare_centromere_BED <- function(df, contig_prefix, mt_name, pt_name) {
 #' @param pt_name A string representing the name of the plastid chromosome
 #'  (*e.g.*, "Pt").
 #'
-#' @importFrom utils read.table write.table
 #' @examples
 #' # Provide file paths to example files in this package
 #' gtf_file <- system.file("extdata",
@@ -114,7 +111,7 @@ prepare_centromere_split <- function(
   # --------------------------------------------------
   # 1. Read GTF file, add column names
   # --------------------------------------------------
-  gtf_file <- read.table(file = gtf_path, header = FALSE, sep = "\t")
+  gtf_file <- utils::read.table(file = gtf_path, header = FALSE, sep = "\t")
   colnames(gtf_file) <- c(
     "Chr",
     "source",
@@ -131,7 +128,7 @@ prepare_centromere_split <- function(
   # --------------------------------------------------
   # 2. Read centromere positions file (BED format)
   # --------------------------------------------------
-  read_cent <- read.table(file = centromere_path, sep = "\t")
+  read_cent <- utils::read.table(file = centromere_path, sep = "\t")
   colnames(read_cent) <- c("Chr", "CentrStart", "ChrEND")
 
   # Convert original BED format ready for FASTA processing
@@ -141,7 +138,7 @@ prepare_centromere_split <- function(
     mt_name,
     pt_name
   )
-  write.table(
+  utils::write.table(
     orig_For_FASTA,
     file = sprintf("%sIN0_original_centromeres_for_FASTA.bed", out_path),
     quote = FALSE,
@@ -228,7 +225,7 @@ prepare_centromere_split <- function(
       out_path
     )
     # for GTF
-    write.table(
+    utils::write.table(
       BED_df_combined_sorted_as_original,
       file = gtf_bed_outfile,
       quote = FALSE,
@@ -237,7 +234,7 @@ prepare_centromere_split <- function(
       sep = "\t"
     )
     # for FASTA
-    write.table(
+    utils::write.table(
       prepare_centromere_BED(
         BED_df_combined_sorted_as_original,
         contig_prefix,
