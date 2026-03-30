@@ -1,8 +1,8 @@
-#' @importFrom utils read.table write.table
-#' @autoglobal
+#' Helper: check TAB-delimited structure (outside main function, for reuse)
+#'
 #' @dev
+#' @autoglobal
 
-# Helper: check TAB-delimited structure (outside main function, for reuse)
 check_tab_file <- function(
   path,
   min_fields,
@@ -16,7 +16,7 @@ check_tab_file <- function(
     return(invisible(NULL))
   }
   split_lines <- strsplit(lines, "\t", fixed = TRUE)
-  field_counts <- vapply(split_lines, length, integer(1))
+  field_counts <- vapply(split_lines, lengths, integer(1))
   bad_min <- which(field_counts < min_fields)
   bad_max <- if (!is.na(max_fields)) {
     which(field_counts > max_fields)
@@ -42,9 +42,16 @@ check_tab_file <- function(
       .envir = environment()
     )
   }
-  invisible()
+  invisible(NULL)
 }
 
+#' Helper: Validate GTF and BED files
+#'
+#' @param gtf_path User provided file path to a GTF file for validation.
+#' @param centromere_path User provided file path to a BED file for validation.
+#'
+#' @returns A list object containing validated GTF and BED files.
+#' @dev
 #' @autoglobal
 validate_inputs <- function(gtf_path, centromere_path) {
   # --- ERROR 0: Check file paths ----------------------------------------------
@@ -65,7 +72,7 @@ validate_inputs <- function(gtf_path, centromere_path) {
     label = "GTF",
     error_num = 2L
   )
-  # --- ERROR 3: Validate BED -----------------------------------------------------
+  # --- ERROR 3: Validate BED --------------------------------------------------
   check_tab_file(
     path = centromere_path,
     min_fields = 3L,
@@ -74,8 +81,8 @@ validate_inputs <- function(gtf_path, centromere_path) {
     error_num = 3L
   )
 
-  # --- Read validated files ------------------------------------------------------
-  gtf <- read.table(
+  # --- Read validated files ---------------------------------------------------
+  gtf <- utils::read.table(
     gtf_path,
     sep = "\t",
     header = FALSE,
@@ -95,7 +102,7 @@ validate_inputs <- function(gtf_path, centromere_path) {
     "attribute"
   )
 
-  bed <- read.table(
+  bed <- utils::read.table(
     centromere_path,
     sep = "\t",
     header = FALSE,
@@ -105,5 +112,5 @@ validate_inputs <- function(gtf_path, centromere_path) {
 
   cli::cli_alert_success("All files loaded and validated successfully.")
 
-  list(gtf = gtf, bed = bed)
+  return(list(gtf = gtf, bed = bed))
 }

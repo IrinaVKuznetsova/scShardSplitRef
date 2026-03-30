@@ -1,4 +1,3 @@
-#' @importFrom utils read.table write.table
 #' @autoglobal
 
 process_gtf <- function(
@@ -71,7 +70,8 @@ process_gtf <- function(
   if (nrow(chr_overlap) > 0L) {
     cli::cli_warn(c(
       "Some gene features overlap the centromere boundary.",
-      "i" = "{nrow(chr_overlap)} detected. This can indicate BED/GTF inconsistency.",
+      "i" = "{nrow(chr_overlap)} detected. This can indicate BED/GTF
+      inconsistency.",
       "i" = "See 'prepare_centromere_split.r' for guidance."
     ))
   }
