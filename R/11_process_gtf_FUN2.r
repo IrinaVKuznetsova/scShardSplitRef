@@ -10,7 +10,7 @@
 #' @examples
 #' #TODO: Add examples of use for this fn.
 #'
-#' @inheritParams prepare_centromere_split
+#' @returns A vector.
 #' @autoglobal
 
 process_gtf <- function(
