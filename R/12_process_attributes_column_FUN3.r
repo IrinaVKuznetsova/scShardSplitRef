@@ -1,4 +1,3 @@
-#' @importFrom utils read.table write.table
 #' @autoglobal
 #' @export
 
@@ -41,7 +40,7 @@ process_attributes_column <- function(
     sprintf("B1_FINAL_MODIFIED_GTF_%s_%s.gtf", genome_name, genome_version)
   )
 
-  write.table(
+  utils::write.table(
     result,
     file = output_file,
     quote = FALSE,

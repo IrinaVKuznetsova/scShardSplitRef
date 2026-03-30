@@ -3,5 +3,3 @@
 export(determine_split_regions)
 export(prepare_centromere_split)
 export(process_attributes_column)
-importFrom(utils,read.table)
-importFrom(utils,write.table)
