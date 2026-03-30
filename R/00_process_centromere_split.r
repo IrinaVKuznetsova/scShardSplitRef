@@ -80,14 +80,13 @@ prepare_centromere_BED <- function(df, contig_prefix, mt_name, pt_name) {
 #'  (*e.g.*, "Pt").
 #'
 #' @importFrom utils read.table write.table
-#' @returns A XXXX file.
 #' @examples
 #' # Provide file paths to example files in this package
 #' gtf_file <- system.file("extdata",
 #'                         "A3_toy_all_scenarios_2chr.gtf",
 #'                         package = "scShardSplitRef",
 #'                         mustWork = TRUE)
-#' centromere_file <- system.file("extdata, "IN0_toy_centromeres_for_gtf.bed",
+#' centromere_file <- system.file("extdata", "IN0_toy_centromeres_for_gtf.bed",
 #'                                package = "scShardSplitRef",
 #'                                mustWork = TRUE)
 #'
@@ -99,6 +98,7 @@ prepare_centromere_BED <- function(df, contig_prefix, mt_name, pt_name) {
 #'                       mt_name = "Mt",
 #'                       pt_name = "Pt")
 #'
+#' @returns A XXXX file.
 #' @author Irina Kuznetsova, \email{irina.Kuznetsova@@curtin.edu.au}
 #' @autoglobal
 #' @export
