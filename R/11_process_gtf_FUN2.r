@@ -1,3 +1,16 @@
+#' Process the GTF file
+#'
+#' @param gtf_path A string representing the file path to the GTF file.
+#' @param centromere_path A string representing the file path to the centromere
+#'   coordinates BED file.
+#' @param unchar_region TODO: describe this param.
+#' @param mito TODO: describe this param.
+#' @param chloro TODO: describe this param.
+#'
+#' @examples
+#' #TODO: Add examples of use for this fn.
+#'
+#' @inheritParams prepare_centromere_split
 #' @autoglobal
 
 process_gtf <- function(
@@ -82,7 +95,6 @@ process_gtf <- function(
   )
   feature_length <- chr_greater_than$end - chr_greater_than$start
   dist_chr_end_feat_end <- chr_greater_than$ChrEND - chr_greater_than$end
-  dist_centr_feat_start <- chr_greater_than$start - chr_greater_than$CentrStart
   dist_centr_chr_end <- chr_greater_than$ChrEND - chr_greater_than$CentrStart
 
   chr_greater_than$start <- dist_centr_chr_end -
