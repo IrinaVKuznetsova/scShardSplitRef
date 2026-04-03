@@ -11,8 +11,6 @@
 #' @param pt_name A string representing the name of the plastid chromosome
 #'  (*e.g.*, "Pt").
 #'
-#' @importFrom utils read.table write.table
-#'
 #' @examples
 #' prepare_centromere_BED(df,
 #'                        contig_prefix = "CAJHDD",
@@ -20,6 +18,7 @@
 #'                        pt_name = "Pt")
 #'
 #' @author Irina Kuznetsova, \email{irina.Kuznetsova@@curtin.edu.au}
+#' @autoglobal
 #' @dev
 #'
 ################################################################################
@@ -32,7 +31,7 @@
 # splitting.
 ################################################################################
 
-prepare_centromere_BED = function(df, contig_prefix, mt_name, pt_name) {
+prepare_centromere_BED <- function(df, contig_prefix, mt_name, pt_name) {
   contig <- grepl(sprintf("^%s", contig_prefix), df$Chr)
   organelle <- df$Chr %in% c(mt_name, pt_name)
   to_keep <- contig | organelle
@@ -78,18 +77,29 @@ prepare_centromere_BED = function(df, contig_prefix, mt_name, pt_name) {
 #' @param pt_name A string representing the name of the plastid chromosome
 #'  (*e.g.*, "Pt").
 #'
-#' @importFrom utils read.table write.table
-#'
 #' @examples
-#' prep_centromere_split(gtf_path = "/data/02_PROJECTS/sc_ShardSplitRef/01_Working_R_scripts/Toy_validate_GTF_script/toy_input/A0_toy_all_scenarios_2chr.gtf,   #A0_toy_all_scenarios.gtf",     ###/A0_toy_all_scenarios.gtf",
-#'                       centromere_path = "/data/02_PROJECTS/sc_ShardSplitRef/01_Working_R_scripts/Toy_validate_GTF_script/toy_input/A0_toy_centromeres_for_gtf.bed",
-#'                       out_path = "/data/02_PROJECTS/sc_ShardSplitRef/01_Working_R_scripts/Toy_validate_GTF_script/toy_input/",
+#' # Provide file paths to example files in this package
+#' gtf_file <- system.file("extdata",
+#'                         "A3_toy_all_scenarios_2chr.gtf",
+#'                         package = "scShardSplitRef",
+#'                         mustWork = TRUE)
+#' centromere_file <- system.file("extdata", "IN0_toy_centromeres_for_gtf.bed",
+#'                                package = "scShardSplitRef",
+#'                                mustWork = TRUE)
+#'
+#' # Read gtf_file and centromere_file and write file to local working dir
+#' prep_centromere_split(gtf_path = gtf_file
+#'                       centromere_path = centromere_file,
+#'                       out_path = "./",
 #'                       contig_prefix = "CAJHDD",
 #'                       mt_name = "Mt",
 #'                       pt_name = "Pt")
 #'
+#' @returns A XXXX file.
 #' @author Irina Kuznetsova, \email{irina.Kuznetsova@@curtin.edu.au}
+#' @autoglobal
 #' @export
+
 prepare_centromere_split <- function(
   gtf_path,
   centromere_path,
@@ -101,7 +111,7 @@ prepare_centromere_split <- function(
   # --------------------------------------------------
   # 1. Read GTF file, add column names
   # --------------------------------------------------
-  gtf_file <- read.table(file = gtf_path, header = FALSE, sep = "\t")
+  gtf_file <- utils::read.table(file = gtf_path, header = FALSE, sep = "\t")
   colnames(gtf_file) <- c(
     "Chr",
     "source",
@@ -118,7 +128,7 @@ prepare_centromere_split <- function(
   # --------------------------------------------------
   # 2. Read centromere positions file (BED format)
   # --------------------------------------------------
-  read_cent <- read.table(file = centromere_path, sep = "\t")
+  read_cent <- utils::read.table(file = centromere_path, sep = "\t")
   colnames(read_cent) <- c("Chr", "CentrStart", "ChrEND")
 
   # Convert original BED format ready for FASTA processing
@@ -128,7 +138,7 @@ prepare_centromere_split <- function(
     mt_name,
     pt_name
   )
-  write.table(
+  utils::write.table(
     orig_For_FASTA,
     file = sprintf("%sIN0_original_centromeres_for_FASTA.bed", out_path),
     quote = FALSE,
@@ -215,7 +225,7 @@ prepare_centromere_split <- function(
       out_path
     )
     # for GTF
-    write.table(
+    utils::write.table(
       BED_df_combined_sorted_as_original,
       file = gtf_bed_outfile,
       quote = FALSE,
@@ -224,7 +234,7 @@ prepare_centromere_split <- function(
       sep = "\t"
     )
     # for FASTA
-    write.table(
+    utils::write.table(
       prepare_centromere_BED(
         BED_df_combined_sorted_as_original,
         contig_prefix,
