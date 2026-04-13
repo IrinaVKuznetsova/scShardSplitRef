@@ -3,3 +3,5 @@
 ^doc$
 ^Meta$
 ^man/prepare_centromere_BED.Rd
+^man/check_tab_file.Rd
+^man/validate_inputs.Rd
