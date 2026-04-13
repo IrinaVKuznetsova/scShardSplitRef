@@ -1,10 +1,35 @@
+#' Filter and write the GTF attribute column
+#'
+#' Keeps only the requested keys from the 9th GTF column (`attribute`) and
+#' writes a final tab-delimited GTF file.
+#'
+#' @param result A data frame from `process_gtf()` containing standard GTF
+#'   columns including `attribute`.
+#' @param keep_attributes Character vector of attribute keys to keep, e.g.
+#'   `c("gene_id", "transcript_id", "gene_name")`.
+#' @param out_path Directory where the output GTF will be written. Defaults to
+#'   the current working directory (`"."`).
+#' @param genome_name Genome identifier used in the output filename.
+#' @param genome_version Genome version string used in the output filename.
+#'
+#' @returns The function writes the filtered GTF file to disk
+#'   at `out_path`.
+#'
+#' @examples
+#' # keep_attributes <- c("gene_id", "transcript_id", "gene_name")
+#' # final_gtf_df <- process_attributes_column(
+#' #   result = processed_gtf,
+#' #   keep_attributes = keep_attributes,
+#' #   genome_name = "Rye_Lo7",
+#' #   genome_version = "v1p1p1"
+#' # )
 #' @autoglobal
 #' @export
 
 process_attributes_column <- function(
   result,
   keep_attributes,
-  out_path,
+  out_path = ".",
   genome_name,
   genome_version
 ) {
@@ -51,5 +76,4 @@ process_attributes_column <- function(
 
   cli::cli_alert_success("Finished writing processed GTF: {output_file}")
 
-  result
 }
