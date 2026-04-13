@@ -16,7 +16,7 @@ check_tab_file <- function(
     return(invisible(NULL))
   }
   split_lines <- strsplit(lines, "\t", fixed = TRUE)
-  field_counts <- vapply(split_lines, lengths, integer(1))
+  field_counts <- vapply(split_lines, length, integer(1))
   bad_min <- which(field_counts < min_fields)
   bad_max <- if (!is.na(max_fields)) {
     which(field_counts > max_fields)
@@ -28,7 +28,7 @@ check_tab_file <- function(
     expected <- if (!is.na(max_fields)) {
       glue::glue("{min_fields}-{max_fields} TAB-separated fields")
     } else {
-      glue::glue("= {min_fields} TAB-separated fields")
+      glue::glue("at least {min_fields} TAB-separated fields")
     }
     cli::cli_abort(
       c(
@@ -48,19 +48,22 @@ check_tab_file <- function(
 #' Helper: Validate GTF and BED files
 #'
 #' @param gtf_path User provided file path to a GTF file for validation.
-#' @param centromere_path User provided file path to a BED file for validation.
+#' @param bed_path User provided file path to a BED file for validation.
 #'
 #' @returns A list object containing validated GTF and BED files.
 #' @dev
 #' @autoglobal
-validate_inputs <- function(gtf_path, centromere_path) {
+validate_inputs <- function(gtf_path, bed_path) {
   # --- ERROR 0: Check file paths ----------------------------------------------
   if (!file.exists(gtf_path)) {
     cli::cli_abort("ERROR 0: GTF file does not exist. Check: {gtf_path}")
   }
-  if (!file.exists(centromere_path)) {
+  if (!file.exists(bed_path)) {
     cli::cli_abort(
-      "ERROR 1: Centromere BED file does not exist. Check: {centromere_path}"
+      paste(
+        "ERROR 1: BED file does not exist. Check:",
+        bed_path
+      )
     )
   }
 
@@ -74,9 +77,9 @@ validate_inputs <- function(gtf_path, centromere_path) {
   )
   # --- ERROR 3: Validate BED --------------------------------------------------
   check_tab_file(
-    path = centromere_path,
+    path = bed_path,
     min_fields = 3L,
-    max_fields = 3L,
+    max_fields = NA_integer_,
     label = "BED",
     error_num = 3L
   )
@@ -103,12 +106,26 @@ validate_inputs <- function(gtf_path, centromere_path) {
   )
 
   bed <- utils::read.table(
-    centromere_path,
+    bed_path,
     sep = "\t",
     header = FALSE,
+    quote = "",
+    comment.char = "#",
     stringsAsFactors = FALSE
   )
-  colnames(bed) <- c("Chr", "CentrStart", "ChrEND")
+  colnames(bed)[seq_len(3L)] <- c("Chr", "RegionStart", "RegionEnd")
+
+  invalid_ranges <- which(bed$RegionStart >= bed$RegionEnd)
+  if (length(invalid_ranges) > 0L) {
+    cli::cli_abort(c(
+      "ERROR 4: Invalid BED coordinates.",
+      "i" = "Each row must satisfy RegionStart < RegionEnd.",
+      "i" = paste(
+        "Problematic row numbers:",
+        paste(invalid_ranges, collapse = ", ")
+      )
+    ))
+  }
 
   cli::cli_alert_success("All files loaded and validated successfully.")
 
