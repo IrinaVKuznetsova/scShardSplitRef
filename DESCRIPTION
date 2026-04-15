@@ -20,6 +20,7 @@ Description: Provides utilities that enable researchers to build custom
     references for the Multiome ATAC Gene Expression sequencing data for
     large-genome species without manual intervention.
 License: GPL (>= 3)
+Depends: R (>= 4.3.0)
 Imports: 
     cli,
     dplyr,
