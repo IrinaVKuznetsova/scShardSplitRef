@@ -2,18 +2,46 @@
 % Please edit documentation in R/10_validate_inputs_FUN1.r
 \name{validate_inputs}
 \alias{validate_inputs}
-\title{Helper: Validate GTF and BED files}
+\title{Validate GTF and BED files}
 \usage{
 validate_inputs(gtf_path, bed_path)
 }
 \arguments{
-\item{gtf_path}{User provided file path to a GTF file for validation.}
+\item{gtf_path}{Character: file path to GTF file.}
 
-\item{bed_path}{User provided file path to a BED file for validation.}
+\item{bed_path}{Character: file path to BED file.}
 }
 \value{
-A list object containing validated GTF and BED files.
+List with named elements:
+\itemize{
+\item \code{gtf}: Data frame with 9 GTF columns (Chr, source, feature, start,
+end, score, strand, frame, attribute)
+\item \code{bed}: Data frame with at least 3 BED columns (Chr, RegionStart,
+RegionEnd) plus any additional columns from the input file.
+}
 }
 \description{
-Internal function: Helper: Validate GTF and BED files
+Reads and validates GTF and BED files, checking for:
+\itemize{
+\item File existence
+\item TAB-delimited format with correct number of columns
+\item Valid BED coordinate ranges (start < end)
+}
+}
+\details{
+Performs four checks in sequence:
+\enumerate{
+\item Both files exist (ERROR 0 for GTF, ERROR 1 for BED)
+\item GTF has >= 9 columns (ERROR 2)
+\item BED has >= 3 columns (ERROR 3)
+\item All BED ranges satisfy RegionStart < RegionEnd (ERROR 4)
+}
+}
+\examples{
+\dontrun{
+  result <- .validate_inputs("genes.gtf", "regions.bed")
+  gtf <- result$gtf
+  bed <- result$bed
+}
+
 }

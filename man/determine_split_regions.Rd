@@ -6,48 +6,62 @@
 \usage{
 determine_split_regions(
   regions_bed,
-  genes_gft,
+  genes_gtf,
   output_bed,
-  limit = 2^29,
+  limit = 2L^29L,
   shift_by = 1L
 )
 }
 \arguments{
-\item{regions_bed}{Path to a 3-column BED-like file with chromosome,
-start, and end coordinates. If the start position is not 0, it is assumed
-to be the start of a centromere.}
+\item{regions_bed}{Path to a 3-column BED-like file (chr, start, end).
+Columns should be TAB-delimited with chromosome name, region start
+(0-based), and region end coordinates.}
 
-\item{genes_gft}{Path to a GTF file containing gene annotations.}
+\item{genes_gtf}{Path to a GTF file containing gene annotations.
+Must contain standard 9 GTF columns. Comments starting with '#' are
+ignored.}
 
-\item{output_bed}{Path to the BED file that will be written with the final
-split intervals.}
+\item{output_bed}{Path to the BED file to be written. Directory must exist.}
 
-\item{limit}{Maximum allowed width (in bp) for each output interval. Default
-is 2^29 (512 million bp) as per Cell Ranger docs.}
+\item{limit}{Maximum allowed width (bp) for output intervals.
+Defaults to 2^29 (536,870,912 bp). Must be larger than any single gene
+plus the shift distance.}
 
-\item{shift_by}{Number of base pairs to shift a boundary to the right after
-the end of an overlapping gene.}
+\item{shift_by}{Number of base pairs to shift a boundary right when it falls
+inside a gene. Defaults to 1 bp.}
 }
 \value{
-The path to the written BED file.
+Invisible character: path to the written BED file.
 }
 \description{
 Builds BED-like split intervals from genomic regions and GTF gene
-annotations. If the start position in the genomic region is not 0, it is
-assumed to be the start of a centromere, and splitting is initiated from
-there. Proposed boundaries are shifted rightward when they fall inside
-a gene, and oversized chunks are re-split until boundaries are valid and
-segment widths are within the requested limit.
+annotations. If the start position in a genomic region is not 0, it is
+assumed to mark the start of a centromere and the region is split around
+that point. Proposed boundaries are shifted rightward when they fall inside
+gene intervals, and oversized chunks are repeatedly re-split until all
+segments satisfy the requested size limit.
+}
+\details{
+The function performs the following steps:
+\enumerate{
+\item Reads genomic regions and gene annotations from input files.
+\item Checks that the provided \code{limit} is feasible given gene positions.
+\item For each region, splits it at the centromere (if start > 0) and applies
+the size limit.
+\item Adjusts boundaries that fall within genes by shifting them right.
+\item Iteratively subdivides intervals exceeding the limit until all intervals
+satisfy the constraint.
+\item Writes final split regions to BED file.
+}
 }
 \examples{
-regions_bed <- "inst/extdata/IN0_toy_centromeres_for_gtf.bed"
-genes_gft <- "inst/extdata/A3_toy_all_scenarios_2chr.gtf"
-output_bed <- tempfile(fileext = ".bed")
-determine_split_regions(
-  regions_bed,
-  genes_gft,
-  output_bed,
-  limit = 92,
-  shift_by = 1
-)
+\dontrun{
+  determine_split_regions(
+    regions_bed = "chromosomes.bed",
+    genes_gtf = "genes.gtf",
+    output_bed = "split_regions.bed",
+    limit = 2L^29L,
+    shift_by = 1L
+  )
+}
 }

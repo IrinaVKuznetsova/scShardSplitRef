@@ -7,18 +7,38 @@
 process_gtf(gtf_path, split_regions_path)
 }
 \arguments{
-\item{gtf_path}{file path to the GTF file.}
+\item{gtf_path}{Character: file path to the GTF file.}
 
-\item{split_regions_path}{file path to a BED-like file containing split
-intervals with chromosome, start, and end columns.}
+\item{split_regions_path}{Character: file path to BED-like split intervals
+with chromosome, start, and end columns.}
 }
 \value{
-A data frame containing the updated GTF rows.
+Data frame with GTF data updated with split region identifiers
+(formatted as "chr:start-end") in place of the original chromosome column.
+Columns are: Chr (new region name), source, feature, start, end, score,
+strand, frame, attribute.
 }
 \description{
-Process the GTF file
+Assigns GTF features to split genomic regions by matching feature
+coordinates with split interval boundaries. Each feature must fit entirely
+within exactly one split region interval.
+}
+\details{
+The function:
+\enumerate{
+\item Validates input files (via \code{validate_inputs()})
+\item Assigns unique IDs to GTF features for tracking
+\item Formats split region names as "chr:start-"
+\item Matches each feature to the region it falls within
+\item Validates that matches are unambiguous (no feature matches multiple regions)
+\item Validates that all features match exactly one region
+\item Returns GTF with updated Chr column containing region names
+}
 }
 \examples{
-#TODO: Add examples of use for this fn.
+\dontrun{
+  result <- process_gtf("annotations.gtf", "split_regions.bed")
+  head(result)
+}
 
 }

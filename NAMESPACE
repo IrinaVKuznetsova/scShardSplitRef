@@ -2,3 +2,6 @@
 
 export(determine_split_regions)
 export(process_attributes_column)
+export(process_gtf)
+export(scShardSplitRef_options)
+export(validate_inputs)

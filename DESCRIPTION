@@ -23,8 +23,6 @@ License: GPL (>= 3)
 Depends: R (>= 4.3.0)
 Imports: 
     cli,
-    dplyr,
-    stringr,
     utils
 Suggests: 
     knitr,

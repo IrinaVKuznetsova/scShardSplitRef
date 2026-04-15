@@ -33,47 +33,119 @@ process_attributes_column <- function(
   genome_name,
   genome_version
 ) {
-  # Regular expression for matching attribute keys
-  pat <- sprintf("^(%s)\\s", paste(keep_attributes, collapse = "|"))
-
-  # Vectorised: for each attribute, split, filter by key, glue with ";"
-  filtered <- vapply(
-    strsplit(result$attribute, ";\\s*"),
-    function(parts) {
-      subparts <- grep(pat, parts, value = TRUE)
-      if (length(subparts)) {
-        sprintf("%s;", paste(subparts, collapse = "; "))
-      } else {
-        ""
-      }
-    },
-    character(1L)
-  )
-
-  if (any(filtered == "")) {
-    cli::cli_warn(c(
-      "Not all attribute fields were found in some rows.",
-      "i" = "{sum(filtered == '')} of {length(filtered)} rows are empty after
-      filtering."
-    ))
+  if (!dir.exists(out_path)) {
+    cli::cli_abort("Output directory does not exist: {.file {out_path}}")
   }
 
+  filtered <- .filter_attributes(result$attribute, keep_attributes)
+  .check_filtered_completeness(filtered, result$attribute)
+
   result$attribute <- filtered
+  output_file <- .build_output_filename(out_path, genome_name, genome_version)
 
-  output_file <- file.path(
-    out_path,
-    sprintf("B1_FINAL_MODIFIED_GTF_%s_%s.gtf", genome_name, genome_version)
+  .write_filtered_gtf(result, output_file)
+
+  cli::cli_inform("Finished writing processed GTF: {output_file}")
+
+  invisible(NULL)
+}
+
+#' Filter GTF attributes
+#'
+#' Extract and keep only specified attributes from GTF attribute column
+#'
+#' @param attributes Character vector of GTF attribute strings
+#' @param keep_attributes Character vector of attribute names to keep
+#'
+#' @return Character vector of filtered attribute strings
+#'
+#' @details
+#' Extracts key-value pairs from GTF attribute column and keeps only
+#' specified attributes in the original order.
+#'
+#' @dev
+.filter_attributes <- function(attributes, keep_attributes) {
+  filtered <- character(length(attributes))
+
+  for (i in seq_along(attributes)) {
+    attr_str <- attributes[i]
+    pairs <- strsplit(attr_str, ";\\s*")[[1]]
+    pairs <- pairs[nchar(pairs) > 0L]
+
+    kept_pairs <- character(0)
+
+    for (keep_attr in keep_attributes) {
+      pattern <- paste0("^", keep_attr, "\\s+")
+      matching <- pairs[grepl(pattern, pairs)]
+
+      if (length(matching) > 0L) {
+        kept_pairs <- c(kept_pairs, matching)
+      }
+    }
+
+    filtered[i] <- paste(kept_pairs, collapse = "; ")
+  }
+
+  filtered
+}
+
+#' Check filtered attributes completeness
+#'
+#' Verify that filtering didn't result in empty attributes
+#'
+#' @param filtered Character vector of filtered attributes
+#' @param original Character vector of original attributes
+#'
+#' @return Invisible TRUE if valid
+#'
+#' @dev
+.check_filtered_completeness <- function(filtered, original) {
+  empty_idx <- which(!nzchar(filtered) & nzchar(original) > 0L)
+
+  if (length(empty_idx) > 0L) {
+    cli::cli_warn(
+      "Warning: {length(empty_idx)} lines had no matching attributes.",
+      "Check your keep_attributes list."
+    )
+  }
+
+  invisible(TRUE)
+}
+
+#' Build output filename for filtered GTF
+#'
+#' @param out_path Character: output directory
+#' @param genome_name Character: genome name
+#' @param genome_version Character: genome version
+#'
+#' @return Character: full file path
+#'
+#' @dev
+.build_output_filename <- function(out_path, genome_name, genome_version) {
+  filename <- sprintf(
+    "B1_FINAL_MODIFIED_GTF_%s_%s.gtf",
+    genome_name,
+    genome_version
   )
+  file.path(out_path, filename)
+}
 
-  utils::write.table(
+#' Write filtered GTF file
+#'
+#' @param result Data frame with filtered GTF data
+#' @param output_file Character: output file path
+#'
+#' @return Invisible TRUE
+#'
+#' @dev
+.write_filtered_gtf <- function(result, output_file) {
+  invisible(utils::write.table(
     result,
     file = output_file,
     quote = FALSE,
     row.names = FALSE,
     col.names = FALSE,
     sep = "\t"
-  )
-
-  cli::cli_alert_success("Finished writing processed GTF: {output_file}")
-
+  ))
+  invisible(TRUE)
 }
