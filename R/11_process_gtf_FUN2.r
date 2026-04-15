@@ -1,7 +1,7 @@
 #' Process the GTF file
 #'
 #' @param gtf_path file path to the GTF file.
-#' @param split_regions_path file path to a BED-like file containing split 
+#' @param split_regions_path file path to a BED-like file containing split
 #' intervals with chromosome, start, and end columns.
 #'
 #' @examples
@@ -15,7 +15,10 @@ process_gtf <- function(
   split_regions_path
 ) {
   cli::cli_alert_info("Validating inputs and reading files...")
-  validated <- validate_inputs(gtf_path = gtf_path, bed_path = split_regions_path)
+  validated <- validate_inputs(
+    gtf_path = gtf_path,
+    bed_path = split_regions_path
+  )
   gtf_file <- validated$gtf
   split_regions <- validated$bed
 
@@ -46,14 +49,9 @@ process_gtf <- function(
   if (length(duplicate_matches) > 0L) {
     cli::cli_abort(c(
       "Ambiguous split-region matches detected for GTF features.",
-      "i" = paste(
-        "Feature IDs with multiple matches:",
-        paste(duplicate_matches, collapse = ", ")
-      ),
-      "i" = paste(
-        "Ensure the split-regions BED does not contain overlapping intervals",
-        "for the same chromosome."
-      )
+      "i" = "Feature IDs with multiple matches: {duplicate_matches}",
+      "i" = "Ensure the split-regions BED does not contain overlapping
+             intervals for the same chromosome."
     ))
   }
 
@@ -82,7 +80,9 @@ process_gtf <- function(
     ))
   }
 
-  cli::cli_alert_info("Assigning split-region sequence names to GTF features...")
+  cli::cli_alert_info(
+    "Assigning split-region sequence names to GTF features..."
+  )
   matched <- matched[
     match(gtf_file$unique_ID, matched$unique_ID),
     ,
@@ -105,3 +105,4 @@ process_gtf <- function(
   cli::cli_alert_success("Processing complete. Returning formatted GTF.")
   out
 }
+

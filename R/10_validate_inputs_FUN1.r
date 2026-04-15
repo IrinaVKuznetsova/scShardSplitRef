@@ -10,13 +10,13 @@ check_tab_file <- function(
   label,
   error_num
 ) {
-  lines <- suppressWarnings(readLines(path))
-  lines <- lines[!startsWith(lines, "#")]
+  tf <- suppressWarnings(readLines(path))
+  tf <- lines[!startsWith(lines, "#")]
   if (length(lines) == 0L) {
     return(invisible(NULL))
   }
-  split_lines <- strsplit(lines, "\t", fixed = TRUE)
-  field_counts <- vapply(split_lines, length, integer(1))
+  split_lines <- strsplit(tf, "\t", fixed = TRUE)
+  field_counts <- vapply(split_lines, lengths, integer(1))
   bad_min <- which(field_counts < min_fields)
   bad_max <- if (!is.na(max_fields)) {
     which(field_counts > max_fields)
@@ -33,16 +33,16 @@ check_tab_file <- function(
     cli::cli_abort(
       c(
         "ERROR {.val {error_num}}: Invalid {label} formatting.",
-        "Problematic line numbers: {.val {paste(bad, collapse = ', ')}}",
+        "Problematic line numbers: {bad}.",
         "Example problematic line:",
         "  {lines[bad[1]]}",
-        "Expected: {expected}",
+        "Expected: {expected}.",
         "This file must be TAB-delimited."
       ),
       .envir = environment()
     )
   }
-  invisible(NULL)
+  return(invisible(NULL))
 }
 
 #' Helper: Validate GTF and BED files
@@ -56,14 +56,16 @@ check_tab_file <- function(
 validate_inputs <- function(gtf_path, bed_path) {
   # --- ERROR 0: Check file paths ----------------------------------------------
   if (!file.exists(gtf_path)) {
-    cli::cli_abort("ERROR 0: GTF file does not exist. Check: {gtf_path}")
+    cli::cli_abort(
+      "ERROR 0: GTF file does not exist. Check: {.var gtf_path}
+      {gtf_path}",
+      .envir = environment()
+    )
   }
   if (!file.exists(bed_path)) {
     cli::cli_abort(
-      paste(
-        "ERROR 1: BED file does not exist. Check:",
-        bed_path
-      )
+      "ERROR 1: BED file does not exist. Check: {.var bed_path}, {bed_path}.",
+      .envir = environment()
     )
   }
 
@@ -119,11 +121,8 @@ validate_inputs <- function(gtf_path, bed_path) {
   if (length(invalid_ranges) > 0L) {
     cli::cli_abort(c(
       "ERROR 4: Invalid BED coordinates.",
-      "i" = "Each row must satisfy RegionStart < RegionEnd.",
-      "i" = paste(
-        "Problematic row numbers:",
-        paste(invalid_ranges, collapse = ", ")
-      )
+      "i" = "Each row must satisfy {.field RegionStart < RegionEnd}.",
+      "i" = "Problematic row numbers: {invalid_ranges}"
     ))
   }
 
