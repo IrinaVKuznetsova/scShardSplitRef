@@ -1,3 +1,51 @@
+#' Validate GTF and BED files
+#'
+#' Reads and validates GTF and BED files, checking for:
+#' - File existence
+#' - TAB-delimited format with correct number of columns
+#' - Valid BED coordinate ranges (start < end)
+#'
+#' @param gtf_path Character: file path to GTF file.
+#' @param bed_path Character: file path to BED file.
+#'
+#' @return List with named elements:
+#'   - `gtf`: Data frame with 9 GTF columns (Chr, source, feature, start,
+#'     end, score, strand, frame, attribute)
+#'   - `bed`: Data frame with at least 3 BED columns (Chr, RegionStart,
+#'      RegionEnd) plus any additional columns from the input file.
+#'
+#' @details
+#' Performs four checks in sequence:
+#' 1. Both files exist
+#' 2. GTF has >= 9 columns
+#' 3. BED has >= 3 columns
+#' 4. All BED ranges satisfy RegionStart < RegionEnd
+#'
+#' @examples
+#' \dontrun{
+#'   result <- .validate_inputs("genes.gtf", "regions.bed")
+#'   gtf <- result$gtf
+#'   bed <- result$bed
+#' }
+#'
+#' @export
+validate_inputs <- function(gtf_path, bed_path) {
+  .check_files_exist(gtf_path, bed_path)
+
+  #TODO: streamline this so we aren't reading the files 2X each
+  .check_tab_file(gtf_path, min_fields = 9L, label = "GTF")
+  .check_tab_file(bed_path, min_fields = 3L, label = "BED")
+
+  gtf <- .read_and_format_gtf(gtf_path)
+  bed <- .read_and_format_bed(bed_path)
+
+  .validate_bed_ranges(bed)
+
+  cli::cli_inform("{.bold All files loaded and validated successfully.}")
+
+  return(list(gtf = gtf, bed = bed))
+}
+
 #' Check TAB-delimited file structure
 #'
 #' Validates that a file has the correct number of TAB-separated fields.
@@ -7,7 +55,6 @@
 #' @param min_fields Integer: minimum number of required fields per line.
 #' @param label Character: human-readable file type label (*e.g.*, "GTF", "BED")
 #'   for error messages.
-#' @param error_num Integer: error code number for identification in messages.
 #' @param max_fields Integer or `NA`: maximum number of allowed fields.
 #'   If `NA` (default), no upper limit is enforced.
 #' @return Invisible NULL. Raises an error if validation fails.
@@ -22,8 +69,7 @@
 #'   .check_tab_file(
 #'     "annotations.gtf",
 #'     min_fields = 9L,
-#'     label = "GTF",
-#'     error_num = 2L
+#'     label = "GTF"
 #'   )
 #' }
 #'
@@ -32,7 +78,6 @@
   path,
   min_fields,
   label,
-  error_num,
   max_fields = NA_integer_
 ) {
   lines <- readLines(path)
@@ -43,7 +88,7 @@
     return(invisible(TRUE))
   }
 
-  split_lines <- strsplit(lines, "\t")
+  split_lines <- strsplit(lines, "\t", fixed = TRUE)
   field_counts <- lengths(split_lines)
 
   invalid_idx <- .find_invalid_field_counts(
@@ -162,53 +207,6 @@
   }
 }
 
-# ============================================================================
-
-#' Validate GTF and BED files
-#'
-#' Reads and validates GTF and BED files, checking for:
-#' - File existence
-#' - TAB-delimited format with correct number of columns
-#' - Valid BED coordinate ranges (start < end)
-#'
-#' @param gtf_path Character: file path to GTF file.
-#' @param bed_path Character: file path to BED file.
-#'
-#' @return List with named elements:
-#'   - `gtf`: Data frame with 9 GTF columns (Chr, source, feature, start,
-#'     end, score, strand, frame, attribute)
-#'   - `bed`: Data frame with at least 3 BED columns (Chr, RegionStart,
-#'      RegionEnd) plus any additional columns from the input file.
-#'
-#' @details
-#' Performs four checks in sequence:
-#' 1. Both files exist (ERROR 0 for GTF, ERROR 1 for BED)
-#' 2. GTF has >= 9 columns (ERROR 2)
-#' 3. BED has >= 3 columns (ERROR 3)
-#' 4. All BED ranges satisfy RegionStart < RegionEnd (ERROR 4)
-#'
-#' @examples
-#' \dontrun{
-#'   result <- .validate_inputs("genes.gtf", "regions.bed")
-#'   gtf <- result$gtf
-#'   bed <- result$bed
-#' }
-#'
-#' @export
-validate_inputs <- function(gtf_path, bed_path) {
-  .check_files_exist(gtf_path, bed_path)
-  .check_tab_file(gtf_path, min_fields = 9L, label = "GTF", error_num = 2L)
-  .check_tab_file(bed_path, min_fields = 3L, label = "BED", error_num = 3L)
-
-  gtf <- .read_and_format_gtf(gtf_path)
-  bed <- .read_and_format_bed(bed_path)
-
-  .validate_bed_ranges(bed)
-
-  cli::cli_inform("All files loaded and validated successfully.")
-
-  return(list(gtf = gtf, bed = bed))
-}
 
 #' Check that files exist
 #'

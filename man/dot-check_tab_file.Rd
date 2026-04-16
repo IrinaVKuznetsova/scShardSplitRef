@@ -4,7 +4,7 @@
 \alias{.check_tab_file}
 \title{Check TAB-delimited file structure}
 \usage{
-.check_tab_file(path, min_fields, label, error_num, max_fields = NA_integer_)
+.check_tab_file(path, min_fields, label, max_fields = NA_integer_)
 }
 \arguments{
 \item{path}{Character: file path to validate.}
@@ -13,8 +13,6 @@
 
 \item{label}{Character: human-readable file type label (\emph{e.g.}, "GTF", "BED")
 for error messages.}
-
-\item{error_num}{Integer: error code number for identification in messages.}
 
 \item{max_fields}{Integer or \code{NA}: maximum number of allowed fields.
 If \code{NA} (default), no upper limit is enforced.}
@@ -36,8 +34,7 @@ Reports line numbers and examples of problematic lines.
   .check_tab_file(
     "annotations.gtf",
     min_fields = 9L,
-    label = "GTF",
-    error_num = 2L
+    label = "GTF"
   )
 }
 

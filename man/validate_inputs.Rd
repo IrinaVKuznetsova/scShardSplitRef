@@ -31,10 +31,10 @@ Reads and validates GTF and BED files, checking for:
 \details{
 Performs four checks in sequence:
 \enumerate{
-\item Both files exist (ERROR 0 for GTF, ERROR 1 for BED)
-\item GTF has >= 9 columns (ERROR 2)
-\item BED has >= 3 columns (ERROR 3)
-\item All BED ranges satisfy RegionStart < RegionEnd (ERROR 4)
+\item Both files exist
+\item GTF has >= 9 columns
+\item BED has >= 3 columns
+\item All BED ranges satisfy RegionStart < RegionEnd
 }
 }
 \examples{
