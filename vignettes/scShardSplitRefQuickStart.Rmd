@@ -1,7 +1,7 @@
 ---
 title: "scShardSplitRef"
 author: "Irina Kuznetsova"
-output: rmarkdown::md_document    ####html_vignette
+output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{scShardSplitRef}
   %\VignetteEngine{knitr::rmarkdown}
@@ -17,78 +17,72 @@ knitr::opts_chunk$set(
 
 
 
-## 1. Package overview  
+## 1. Package overview
 
-*scShardSplitRef* designed for researchers working with single-cell data from species that require building a custom reference genome, particularly when one or more contigs in the reference FASTA exceed the Cell Ranger limit of 536.8Mb (2^29 bases). *scShardSplitRef* automates this splitting process, generating contig fragments that comply with Cell Ranger requirements. The software outputs FASTA and GTF files containing the split contigs, which can be directly processed by `cellranger-arc mkref`. 
+*scShardSplitRef* designed for researchers working with single-cell data from species that require building a custom reference genome, particularly when one or more contigs in the reference FASTA exceed the Cell Ranger limit of 536.8Mb (2^29 bases).
+*scShardSplitRef* automates this splitting process, generating contig fragments that comply with Cell Ranger requirements.
+The software outputs FASTA and GTF files containing the split contigs, which can be directly processed by `cellranger-arc mkref`. 
 
 This real-world example demonstrates a step-by-step workflow for downloading and preparing barley (MOREXv3) reference files (GTF and FASTA) for `cellranger-arc mkref`. 
 
+## 2. Accessing Package Help and Vignettes
 
+```{r, eval=TRUE}
+library(scShardSplitRef)
+help(package = "scShardSplitRef")
 
+vignette(package = "scShardSplitRef")
 
-## 2. Installation  
-Start by loading required packages:  
-
-```{r}
-library("dplyr"); library("stringr"); library("utils")
-``` 
-
-
-
-## 3. Accessing Package Help and Vignettes  
-
-#library(scShardSplitRef)
-#help(package="scShardSplitRef")
-#vignette(package="scShardSplitRef")
-#vignette(package="scShardSplitRefQuickStart", "scShardSplitRefDetailed")
-#?scShardSplitRef
-  
-
+help("scShardSplitRef")
+```
 
 ## 4. Quick start
 
-## **RUN THE ANALYSIS BY CALLING THE FUNCTIONS**
-##### 1) Check if gene features are overlapping with the centromere position  
+### 1) Check if gene features are overlapping with the centromere position
 
-```
-gtf_path_T="/tests/testthat/testdata/A3_toy_all_scenarios_2chr.gtf"
-centromere_path_T="/tests/testthat/testdata/IN0_toy_centromeres_for_gtf.bed"
-out_path_T="/tests/testthat/testdata/testoutput/"
-centromere_split = prepare_centromere_split(
-    gtf_path_T, 
-    centromere_path_T, 
-    out_path_T
-    )
-```
+```{r}
+ regions <- system.file(
+   "extdata",
+   "IN0_toy_centromeres_for_gtf.bed",
+   package = "scShardSplitRef",
+   mustWork = TRUE
+ )
+ genes <- system.file(
+   "extdata",
+   "A3_toy_all_scenarios_2chr.gtf",
+   package = "scShardSplitRef",
+   mustWork = TRUE
+ )
 
-######## Output message:
-
-```
-No overlapping gene features detected ? use the original centromere coordinates BED file.
-Use:
-tests/testthat/testdata/IN0_toy_centromeres_for_gtf.bed as the input to modify GTF file.
-and:
-/tests/testthat/testdata/testoutput/IN0_original_centromeres_for_FASTA.bed for splitting FASTA
-```
-
-######## Depending on the input data, the message could be:  
-
-```Overlapping gene features with centromere coordinates detected!
-re-calculating split coordinates for these chromosomes
-Use:
-/tests/testthat/testdata/testoutput/RECAL1_FINAL_SPLIT_coord_for_GTF.bed as the input to modify GTF file.
-and:
-/tests/testthat/testdata/testoutput/RECAL1_FINAL_SPLIT_coord_for_FASTA.bed
- as the input for splitting FASTA.
+ determine_split_regions(
+   regions_bed = regions,
+   genes_gtf = genes,
+   output_bed = file.path(tempdir(), "split_regions.bed"),
+   limit = 2L^29L,
+   shift_by = 1L
+ )
 ```
 
 
-##### 2) Validate inputs 
-```
-centromere_path2="/tests/testthat/testdata/testoutput/RECAL1_FINAL_SPLIT_coord_for_GTF.bed" ### Depending on the input data, the input might be tests/testthat/testdata/IN0_toy_centromeres_for_gtf.bedtests/testthat/testdata/IN0_toy_centromeres_for_gtf.bed
+### 2) Validate inputs
+
+```{r}
+#TODO: Determine which file from `inst/extdata` is provided for the gtf path
+gtf_path <- system.file(
+  "extdata",
+  ""
+)
+
+centromere_path2 <- system.file(
+  "extdata",
+  "RECAL1_FINAL_SPLIT_coord_for_GTF.bed",
+  package = "scShardSplitRef",
+  mustWork = TRUE
+)
 validate_inputs(
-    gtf_path, 
-    centromere_path2)
+  gtf_path,
+  centromere_path2
+)
 ```
 
 #### 3) Process GTF
@@ -120,28 +114,8 @@ final_result = process_attributes_column(
     )
 ```  
 
+## 6. Acknowledgements
 
+This work was supported by resources provided by the [Pawsey Supercomputing Research Centre's](https://pawsey.org.au/) Nimbus Research Cloud (<https://doi.org/10.48569/v0j3-qd51>), with funding from the Australian Government and the Government of Western Australia.
+#TODO: add GRDC AAGI project support code
 
-
-
-
-
-## 5. Session Info  
-
-```{r session-info}
-sessionInfo()
-```
-
-
-
-## 6. Acknowledgements  
-This work was supported by resources provided by the [Pawsey Supercomputing Research Centres](https://pawsey.org.au/) Nimbus Research Cloud (https://doi.org/10.48569/v0j3-qd51), with funding from the Australian Government and the Government of Western Australia.
-
-
-## not used , will be removed
-#Start by installing the BiocManager package:  
-#```{r}
-#if (!requireNamespace("BiocManager", quietly = TRUE))
-#    install.packages("BiocManager")
-#BiocManager::install("scShardSplitRef")
-#```  
