@@ -67,10 +67,9 @@ help("scShardSplitRef")
 ### 2) Validate inputs
 
 ```{r}
-#TODO: Determine which file from `inst/extdata` is provided for the gtf path
 gtf_path <- system.file(
   "extdata",
-  ""
+  "B1_FINAL_MODIFIED_GTF_BarleyMOREXV3_toy_v51_ENSEMBL.gtf"
 )
 
 centromere_path2 <- system.file(
@@ -117,5 +116,7 @@ final_result = process_attributes_column(
 ## 6. Acknowledgements
 
 This work was supported by resources provided by the [Pawsey Supercomputing Research Centre's](https://pawsey.org.au/) Nimbus Research Cloud (<https://doi.org/10.48569/v0j3-qd51>), with funding from the Australian Government and the Government of Western Australia.
-#TODO: add GRDC AAGI project support code
+
+GRDC AAGI project support code: AAGI–CU–RD–SNB
+#TODO: Is there any standardised GRD message for acknowledgment?  
 
