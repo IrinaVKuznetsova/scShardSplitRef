@@ -38,10 +38,21 @@ Performs four checks in sequence:
 }
 }
 \examples{
-\dontrun{
-  result <- .validate_inputs("genes.gtf", "regions.bed")
+  genes <- system.file("extdata",
+             "A3_toy_all_scenarios_2chr.gtf",
+             package = "scShardSplitRef",
+             mustWork = TRUE)
+  regions <- system.file("extdata",
+                   "IN0_toy_centromeres_for_gtf.bed",
+                   package = "scShardSplitRef",
+                   mustWork = TRUE)
+
+  result <- validate_inputs(genes, regions)
+
   gtf <- result$gtf
   bed <- result$bed
-}
+
+  gtf
+  bed
 
 }

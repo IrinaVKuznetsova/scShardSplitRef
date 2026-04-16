@@ -4,7 +4,7 @@
 \alias{.read_and_format_gtf}
 \title{Read and format GTF file}
 \usage{
-.read_and_format_gtf(gtf_path)
+.read_and_format_gtf(gtf)
 }
 \arguments{
 \item{gtf_path}{Character: path to GTF file.}

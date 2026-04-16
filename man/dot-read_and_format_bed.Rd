@@ -4,7 +4,7 @@
 \alias{.read_and_format_bed}
 \title{Read and format BED file}
 \usage{
-.read_and_format_bed(bed_path)
+.read_and_format_bed(bed)
 }
 \arguments{
 \item{bed_path}{Character: path to BED file.}
