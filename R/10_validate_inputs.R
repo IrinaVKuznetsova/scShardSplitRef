@@ -22,22 +22,32 @@
 #' 4. All BED ranges satisfy RegionStart < RegionEnd
 #'
 #' @examples
-#' \dontrun{
-#'   result <- .validate_inputs("genes.gtf", "regions.bed")
+#'   genes <- system.file("extdata",
+#'              "A3_toy_all_scenarios_2chr.gtf",
+#'              package = "scShardSplitRef",
+#'              mustWork = TRUE)
+#'   regions <- system.file("extdata",
+#'                    "IN0_toy_centromeres_for_gtf.bed",
+#'                    package = "scShardSplitRef",
+#'                    mustWork = TRUE)
+#'
+#'   result <- validate_inputs(genes, regions)
+#'
 #'   gtf <- result$gtf
 #'   bed <- result$bed
-#' }
+#'
+#'   gtf
+#'   bed
 #'
 #' @export
 validate_inputs <- function(gtf_path, bed_path) {
   .check_files_exist(gtf_path, bed_path)
 
-  #TODO: streamline this so we aren't reading the files 2X each
-  .check_tab_file(gtf_path, min_fields = 9L, label = "GTF")
-  .check_tab_file(bed_path, min_fields = 3L, label = "BED")
+  gtf <- .check_tab_file(gtf_path, min_fields = 9L, label = "GTF")
+  bed <- .check_tab_file(bed_path, min_fields = 3L, label = "BED")
 
-  gtf <- .read_and_format_gtf(gtf_path)
-  bed <- .read_and_format_bed(bed_path)
+  gtf <- .read_and_format_gtf(gtf)
+  bed <- .read_and_format_bed(bed)
 
   .validate_bed_ranges(bed)
 
@@ -72,7 +82,7 @@ validate_inputs <- function(gtf_path, bed_path) {
 #'     label = "GTF"
 #'   )
 #' }
-#'
+#' @returns The validated contents of the file, else errors if invalid.
 #' @dev
 .check_tab_file <- function(
   path,
@@ -103,7 +113,7 @@ validate_inputs <- function(gtf_path, bed_path) {
     )
   }
 
-  invisible(TRUE)
+  return(lines)
 }
 
 #' Find lines with invalid field counts
@@ -207,7 +217,6 @@ validate_inputs <- function(gtf_path, bed_path) {
   }
 }
 
-
 #' Check that files exist
 #'
 #' Validates that both GTF and BED file paths point to existing files.
@@ -226,12 +235,12 @@ validate_inputs <- function(gtf_path, bed_path) {
 .check_files_exist <- function(gtf_path, bed_path) {
   if (!file.exists(gtf_path)) {
     cli::cli_abort(
-      "GTF file does not exist: {.file {gtf_path}}"
+      "ERROR 0: GTF file does not exist: {.file {gtf_path}}"
     )
   }
   if (!file.exists(bed_path)) {
     cli::cli_abort(
-      "BED file does not exist: {.file {bed_path}}"
+      "ERROR 1: BED file does not exist: {.file {bed_path}}"
     )
   }
   return(invisible(TRUE))
@@ -253,9 +262,9 @@ validate_inputs <- function(gtf_path, bed_path) {
 #' }
 #'
 #' @dev
-.read_and_format_gtf <- function(gtf_path) {
+.read_and_format_gtf <- function(gtf) {
   gtf <- utils::read.table(
-    gtf_path,
+    text = paste(gtf, collapse = "\n"),
     sep = "\t",
     header = FALSE,
     quote = "",
@@ -294,9 +303,9 @@ validate_inputs <- function(gtf_path, bed_path) {
 #' }
 #'
 #' @dev
-.read_and_format_bed <- function(bed_path) {
+.read_and_format_bed <- function(bed) {
   bed <- utils::read.table(
-    bed_path,
+    text = paste(bed, collapse = "\n"),
     sep = "\t",
     header = FALSE,
     quote = "",
