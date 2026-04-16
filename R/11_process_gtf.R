@@ -34,7 +34,7 @@ process_gtf <- function(
   gtf_path,
   split_regions_path
 ) {
-  cli::cli_inform("Validating inputs and reading files...")
+  cli::cli_inform("Validating inputs and reading files.../n")
 
   validated <- .validate_inputs(
     gtf_path = gtf_path,
@@ -54,11 +54,11 @@ process_gtf <- function(
   matched <- .match_features_to_regions(gtf_file, split_regions)
   .check_match_validity(matched, gtf_file)
 
-  cli::cli_inform("Assigning split-region names to GTF features...")
+  cli::cli_inform("Assigning split-region names to GTF features.../n")
 
   out <- .build_output_gtf(matched, gtf_file)
 
-  cli::cli_inform("Processing complete. Returning formatted GTF.")
+  cli::cli_inform("{.bold Processing complete. Returning formatted GTF.}")
   out
 }
 
@@ -181,8 +181,8 @@ process_gtf <- function(
   if (length(duplicates) > 0L) {
     cli::cli_abort(
       c(
-        x = "Ambiguous split-region matches detected.",
-        i = "GTF feature IDs with multiple matches: {duplicates}",
+        "Ambiguous split-region matches detected.",
+        x = "GTF feature IDs with multiple matches: {duplicates}",
         i = "Ensure split-region BED has non-overlapping intervals."
       )
     )
@@ -233,8 +233,8 @@ process_gtf <- function(
   )
   cli::cli_abort(
     c(
-      x = "Some GTF features do not fit within any split-region interval.",
-      i = "Unmatched features: {length(missing_ids)}",
+      "Some GTF features do not fit within any split-region interval.",
+      x = "Unmatched features: {length(missing_ids)}",
       i = "Examples: {toString(missing_preview)}",
       i = "Ensure split-regions BED fully covers annotation coordinates."
     )
@@ -265,7 +265,7 @@ process_gtf <- function(
 .build_output_gtf <- function(matched, gtf_file) {
   # Ensure NEW column exists
   if (!"NEW" %in% colnames(matched)) {
-    cli::cli_abort("NEW column not found in matched data")
+    cli::cli_abort("NEW column not found in matched data.")
   }
 
   # Sort by NEW column (region name)

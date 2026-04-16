@@ -55,7 +55,7 @@
 
   if (length(invalid_idx) > 0L) {
     cli::cli_abort(
-      "ERROR {error_num}: Invalid {label} file format at line(s) {invalid_idx}"
+      "ERROR {error_num}: Invalid {label} file format at line{?s} {invalid_idx}"
     )
   }
 
@@ -126,8 +126,8 @@
 
   cli::cli_abort(
     c(
-      x = "ERROR {.val {error_num}}: Invalid {label} formatting.",
-      i = "Problematic line numbers: {bad_lines}.",
+      "{.val {error_num}}: Invalid {label} formatting.",
+      x = "Problematic line numbers: {bad_lines}.",
       i = "Example: {example_bad}",
       i = "Expected: {expected}",
       i = "File must be TAB-delimited."
@@ -229,12 +229,12 @@ validate_inputs <- function(gtf_path, bed_path) {
 .check_files_exist <- function(gtf_path, bed_path) {
   if (!file.exists(gtf_path)) {
     cli::cli_abort(
-      "ERROR 0: GTF file does not exist: {.file {gtf_path}}"
+      "GTF file does not exist: {.file {gtf_path}}"
     )
   }
   if (!file.exists(bed_path)) {
     cli::cli_abort(
-      "ERROR 1: BED file does not exist: {.file {bed_path}}"
+      "BED file does not exist: {.file {bed_path}}"
     )
   }
   return(invisible(TRUE))
@@ -333,9 +333,9 @@ validate_inputs <- function(gtf_path, bed_path) {
   if (length(invalid_ranges) > 0L) {
     cli::cli_abort(
       c(
-        x = "ERROR 4: Invalid BED coordinates.",
-        i = "Each row must satisfy {.field RegionStart < RegionEnd}.",
-        i = "Problematic rows: {invalid_ranges}"
+        "Invalid BED coordinates.",
+        x = "Each row must satisfy {.field RegionStart < RegionEnd}.",
+        i = "Problematic row{?s}: {invalid_ranges}"
       )
     )
   }

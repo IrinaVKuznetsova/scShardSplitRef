@@ -45,7 +45,7 @@ process_attributes_column <- function(
 
   .write_filtered_gtf(result, output_file)
 
-  cli::cli_inform("Finished writing processed GTF: {output_file}")
+  cli::cli_inform("{.bold Finished writing processed GTF: {output_file}}")
 
   invisible(NULL)
 }
@@ -104,8 +104,10 @@ process_attributes_column <- function(
 
   if (length(empty_idx) > 0L) {
     cli::cli_warn(
-      "Warning: {length(empty_idx)} lines had no matching attributes.",
-      "Check your keep_attributes list."
+      c(
+        "{length(empty_idx)} lines had no matching attributes.",
+        i = "Check your keep_attributes list."
+      )
     )
   }
 
