@@ -51,17 +51,28 @@ the size limit.
 \item Adjusts boundaries that fall within genes by shifting them right.
 \item Iteratively subdivides intervals exceeding the limit until all intervals
 satisfy the constraint.
-\item Writes final split regions to BED file.
+\item Writes final split regions to BED file in the active \R session's
+\code{tempdir()}.
 }
 }
 \examples{
-\dontrun{
+  # load example files from this package and write the output bed file to
+  # R's tempdir()
+
+  chromosomes <- system.file("extdata",
+                   "IN0_toy_centromeres_for_gtf.bed",
+                   package = "scShardSplitRef",
+                   mustWork = TRUE)
+  genes <- system.file("extdata",
+             "A3_toy_all_scenarios_2chr.gtf",
+             package = "scShardSplitRef",
+             mustWork = TRUE)
+
   determine_split_regions(
-    regions_bed = "chromosomes.bed",
-    genes_gtf = "genes.gtf",
-    output_bed = "split_regions.bed",
+    regions_bed = chromosomes,
+    genes_gtf = genes,
+    output_bed = file.path(tempdir(), "split_regions.bed"),
     limit = 2L^29L,
     shift_by = 1L
   )
-}
 }
