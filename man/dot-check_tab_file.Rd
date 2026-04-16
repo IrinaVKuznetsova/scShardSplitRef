@@ -4,20 +4,20 @@
 \alias{.check_tab_file}
 \title{Check TAB-delimited file structure}
 \usage{
-.check_tab_file(path, min_fields, max_fields = NA_integer_, label, error_num)
+.check_tab_file(path, min_fields, label, error_num, max_fields = NA_integer_)
 }
 \arguments{
 \item{path}{Character: file path to validate.}
 
 \item{min_fields}{Integer: minimum number of required fields per line.}
 
-\item{max_fields}{Integer or NA: maximum number of allowed fields.
-If NA (default), no upper limit is enforced.}
-
-\item{label}{Character: human-readable file type label (e.g., "GTF", "BED")
+\item{label}{Character: human-readable file type label (\emph{e.g.}, "GTF", "BED")
 for error messages.}
 
 \item{error_num}{Integer: error code number for identification in messages.}
+
+\item{max_fields}{Integer or \code{NA}: maximum number of allowed fields.
+If \code{NA} (default), no upper limit is enforced.}
 }
 \value{
 Invisible NULL. Raises an error if validation fails.
