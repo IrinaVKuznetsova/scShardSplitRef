@@ -299,12 +299,16 @@ determine_split_regions <- function(
 #' @dev
 .validate_bed_coordinates <- function(start, end, chr) {
   if (start < 0L) {
-    cli::cli_abort("Region start must be >= 0 for BED coordinates (chr={chr}).")
+    cli::cli_abort(
+      "Region start must be >= 0 for BED coordinates ({.var chr})
+      ={chr})."
+    )
   }
   if (start >= end) {
     cli::cli_abort(
-      "Invalid BED region: start ({start}) must be < end ({end}) for \\
-       chr={chr}."
+      "Invalid BED region: {.var start} ({start}) must be < {.var end} ({end})
+      for \\
+      {.var chr}={chr}."
     )
   }
   return(invisible(TRUE))
