@@ -5,12 +5,11 @@
 #'
 #' @param path Character: file path to validate.
 #' @param min_fields Integer: minimum number of required fields per line.
-#' @param max_fields Integer or NA: maximum number of allowed fields.
-#'   If NA (default), no upper limit is enforced.
-#' @param label Character: human-readable file type label (e.g., "GTF", "BED")
+#' @param label Character: human-readable file type label (*e.g.*, "GTF", "BED")
 #'   for error messages.
 #' @param error_num Integer: error code number for identification in messages.
-#'
+#' @param max_fields Integer or `NA`: maximum number of allowed fields.
+#'   If `NA` (default), no upper limit is enforced.
 #' @return Invisible NULL. Raises an error if validation fails.
 #'
 #' @details
@@ -32,13 +31,13 @@
 .check_tab_file <- function(
   path,
   min_fields,
-  max_fields = NA_integer_,
   label,
-  error_num
+  error_num,
+  max_fields = NA_integer_
 ) {
   lines <- readLines(path)
-  lines <- lines[!grepl("^#", lines)]
-  lines <- lines[nchar(lines) > 0L]
+  lines <- lines[!startsWith("#", lines)]
+  lines <- lines[nzchar(lines)]
 
   if (length(lines) == 0L) {
     return(invisible(TRUE))
@@ -55,7 +54,7 @@
 
   if (length(invalid_idx) > 0L) {
     cli::cli_abort(
-      "ERROR {error_num}: Invalid {label} file format at line{?s} {invalid_idx}"
+      "{error_num}: Invalid {label} file format at line{?s} {invalid_idx}"
     )
   }
 
