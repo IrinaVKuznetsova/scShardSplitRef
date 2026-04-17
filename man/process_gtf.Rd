@@ -4,41 +4,44 @@
 \alias{process_gtf}
 \title{Process the GTF file}
 \usage{
-process_gtf(gtf_path, split_regions_path)
+process_gtf(gtf_path, centromere_path, unchar_region, mito, chloro)
 }
 \arguments{
-\item{gtf_path}{Character: file path to the GTF file.}
+\item{gtf_path}{A string representing the file path to the GTF file.}
 
-\item{split_regions_path}{Character: file path to BED-like split intervals
-with chromosome, start, and end columns.}
+\item{centromere_path}{A string representing the file path to the centromere
+coordinates BED file.}
+
+\item{unchar_region}{A string specifying the pattern for uncharacterized
+region chromosome names.}
+
+\item{mito}{A string specifying the mitochondrial chromosome name.}
+
+\item{chloro}{A string specifying the chloroplast chromosome name.}
 }
 \value{
-Data frame with GTF data updated with split region identifiers
-(formatted as "chr:start-end") in place of the original chromosome column.
-Columns are: Chr (new region name), source, feature, start, end, score,
-strand, frame, attribute.
+A data frame with formatted GTF columns.
 }
 \description{
-Assigns GTF features to split genomic regions by matching feature
-coordinates with split interval boundaries. Each feature must fit entirely
-within exactly one split region interval.
-}
-\details{
-The function:
-\enumerate{
-\item Validates input files (via \code{validate_inputs()})
-\item Assigns unique IDs to GTF features for tracking
-\item Formats split region names as "chr:start-"
-\item Matches each feature to the region it falls within
-\item Validates that matches are unambiguous (no feature matches multiple regions)
-\item Validates that all features match exactly one region
-\item Returns GTF with updated Chr column containing region names
-}
+Process the GTF file
 }
 \examples{
-\dontrun{
-  result <- process_gtf("annotations.gtf", "split_regions.bed")
-  head(result)
-}
+
+gtf <- system.file("extdata",
+         "A3_toy_all_scenarios_2chr.gtf",
+         package = "scShardSplitRef",
+         mustWork = TRUE
+         )
+bed <- system.file("extdata",
+                   "IN0_toy_centromeres_for_gtf.bed",
+                   package = "scShardSplitRef",
+                   mustWork = TRUE)
+result <- process_gtf(
+   gtf_path = gtf,
+   centromere_path = bed,
+   unchar_region = "CAJHDD.*",
+   mito = "Mt",
+   chloro = "Pt"
+   )
 
 }
