@@ -15,19 +15,17 @@ knitr::opts_chunk$set(
 )
 ```
 
-
-
 ## 1. Package overview
 
-*scShardSplitRef* designed for researchers working with single-cell data from species that require building a custom reference genome, particularly when one or more contigs in the reference FASTA exceed the Cell Ranger limit of 536.8Mb (2^29 bases).
+*scShardSplitRef* designed for researchers working with single-cell data from species that require building a custom reference genome, particularly when one or more contigs in the reference FASTA exceed the Cell Ranger limit of 536.8Mb (2\^29 bases).
 *scShardSplitRef* automates this splitting process, generating contig fragments that comply with Cell Ranger requirements.
-The software outputs FASTA and GTF files containing the split contigs, which can be directly processed by `cellranger-arc mkref`. 
+The software outputs FASTA and GTF files containing the split contigs, which can be directly processed by `cellranger-arc mkref`.
 
-This real-world example demonstrates a step-by-step workflow for downloading and preparing barley (MOREXv3) reference files (GTF and FASTA) for `cellranger-arc mkref`. 
+This real-world example demonstrates a step-by-step workflow for downloading and preparing barley (MOREXv3) reference files (GTF and FASTA) for `cellranger-arc mkref`.
 
 ## 2. Accessing Package Help and Vignettes
 
-```{r, eval=TRUE}
+```{r, eval=TRUE, setup}
 library(scShardSplitRef)
 help(package = "scShardSplitRef")
 
@@ -40,7 +38,7 @@ help("scShardSplitRef")
 
 ### 1) Check if gene features are overlapping with the centromere position
 
-```{r}
+```{r, check_gene_features}
  regions <- system.file(
    "extdata",
    "IN0_toy_centromeres_for_gtf.bed",
@@ -63,13 +61,14 @@ help("scShardSplitRef")
  )
 ```
 
-
 ### 2) Validate inputs
 
-```{r}
+```{r, validate_inputs}
 gtf_path <- system.file(
   "extdata",
-  "B1_FINAL_MODIFIED_GTF_BarleyMOREXV3_toy_v51_ENSEMBL.gtf"
+  "A3_toy_all_scenarios_2chr.gtf",
+  package = "scShardSplitRef",
+  mustWork = TRUE
 )
 
 centromere_path2 <- system.file(
@@ -78,45 +77,45 @@ centromere_path2 <- system.file(
   package = "scShardSplitRef",
   mustWork = TRUE
 )
+
 validate_inputs(
   gtf_path,
   centromere_path2
 )
 ```
 
-#### 3) Process GTF
-```
-unchar_region="CAJHDD"
-mito="Mt"
-chloro="Pt"
-processed_GTF_First_Fith_Sixth_Col = process_gtf(
-    gtf_path, 
-    centromere_path2, 
-    unchar_region, 
-    mito, 
-    chloro
-    )
+### 3) Process GTF
+
+```{r, process_gtf}
+processed_GTF_First_Fith_Sixth_Col <- process_gtf(
+  gtf_path,
+  centromere_path2
+)
+
+processed_GTF_First_Fith_Sixth_Col
 ```
 
-#### 4) Process 9th column of the GTF file
-```
-keep_attributes= c("gene_id", "transcript_id", "gene_name")
-out_path="testthat/testdata/testoutput/"
-genome_name ="BarleyMOREXV3_toy"
-genome_version ="v51_ENSEMBL"
-final_result = process_attributes_column(
-    processed_GTF_First_Fith_Sixth_Col, 
-    keep_attributes,
-    out_path,
-    genome_name,
-    genome_version
-    )
-```  
+### 4) Process 9th column of the GTF file
 
-## 6. Acknowledgements
+```{r, process_col_9}
+keep_attributes <- c("gene_id", "transcript_id", "gene_name")
+out_path <- tempdir() # write only to R's tempdirectory
+genome_name <- "BarleyMOREXV3_toy"
+genome_version <- "v51_ENSEMBL"
+
+final_result <- process_attributes_column(
+  result = processed_GTF_First_Fith_Sixth_Col,
+  keep_attributes,
+  out_path,
+  genome_name,
+  genome_version
+)
+
+final_result
+```
+
+## Acknowledgements
 
 This work was supported by resources provided by the [Pawsey Supercomputing Research Centre's](https://pawsey.org.au/) Nimbus Research Cloud (<https://doi.org/10.48569/v0j3-qd51>), with funding from the Australian Government and the Government of Western Australia.
 
-GRDC AAGI project support code: AAGI–CU–RD–SNB
-#TODO: Is there any standardised GRD message for acknowledgment?  
-
+GRDC AAGI project support code: AAGI–CU–RD–SNB #TODO: Is there any standardised GRD message for acknowledgment?
