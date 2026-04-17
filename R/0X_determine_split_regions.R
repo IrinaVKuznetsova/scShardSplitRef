@@ -64,9 +64,9 @@ determine_split_regions <- function(
   shift_by = 1L
 ) {
   cli::cli_inform(
-    "Preparing split regions from {.file {regions_bed}} and \\
-     {.file {genes_gtf}} into {.file {output_bed}} \\
-     (limit = {limit}, shift_by = {shift_by}). 
+    "Preparing split regions from {.file regions_bed} and \\
+     {.file genes_gtf} into {.file output_bed} \\
+     ({.var limit} = {limit}, {.var shift_by} = {shift_by}). 
     \n
     \n"
   )
@@ -89,8 +89,8 @@ determine_split_regions <- function(
 
   cli::cli_inform(
     "{.strong Built {nrow(out)} split intervals across \\
-     {length(unique(out$chr))} chromosome(s) and wrote them to \\
-     {.file {output_bed}}}."
+     {length(unique(out$chr))} chromosome{?s} and wrote them to \\
+     {.file output_bed}}."
   )
 
   return(invisible(output_bed))
