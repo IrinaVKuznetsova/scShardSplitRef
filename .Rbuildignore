@@ -48,3 +48,5 @@
 ^codemeta\.json$
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^man/dot-recalculate_above_centromere_coords.Rd
+^man/dot-assign_coords.Rd
