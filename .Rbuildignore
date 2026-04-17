@@ -46,3 +46,5 @@
 ^man/dot-build_output_filename.Rd
 ^man/dot-write_filtered_gtf.Rd
 ^codemeta\.json$
+^.*\.Rproj$
+^\.Rproj\.user$
