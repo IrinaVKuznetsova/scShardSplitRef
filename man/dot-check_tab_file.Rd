@@ -20,7 +20,7 @@ If \code{NA} (default), no upper limit is enforced.}
 \value{
 Invisible NULL. Raises an error if validation fails.
 
-The validated contents of the file, else errors if invalid.
+Invisible TRUE if valid, else errors if invalid.
 }
 \description{
 Validates that a file has the correct number of TAB-separated fields.

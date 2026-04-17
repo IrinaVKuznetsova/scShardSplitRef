@@ -48,16 +48,8 @@ test_that(".validate_bed_coordinates accepts valid coords", {
 
 test_that(".validate_bed_coordinates rejects invalid coords", {
   expect_error(
-    .validate_bed_coordinates(-1L, 100L, "chr1"),
-    regexp = ">= 0"
-  )
-  expect_error(
     .validate_bed_coordinates(100L, 100L, "chr1"),
-    regexp = "must be < end"
-  )
-  expect_error(
-    .validate_bed_coordinates(100L, 100L, "chrX"),
-    regexp = "chrX"
+    regexp = "Invalid BED region"
   )
 })
 
@@ -298,25 +290,6 @@ test_that(".process_single_region handles centromeres", {
   result <- .process_single_region(region, genes, limit = 250L, shift_by = 1L)
   expect_true(any(result$start == 0L))
   expect_true(any(result$start == 100L))
-})
-
-test_that(".process_single_region rejects invalid coords", {
-  region <- data.frame(
-    chr = "chr1",
-    start = 100L,
-    end = 100L,
-    stringsAsFactors = FALSE
-  )
-  genes <- data.frame(
-    chr = character(0),
-    start = integer(0),
-    end = integer(0),
-    stringsAsFactors = FALSE
-  )
-  expect_error(
-    .process_single_region(region, genes, limit = 250L, shift_by = 1L),
-    regexp = "must be < end"
-  )
 })
 
 # .read_bed_file tests

@@ -4,10 +4,10 @@
 \alias{.read_and_format_gtf}
 \title{Read and format GTF file}
 \usage{
-.read_and_format_gtf(gtf)
+.read_and_format_gtf(path)
 }
 \arguments{
-\item{gtf_path}{Character: path to GTF file.}
+\item{path}{Character: path to GTF file.}
 }
 \value{
 Data frame with 9 columns named: Chr, source, feature, start,

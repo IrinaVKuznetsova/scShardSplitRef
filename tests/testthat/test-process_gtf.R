@@ -1,3 +1,4 @@
+# Test helper function
 .make_gtf_with_regions <- function(
   chrs,
   starts,
@@ -12,6 +13,12 @@
     start = starts,
     end = ends,
     unique_ID = ids,
+    source = "source",
+    feature = "gene",
+    score = ".",
+    strand = "+",
+    frame = ".",
+    attribute = 'gene_id "test";',
     stringsAsFactors = FALSE
   )
 
@@ -23,185 +30,215 @@
     Chr = region_chrs,
     RegionStart = region_starts,
     RegionEnd = region_ends,
-    NEW = sprintf("%s:%s-%s", region_chrs, region_starts, region_ends),
     stringsAsFactors = FALSE
   )
 
   list(gtf = gtf, regions = regions)
 }
 
-# .format_region_name tests
-test_that(".format_region_name formats correctly", {
-  expect_identical(
-    .format_region_name("chr1", 100000, 200000),
-    "chr1:100000-200000"
+# .assign_coords tests
+test_that(".assign_coords adds NEW column correctly", {
+  df <- data.frame(
+    Chr = c("1H", "2H"),
+    start = c(100, 200),
+    end = c(150, 250),
+    stringsAsFactors = FALSE
   )
-  expect_identical(.format_region_name("chrX", 0, 1000), "chrX:0-1000")
-  expect_identical(.format_region_name("chr1", 1L, 2L), "chr1:1-2")
+
+  result <- .assign_coords(df, c("1H", "2H"), c(0, 100), c(200, 300))
+  expect_true("NEW" %in% colnames(result))
+  expect_identical(result$NEW, c("1H-0-200", "2H-100-300"))
 })
 
-# .match_features_to_regions tests
-test_that(".match_features_to_regions matches correctly", {
-  data <- .make_gtf_with_regions(
-    c("chr1", "chr1", "chr1"),
-    c(100L, 200L, 500L),
-    c(150L, 250L, 550L),
-    c("ID1", "ID2", "ID3"),
-    c("chr1", "chr1"),
-    c(0L, 400L),
-    c(300L, 600L)
+test_that(".assign_coords handles empty dataframes", {
+  df <- data.frame(
+    Chr = character(0),
+    start = numeric(0),
+    end = numeric(0),
+    stringsAsFactors = FALSE
   )
 
-  result <- .match_features_to_regions(data$gtf, data$regions)
-  expect_identical(nrow(result), 3L)
-  expect_true(all(result$unique_ID %in% c("ID1", "ID2", "ID3")))
-})
-
-test_that(".match_features_to_regions excludes mismatched features", {
-  # Feature crosses boundary
-  data <- .make_gtf_with_regions(
-    c("chr1", "chr1"),
-    c(100L, 250L),
-    c(150L, 350L),
-    c("ID1", "ID2"),
-    "chr1",
-    0L,
-    300L
-  )
-
-  result <- .match_features_to_regions(data$gtf, data$regions)
-  expect_identical(nrow(result), 1L)
-  expect_identical(result$unique_ID, "ID1")
-
-  # Feature before region
-  data <- .make_gtf_with_regions(
-    "chr1",
-    100L,
-    150L,
-    "ID1",
-    "chr1",
-    200L,
-    500L
-  )
-
-  result <- .match_features_to_regions(data$gtf, data$regions)
+  result <- .assign_coords(df, character(0), numeric(0), numeric(0))
   expect_identical(nrow(result), 0L)
+  expect_true("NEW" %in% colnames(result) || nrow(result) == 0L)
 })
 
-# .check_no_ambiguous_matches tests
-test_that(".check_no_ambiguous_matches validates uniqueness", {
-  matched <- data.frame(
-    unique_ID = c("ID1", "ID2", "ID3"),
-    stringsAsFactors = FALSE
-  )
-  expect_invisible(.check_no_ambiguous_matches(matched))
-
-  matched <- data.frame(
-    unique_ID = character(0)
-  )
-  expect_invisible(.check_no_ambiguous_matches(matched))
-})
-
-test_that(".check_no_ambiguous_matches detects duplicates", {
-  matched <- data.frame(
-    unique_ID = c("ID1", "ID1", "ID2"),
-    stringsAsFactors = FALSE
-  )
-  expect_error(
-    .check_no_ambiguous_matches(matched),
-    regexp = "Ambiguous"
-  )
-
-  matched <- data.frame(
-    unique_ID = c("ID1", "ID1", "ID2", "ID2"),
-    stringsAsFactors = FALSE
-  )
-  expect_error(
-    .check_no_ambiguous_matches(matched),
-    regexp = "ID1.*ID2"
-  )
-})
-
-# .check_all_features_matched tests
-test_that(".check_all_features_matched accepts complete matches", {
-  matched <- data.frame(unique_ID = c("ID1", "ID2"), stringsAsFactors = FALSE)
-  gtf <- data.frame(unique_ID = c("ID1", "ID2"), stringsAsFactors = FALSE)
-
-  expect_invisible(.check_all_features_matched(matched, gtf))
-})
-
-test_that(".check_all_features_matched detects missing features", {
-  matched <- data.frame(unique_ID = "ID1", stringsAsFactors = FALSE)
-  gtf <- data.frame(
-    unique_ID = c("ID1", "ID2", "ID3"),
+test_that(".assign_coords preserves input rows", {
+  df <- data.frame(
     Chr = c("chr1", "chr1", "chr1"),
-    feature = c("gene", "gene", "gene"),
-    start = c(0L, 1000L, 2000L),
-    end = c(100L, 2000L, 3000L),
+    start = c(100, 200, 300),
+    end = c(150, 250, 350),
     stringsAsFactors = FALSE
   )
 
-  expect_error(
-    .check_all_features_matched(matched, gtf),
-    regexp = "do not fit within"
-  )
-
-  # Checks count and examples
-  expect_error(
-    .check_all_features_matched(matched, gtf),
-    regexp = "2.*Examples"
-  )
+  result <- .assign_coords(df, df$Chr, c(0, 50, 100), c(200, 250, 350))
+  expect_identical(nrow(result), 3L)
+  expect_identical(result$start, df$start)
+  expect_identical(result$end, df$end)
 })
 
-# .build_output_gtf tests
-test_that(".build_output_gtf reorders and selects columns", {
-  matched <- data.frame(
-    unique_ID = c("ID2", "ID1"),
-    NEW = c("chr1:0-300", "chr1:0-200"),
-    source = c("source", "source"),
-    feature = c("gene", "gene"),
-    start = c(200L, 100L),
-    end = c(300L, 150L),
-    score = c(".", "."),
-    strand = c("+", "+"),
-    frame = c(".", "."),
-    attribute = c('gene_id "G2";', 'gene_id "G1";'),
+# .recalculate_above_centromere_coords tests
+test_that(".recalculate_above_centromere_coords recalculates coordinates", {
+  df <- data.frame(
+    Chr = "1H",
+    start = 100L,
+    end = 150L,
+    CentrStart = 50L,
+    ChrEND = 200L,
     stringsAsFactors = FALSE
   )
 
-  gtf_file <- data.frame(
-    unique_ID = c("ID1", "ID2"),
-    stringsAsFactors = FALSE
-  )
+  result <- .recalculate_above_centromere_coords(df)
 
-  result <- .build_output_gtf(matched, gtf_file)
-  expect_identical(result$NEW, c("chr1:0-200", "chr1:0-300"))
-  expect_identical(colnames(result)[1], "Chr")
-  expect_identical(result$Chr, c("chr1:0-200", "chr1:0-300"))
+  # Expected calculation:
+  # feature_length = 150 - 100 = 50
+  # dist_chr_end_feat_end = 200 - 150 = 50
+  # dist_centr_chr_end = 200 - 50 = 150
+  # new_start = 150 - 50 - 50 = 50
+  # new_end = 150 - 50 = 100
+  expect_identical(result$start, 50L)
+  expect_identical(result$end, 100L)
 })
 
-test_that(".build_output_gtf reorders and selects columns", {
-  matched <- data.frame(
-    unique_ID = c("ID2", "ID1"),
-    NEW = c("chr1:0-300", "chr1:0-200"),
-    source = c("source", "source"),
-    feature = c("gene", "gene"),
-    start = c(200L, 100L),
-    end = c(300L, 150L),
-    score = c(".", "."),
-    strand = c("+", "+"),
-    frame = c(".", "."),
-    attribute = c('gene_id "G2";', 'gene_id "G1";'),
+test_that(".recalculate_above_centromere_coords handles multiple rows", {
+  df <- data.frame(
+    Chr = c("1H", "1H"),
+    start = c(100L, 110L),
+    end = c(150L, 160L),
+    CentrStart = c(50L, 50L),
+    ChrEND = c(200L, 200L),
     stringsAsFactors = FALSE
   )
 
-  gtf_file <- data.frame(
-    unique_ID = c("ID1", "ID2"),
+  result <- .recalculate_above_centromere_coords(df)
+  expect_identical(nrow(result), 2L)
+  expect_true(all(result$start >= 0L))
+  expect_true(all(result$end >= result$start))
+})
+
+test_that(".recalculate_above_centromere_coords handles edge case", {
+  # Feature at the very end
+  df <- data.frame(
+    Chr = "1H",
+    start = 150L,
+    end = 200L,
+    CentrStart = 50L,
+    ChrEND = 200L,
     stringsAsFactors = FALSE
   )
 
-  result <- .build_output_gtf(matched, gtf_file)
-  # Chr column should have sorted NEW values
-  expect_identical(result$Chr, c("chr1:0-200", "chr1:0-300"))
-  expect_identical(colnames(result)[1L], "Chr")
+  result <- .recalculate_above_centromere_coords(df)
+  # feature_length = 200 - 150 = 50
+  # dist_chr_end_feat_end = 200 - 200 = 0
+  # dist_centr_chr_end = 200 - 50 = 150
+  # new_start = 150 - 0 - 50 = 100
+  # new_end = 150 - 0 = 150
+  expect_identical(result$start, 100L)
+  expect_identical(result$end, 150L)
+})
+
+# process_gtf integration tests
+test_that("process_gtf processes basic GTF correctly", {
+  skip_if_not_installed("cli")
+
+  # Create temporary files
+  gtf_content <- "1H\tsource\tgene\t0\t20\t.\t+\t.\tgene_id \"gene1\";
+1H\tsource\tgene\t100\t120\t.\t+\t.\tgene_id \"gene2\";"
+
+  bed_content <- "1H\t50\t150"
+
+  gtf_file <- tempfile(fileext = ".gtf")
+  bed_file <- tempfile(fileext = ".bed")
+
+  writeLines(gtf_content, gtf_file)
+  writeLines(bed_content, bed_file)
+
+  on.exit({
+    unlink(gtf_file)
+    unlink(bed_file)
+  })
+
+  result <- process_gtf(
+    gtf_path = gtf_file,
+    centromere_path = bed_file,
+    unchar_region = "CAJHDD.*",
+    mito = "Mt",
+    chloro = "Pt"
+  )
+
+  expect_true(is.data.frame(result))
+  expect_true("NEW" %in% colnames(result))
+  expect_identical(nrow(result), 2L)
+})
+
+test_that("process_gtf handles special contigs", {
+  skip_if_not_installed("cli")
+
+  gtf_content <- "Mt\tsource\tgene\t1\t10\t.\t+\t.\tgene_id \"MT1\";
+Pt\tsource\tgene\t2\t8\t.\t+\t.\tgene_id \"PT1\";"
+
+  bed_content <- "1H\t50\t150"
+
+  gtf_file <- tempfile(fileext = ".gtf")
+  bed_file <- tempfile(fileext = ".bed")
+
+  writeLines(gtf_content, gtf_file)
+  writeLines(bed_content, bed_file)
+
+  on.exit({
+    unlink(gtf_file)
+    unlink(bed_file)
+  })
+
+  result <- process_gtf(
+    gtf_path = gtf_file,
+    centromere_path = bed_file,
+    unchar_region = "CAJHDD.*",
+    mito = "Mt",
+    chloro = "Pt"
+  )
+
+  expect_true(is.data.frame(result))
+  expect_identical(nrow(result), 2L)
+  expect_true(any(grepl("Mt-", result$NEW)))
+  expect_true(any(grepl("Pt-", result$NEW)))
+})
+
+test_that("process_gtf returns correct columns", {
+  skip_if_not_installed("cli")
+
+  gtf_content <- "1H\tsource\tgene\t0\t20\t.\t+\t.\tgene_id \"gene1\";"
+  bed_content <- "1H\t50\t150"
+
+  gtf_file <- tempfile(fileext = ".gtf")
+  bed_file <- tempfile(fileext = ".bed")
+
+  writeLines(gtf_content, gtf_file)
+  writeLines(bed_content, bed_file)
+
+  on.exit({
+    unlink(gtf_file)
+    unlink(bed_file)
+  })
+
+  result <- process_gtf(
+    gtf_path = gtf_file,
+    centromere_path = bed_file,
+    unchar_region = "CAJHDD.*",
+    mito = "Mt",
+    chloro = "Pt"
+  )
+
+  expected_cols <- c(
+    "NEW",
+    "source",
+    "feature",
+    "start",
+    "end",
+    "score",
+    "strand",
+    "frame",
+    "attribute"
+  )
+  expect_identical(colnames(result), expected_cols)
 })

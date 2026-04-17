@@ -22,7 +22,7 @@ Creates a human-readable string describing the allowed field count range.
 \dontrun{
   .format_field_expectation(3L, 9L)
   # Returns: "3-9 TAB-separated fields"
-  format_field_expectation(9L, NA_integer_)
+  .format_field_expectation(9L, NA_integer_)
   # Returns: "at least 9 TAB-separated fields"
 }
 

@@ -4,10 +4,10 @@
 \alias{.read_and_format_bed}
 \title{Read and format BED file}
 \usage{
-.read_and_format_bed(bed)
+.read_and_format_bed(path)
 }
 \arguments{
-\item{bed_path}{Character: path to BED file.}
+\item{path}{Character: path to BED file.}
 }
 \value{
 Data frame with first 3 columns named Chr, RegionStart, RegionEnd,

@@ -43,11 +43,11 @@
 validate_inputs <- function(gtf_path, bed_path) {
   .check_files_exist(gtf_path, bed_path)
 
-  gtf <- .check_tab_file(gtf_path, min_fields = 9L, label = "GTF")
-  bed <- .check_tab_file(bed_path, min_fields = 3L, label = "BED")
+  .check_tab_file(gtf_path, min_fields = 9L, label = "GTF")
+  .check_tab_file(bed_path, min_fields = 3L, label = "BED")
 
-  gtf <- .read_and_format_gtf(gtf)
-  bed <- .read_and_format_bed(bed)
+  gtf <- .read_and_format_gtf(gtf_path)
+  bed <- .read_and_format_bed(bed_path)
 
   .validate_bed_ranges(bed)
 
@@ -82,7 +82,7 @@ validate_inputs <- function(gtf_path, bed_path) {
 #'     label = "GTF"
 #'   )
 #' }
-#' @returns The validated contents of the file, else errors if invalid.
+#' @returns Invisible TRUE if valid, else errors if invalid.
 #' @dev
 .check_tab_file <- function(
   path,
@@ -91,7 +91,7 @@ validate_inputs <- function(gtf_path, bed_path) {
   max_fields = NA_integer_
 ) {
   lines <- readLines(path)
-  lines <- lines[!startsWith("#", lines)]
+  lines <- lines[!startsWith(lines, "#")]
   lines <- lines[nzchar(lines)]
 
   if (length(lines) == 0L) {
@@ -108,13 +108,21 @@ validate_inputs <- function(gtf_path, bed_path) {
   )
 
   if (length(invalid_idx) > 0L) {
+    example_bad <- lines[invalid_idx[1L]]
+    expected <- .format_field_expectation(min_fields, max_fields)
+
     cli::cli_abort(
       call = rlang::caller_env(),
-      "{error_num}: Invalid {label} file format at line{?s} {invalid_idx}"
+      c(
+        "Invalid {label} file format.",
+        x = "Problematic line{?s}: {invalid_idx}.",
+        i = "Example: {example_bad}",
+        i = "Expected: {expected}"
+      )
     )
   }
 
-  return(lines)
+  return(invisible(TRUE))
 }
 
 #' Find lines with invalid field counts
@@ -148,50 +156,6 @@ validate_inputs <- function(gtf_path, bed_path) {
   sort(unique(invalid))
 }
 
-#' Report field count validation error
-#'
-#' Generates a detailed error message about field count violations,
-#' including examples, expected format, and advice.
-#'
-#' @param bad_lines Integer vector: line numbers with invalid field counts.
-#' @param lines Character vector: all file lines.
-#' @param min_fields Integer: minimum required fields.
-#' @param max_fields Integer or NA: maximum allowed fields.
-#' @param label Character: file type label.
-#' @param error_num Integer: error code number.
-#'
-#' @return Raises an error. Does not return normally.
-#'
-#' @examples
-#' \dontrun{
-#'   .report_field_error(c(1, 3), lines, 3L, NA_integer_, "GTF", 2L)
-#' }
-#'
-#' @dev
-.report_field_error <- function(
-  bad_lines,
-  lines,
-  min_fields,
-  max_fields,
-  label,
-  error_num
-) {
-  expected <- .format_field_expectation(min_fields, max_fields)
-  example_bad <- lines[bad_lines[1L]]
-
-  cli::cli_abort(
-    call = rlang::caller_env(),
-    c(
-      "{.val {error_num}}: Invalid {label} formatting.",
-      x = "Problematic line numbers: {bad_lines}.",
-      i = "Example: {example_bad}",
-      i = "Expected: {expected}",
-      i = "File must be TAB-delimited."
-    ),
-    .envir = environment()
-  )
-}
-
 #' Format field requirement description
 #'
 #' Creates a human-readable string describing the allowed field count range.
@@ -206,7 +170,7 @@ validate_inputs <- function(gtf_path, bed_path) {
 #' \dontrun{
 #'   .format_field_expectation(3L, 9L)
 #'   # Returns: "3-9 TAB-separated fields"
-#'   format_field_expectation(9L, NA_integer_)
+#'   .format_field_expectation(9L, NA_integer_)
 #'   # Returns: "at least 9 TAB-separated fields"
 #' }
 #'
@@ -238,13 +202,13 @@ validate_inputs <- function(gtf_path, bed_path) {
   if (!file.exists(gtf_path)) {
     cli::cli_abort(
       call = rlang::caller_env(),
-      "ERROR 0: GTF file does not exist: {.file {gtf_path}}"
+      "GTF file does not exist: {.file {gtf_path}}"
     )
   }
   if (!file.exists(bed_path)) {
     cli::cli_abort(
       call = rlang::caller_env(),
-      "ERROR 1: BED file does not exist: {.file {bed_path}}"
+      "BED file does not exist: {.file {bed_path}}"
     )
   }
   return(invisible(TRUE))
@@ -255,7 +219,7 @@ validate_inputs <- function(gtf_path, bed_path) {
 #' Reads a GTF file and assigns standard column names. Comment lines are
 #' skipped. Assumes TAB-delimited format with no header.
 #'
-#' @param gtf_path Character: path to GTF file.
+#' @param path Character: path to GTF file.
 #'
 #' @return Data frame with 9 columns named: Chr, source, feature, start,
 #'   end, score, strand, frame, attribute.
@@ -266,9 +230,9 @@ validate_inputs <- function(gtf_path, bed_path) {
 #' }
 #'
 #' @dev
-.read_and_format_gtf <- function(gtf) {
+.read_and_format_gtf <- function(path) {
   gtf <- utils::read.table(
-    text = paste(gtf, collapse = "\n"),
+    file = path,
     sep = "\t",
     header = FALSE,
     quote = "",
@@ -296,7 +260,7 @@ validate_inputs <- function(gtf_path, bed_path) {
 #' Reads a BED file and assigns standard column names to the first three
 #' columns. Assumes TAB-delimited format with no header.
 #'
-#' @param bed_path Character: path to BED file.
+#' @param path Character: path to BED file.
 #'
 #' @return Data frame with first 3 columns named Chr, RegionStart, RegionEnd,
 #'   plus any additional columns from the input file.
@@ -307,9 +271,9 @@ validate_inputs <- function(gtf_path, bed_path) {
 #' }
 #'
 #' @dev
-.read_and_format_bed <- function(bed) {
+.read_and_format_bed <- function(path) {
   bed <- utils::read.table(
-    text = paste(bed, collapse = "\n"),
+    file = path,
     sep = "\t",
     header = FALSE,
     quote = "",

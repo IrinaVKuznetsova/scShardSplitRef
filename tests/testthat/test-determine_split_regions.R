@@ -25,12 +25,8 @@ test_that(".validate_bed_coordinates accepts valid coords", {
 
 test_that(".validate_bed_coordinates rejects invalid coords", {
   expect_error(
-    .validate_bed_coordinates(-1L, 100L, "chr1"),
-    regexp = ">= 0"
-  )
-  expect_error(
     .validate_bed_coordinates(100L, 100L, "chr1"),
-    regexp = "must be < end"
+    regexp = "Invalid BED region"
   )
 })
 

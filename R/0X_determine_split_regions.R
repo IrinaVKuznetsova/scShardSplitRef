@@ -307,22 +307,41 @@ determine_split_regions <- function(
 #' }
 #'
 #' @dev
+#'
+
 .validate_bed_coordinates <- function(start, end, chr) {
+  # Extract scalar values if they're from a data frame row
+  if (length(start) > 1L) {
+    start <- start[1L]
+  }
+  if (length(end) > 1L) {
+    end <- end[1L]
+  }
+  if (length(chr) > 1L) {
+    chr <- chr[1L]
+  }
+
+  if (anyNA(start) || anyNA(end) || anyNA(chr)) {
+    cli::cli_abort(
+      call = rlang::caller_env(),
+      "Missing values in BED region coordinates."
+    )
+  }
+
   if (start < 0L) {
     cli::cli_abort(
       call = rlang::caller_env(),
-      "Region start must be >= 0 for BED coordinates ({.var chr})
-      ={chr})."
+      "Region start must be >= 0 for BED coordinates ({.var chr}={chr})."
     )
   }
+
   if (start >= end) {
     cli::cli_abort(
       call = rlang::caller_env(),
-      "Invalid BED region: {.var start} ({start}) must be < {.var end} ({end})
-      for \\
-      {.var chr}={chr}."
+      "Invalid BED region: {.var start} ({start}) must be < {.var end} ({end}) for {.var chr}={chr}."
     )
   }
+
   return(invisible(TRUE))
 }
 
