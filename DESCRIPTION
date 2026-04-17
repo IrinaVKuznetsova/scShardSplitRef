@@ -23,6 +23,7 @@ License: GPL (>= 3)
 Depends: R (>= 4.3.0)
 Imports: 
     cli,
+    rlang,
     utils
 Suggests: 
     knitr,

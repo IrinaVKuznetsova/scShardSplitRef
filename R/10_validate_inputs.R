@@ -109,6 +109,7 @@ validate_inputs <- function(gtf_path, bed_path) {
 
   if (length(invalid_idx) > 0L) {
     cli::cli_abort(
+      call = rlang::caller_env(),
       "{error_num}: Invalid {label} file format at line{?s} {invalid_idx}"
     )
   }
@@ -179,6 +180,7 @@ validate_inputs <- function(gtf_path, bed_path) {
   example_bad <- lines[bad_lines[1L]]
 
   cli::cli_abort(
+    call = rlang::caller_env(),
     c(
       "{.val {error_num}}: Invalid {label} formatting.",
       x = "Problematic line numbers: {bad_lines}.",
@@ -235,11 +237,13 @@ validate_inputs <- function(gtf_path, bed_path) {
 .check_files_exist <- function(gtf_path, bed_path) {
   if (!file.exists(gtf_path)) {
     cli::cli_abort(
+      call = rlang::caller_env(),
       "ERROR 0: GTF file does not exist: {.file {gtf_path}}"
     )
   }
   if (!file.exists(bed_path)) {
     cli::cli_abort(
+      call = rlang::caller_env(),
       "ERROR 1: BED file does not exist: {.file {bed_path}}"
     )
   }
@@ -338,6 +342,7 @@ validate_inputs <- function(gtf_path, bed_path) {
 
   if (length(invalid_ranges) > 0L) {
     cli::cli_abort(
+      call = rlang::caller_env(),
       c(
         "Invalid BED coordinates.",
         x = "Each row must satisfy {.field RegionStart < RegionEnd}.",

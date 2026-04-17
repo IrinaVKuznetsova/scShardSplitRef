@@ -119,7 +119,10 @@ determine_split_regions <- function(
 #' @dev
 .read_bed_file <- function(path, min_cols = 3L) {
   if (!file.exists(path)) {
-    cli::cli_abort("BED file not found: {.file {path}}")
+    cli::cli_abort(
+      call = rlang::caller_env(),
+      "BED file not found: {.file {path}}",
+    )
   }
 
   d <- utils::read.table(
@@ -134,6 +137,7 @@ determine_split_regions <- function(
   ncol_d <- ncol(d)
   if (ncol_d < min_cols) {
     cli::cli_abort(
+      call = rlang::caller_env(),
       "BED file must have at least {min_cols} columns, found {ncol_d}."
     )
   }
@@ -164,7 +168,10 @@ determine_split_regions <- function(
 #' @dev
 .read_gtf_file <- function(path) {
   if (!file.exists(path)) {
-    cli::cli_abort("GTF file not found: {.file {path}}")
+    cli::cli_abort(
+      call = rlang::caller_env(),
+      "GTF file not found: {.file {path}}"
+    )
   }
 
   d <- utils::read.table(
@@ -180,7 +187,10 @@ determine_split_regions <- function(
   ncol_d <- ncol(d)
 
   if (ncol_d < 9L) {
-    cli::cli_abort("GTF file must have at least 9 columns, found {ncol_d}.")
+    cli::cli_abort(
+      call = rlang::caller_env(),
+      "GTF file must have at least 9 columns, found {ncol_d}."
+    )
   }
 
   colnames(d) <- c(
@@ -300,12 +310,14 @@ determine_split_regions <- function(
 .validate_bed_coordinates <- function(start, end, chr) {
   if (start < 0L) {
     cli::cli_abort(
+      call = rlang::caller_env(),
       "Region start must be >= 0 for BED coordinates ({.var chr})
       ={chr})."
     )
   }
   if (start >= end) {
     cli::cli_abort(
+      call = rlang::caller_env(),
       "Invalid BED region: {.var start} ({start}) must be < {.var end} ({end})
       for \\
       {.var chr}={chr}."
@@ -580,6 +592,7 @@ determine_split_regions <- function(
   if (any(widths > limit)) {
     bad_idx <- which(widths > limit)
     cli::cli_abort(
+      call = rlang::caller_env(),
       "Unable to split chromosome {chr} to satisfy limit={limit}.
        Oversized intervals at positions: {bad_idx}"
     )
@@ -764,6 +777,7 @@ determine_split_regions <- function(
   if (limit < max_blocked) {
     worst <- merged[which.max(blocked_width), , drop = FALSE]
     cli::cli_abort(
+      call = rlang::caller_env(),
       c(
         x = "Limit {limit} is smaller than largest blocked gene \\
                interval ({max_blocked} bp).",

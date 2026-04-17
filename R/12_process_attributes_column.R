@@ -34,7 +34,10 @@ process_attributes_column <- function(
   out_path = "."
 ) {
   if (!dir.exists(out_path)) {
-    cli::cli_abort("Output directory does not exist: {.file {out_path}}")
+    cli::cli_abort(
+      call = rlang::caller_env(),
+      "Output directory does not exist: {.file {out_path}}"
+    )
   }
 
   filtered <- .filter_attributes(result$attribute, keep_attributes)

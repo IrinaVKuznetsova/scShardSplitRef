@@ -36,7 +36,7 @@ process_gtf <- function(
 ) {
   cli::cli_inform("Validating inputs and reading files.../n")
 
-  validated <- .validate_inputs(
+  validated <- validate_inputs(
     gtf_path = gtf_path,
     bed_path = split_regions_path
   )
@@ -180,6 +180,7 @@ process_gtf <- function(
 
   if (length(duplicates) > 0L) {
     cli::cli_abort(
+      call = rlang::caller_env(),
       c(
         "Ambiguous split-region matches detected.",
         x = "GTF feature IDs with multiple matches: {duplicates}",
@@ -232,6 +233,7 @@ process_gtf <- function(
     FUN = \(row) paste(row, collapse = ":")
   )
   cli::cli_abort(
+    call = rlang::caller_env(),
     c(
       "Some GTF features do not fit within any split-region interval.",
       x = "Unmatched features: {length(missing_ids)}",
@@ -265,7 +267,10 @@ process_gtf <- function(
 .build_output_gtf <- function(matched, gtf_file) {
   # Ensure NEW column exists
   if (!"NEW" %in% colnames(matched)) {
-    cli::cli_abort("NEW column not found in matched data.")
+    cli::cli_abort(
+      call = rlang::caller_env(),
+      "NEW column not found in matched data."
+    )
   }
 
   # Sort by NEW column (region name)
