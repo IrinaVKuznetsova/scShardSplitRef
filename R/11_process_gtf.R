@@ -1,134 +1,212 @@
-#' Process the GTF file
+#' Process a GTF file by assigning split-region sequence names
 #'
-#' @param gtf_path A string representing the file path to the GTF file.
-#' @param centromere_path A string representing the file path to the centromere
-#'   coordinates BED file.
-#' @param unchar_region A string specifying the pattern for uncharacterized
-#'   region chromosome names.
-#' @param mito A string specifying the mitochondrial chromosome name.
-#' @param chloro A string specifying the chloroplast chromosome name.
+#' Reads a GTF and a BED-like "split regions" file, assigns each GTF feature to
+#' exactly one split-region interval, and replaces the GTF `Chr` field with a
+#' split-region name of the form `Chr:RegionStart-RegionEnd`.
+#'
+#' A feature is considered inside a region when:
+#' - `start >= RegionStart`
+#' - `start <  RegionEnd`
+#' - `end   <= RegionEnd`
+#'
+#' The function aborts if:
+#' - any GTF feature matches more than one region (overlapping regions), or
+#' - any GTF feature matches no region (regions don't fully cover the GTF).
+#'
+#' @param gtf_path Character scalar. File path to the GTF file.
+#' @param split_regions_path Character scalar. File path to a BED-like file
+#'   containing split intervals. The first three columns must be:
+#'   `Chr`, `RegionStart`, `RegionEnd` (as produced by [validate_inputs()]).
+#'
+#' @return A data frame containing the updated GTF rows, with columns:
+#' `Chr`, `source`, `feature`, `start`, `end`, `score`, `strand`, `frame`,
+#' `attribute`. The output row order matches the input GTF order.
 #'
 #' @examples
+#' # Minimal working example using temporary files
 #'
-#' gtf <- system.file("extdata",
-#'          "A3_toy_all_scenarios_2chr.gtf",
-#'          package = "scShardSplitRef",
-#'          mustWork = TRUE
-#'          )
-#' bed <- system.file("extdata",
+#'   gtf_file <- system.file("extdata",
+#'              "A3_toy_all_scenarios_2chr.gtf",
+#'              package = "scShardSplitRef",
+#'              mustWork = TRUE)
+#'   reg_file <- system.file("extdata",
 #'                    "IN0_toy_centromeres_for_gtf.bed",
 #'                    package = "scShardSplitRef",
 #'                    mustWork = TRUE)
-#' result <- process_gtf(
-#'    gtf_path = gtf,
-#'    centromere_path = bed,
-#'    unchar_region = "CAJHDD.*",
-#'    mito = "Mt",
-#'    chloro = "Pt"
-#'    )
 #'
-#' @returns A data frame with formatted GTF columns.
-#' @export
+#' out <- process_gtf(gtf_file, reg_file)
+#' out
+#'
 #' @autoglobal
+#' @export
+process_gtf <- function(gtf_path, split_regions_path) {
+  cli::cli_alert_info("Validating inputs and reading files...")
+  validated <- validate_inputs(
+    gtf_path = gtf_path,
+    bed_path = split_regions_path
+  )
+  gtf <- validated$gtf
+  regions <- validated$bed
 
-process_gtf <- function(
-  gtf_path,
-  centromere_path,
-  unchar_region,
-  mito,
-  chloro
-) {
-  # Validation and reading
-  cli::cli_alert("Validating inputs and reading files...")
-  validated <- validate_inputs(gtf_path, centromere_path)
-  gtf_file <- validated$gtf
-  bed_file <- validated$bed
+  gtf$unique_ID <- sprintf("ID%i", seq_len(nrow(gtf)))
+  regions <- .prepare_split_regions(regions)
 
-  # Add unique ID for ordering
-  gtf_file$unique_ID <- sprintf("ID%i", seq_len(nrow(gtf_file)))
-
-  # Standardize BED column names for internal use
-  bed_file$CentrStart <- bed_file$RegionStart
-  bed_file$ChrEND <- bed_file$RegionEnd
-
-  # Merge GTF/BED by chromosome
-  df_merged_chr <- merge(
-    gtf_file,
-    bed_file[, c("Chr", "CentrStart", "ChrEND")],
+  merged <- merge(
+    gtf,
+    regions[, c("Chr", "RegionStart", "RegionEnd", "NEW"), drop = FALSE],
     by = "Chr",
-    all.x = TRUE
+    all.x = TRUE,
+    sort = FALSE
   )
 
-  # Build regex for special chromosomes
-  contig_regex <- sprintf("^(%s|%s|%s)$", unchar_region, mito, chloro)
+  matched <- merged[.rows_within_region(merged), , drop = FALSE]
 
-  cli::cli_alert("Splitting contigs and chromosomes...")
+  .abort_if_ambiguous_matches(matched)
+  .abort_if_unmatched_features(matched, gtf)
 
-  # Identify special contigs (e.g., CAJHD, Mt, Pt)
-  is_special <- grepl(contig_regex, df_merged_chr$Chr)
-  contigs_rows <- .assign_coords(
-    df_merged_chr[is_special, , drop = FALSE],
-    df_merged_chr[is_special, "Chr"],
-    df_merged_chr[is_special, "CentrStart"],
-    df_merged_chr[is_special, "ChrEND"]
+  matched <- .restore_gtf_order(matched, gtf$unique_ID)
+
+  out <- .build_gtf_output(matched)
+
+  cli::cli_alert_success("Processing complete. Returning formatted GTF.")
+  out
+}
+
+#' Prepare split regions by adding `NEW` region names
+#'
+#' Adds a `NEW` column to the split-regions data frame, formatted as
+#' `Chr:RegionStart-RegionEnd`.
+#'
+#' @param regions Data frame with columns `Chr`, `RegionStart`, `RegionEnd`.
+#'
+#' @return The input data frame with an added `NEW` column.
+#' @dev
+.prepare_split_regions <- function(regions) {
+  regions$NEW <- sprintf(
+    "%s:%s-%s",
+    regions$Chr,
+    regions$RegionStart,
+    regions$RegionEnd
   )
+  regions
+}
 
-  chr_df <- df_merged_chr[!is_special, , drop = FALSE]
+#' Identify rows where a feature lies fully within a split region
+#'
+#' Applies the matching rule used by [process_gtf()].
+#'
+#' @param df Data frame containing `start`, `end`, `RegionStart`, `RegionEnd`.
+#'
+#' @return Logical vector of length `nrow(df)`.
+#' @dev
+.rows_within_region <- function(df) {
+  df$start >= df$RegionStart & df$start < df$RegionEnd & df$end <= df$RegionEnd
+}
 
-  # Remove rows with NA centromere info from chr_df
-  chr_df <- chr_df[!is.na(chr_df$CentrStart), , drop = FALSE]
-
-  # Define indices for chromosome position relative to centromere
-  idx_less_than <- with(chr_df, start < CentrStart & end <= CentrStart)
-  idx_greater_than <- with(chr_df, start >= CentrStart & end > CentrStart)
-  idx_overlap <- with(chr_df, start < CentrStart & end > CentrStart)
-
-  chr_less_than <- .assign_coords(
-    chr_df[idx_less_than, , drop = FALSE],
-    chr_df[idx_less_than, "Chr"],
-    0L,
-    chr_df[idx_less_than, "CentrStart"]
-  )
-
-  chr_greater_than <- .assign_coords(
-    chr_df[idx_greater_than, , drop = FALSE],
-    chr_df[idx_greater_than, "Chr"],
-    chr_df[idx_greater_than, "CentrStart"],
-    chr_df[idx_greater_than, "ChrEND"]
-  )
-
-  chr_overlap <- .assign_coords(
-    chr_df[idx_overlap, , drop = FALSE],
-    chr_df[idx_overlap, "Chr"],
-    chr_df[idx_overlap, "CentrStart"],
-    chr_df[idx_overlap, "ChrEND"]
-  )
-
-  if (nrow(chr_overlap) > 0L) {
-    cli::cli_warn(c(
-      "Some gene features overlap the centromere boundary.",
-      x = "{nrow(chr_overlap)} detected. This can indicate BED/GTF inconsistency.",
-      i = "See 'prepare_centromere_split.r' for guidance."
-    ))
+#' Abort if any feature matches multiple split regions
+#'
+#' Detects duplicated `unique_ID` values in the matched table, which indicates
+#' overlapping split regions (or otherwise ambiguous assignments).
+#'
+#' @param matched Data frame containing a `unique_ID` column.
+#'
+#' @return Invisibly `TRUE` if ok; otherwise aborts.
+#' @dev
+.abort_if_ambiguous_matches <- function(matched) {
+  # no matches is okay here; missing-features check handles that
+  if (nrow(matched) == 0L) {
+    return(invisible(TRUE))
   }
 
-  # Recalculate coordinates for genes above centromere
-  cli::cli_alert(
-    "Recalculating coordinates for features above centromere..."
-  )
-  chr_greater_than <- .recalculate_above_centromere_coords(chr_greater_than)
+  dup_ids <- unique(matched$unique_ID[duplicated(matched$unique_ID)])
+  n_dup <- length(dup_ids)
 
-  # Combine all subsets and restore input order by unique ID
-  cli::cli_alert("Combining all feature rows...")
-  combined <- rbind(chr_greater_than, chr_less_than, chr_overlap, contigs_rows)
-  combined <- combined[
-    match(gtf_file$unique_ID, combined$unique_ID),
-    ,
+  if (n_dup > 0L) {
+    cli::cli_abort(
+      call = rlang::caller_env(),
+      c(
+        "Ambiguous split-region matches detected for GTF feature{?s}.",
+        x = "{n_dup} feature ID{?s} matched multiple intervals.",
+        i = "Feature ID{?s}: {dup_ids}",
+        i = "Ensure the split-regions BED has no overlapping intervals per
+             chromosome."
+      ),
+      .envir = environment()
+    )
+  }
+
+  invisible(TRUE)
+}
+
+#' Abort if any GTF features match no split region
+#'
+#' @param matched Data frame containing `unique_ID`.
+#' @param gtf Original GTF data frame containing `unique_ID`, `Chr`, `feature`,
+#'   `start`, and `end`.
+#'
+#' @return Invisibly `TRUE` if ok; otherwise aborts.
+#' @dev
+.abort_if_unmatched_features <- function(matched, gtf) {
+  missing_ids <- setdiff(gtf$unique_ID, matched$unique_ID)
+  n_missing <- length(missing_ids)
+
+  if (n_missing == 0L) {
+    return(invisible(TRUE))
+  }
+
+  missing_rows <- gtf[
+    gtf$unique_ID %in% missing_ids,
+    c("Chr", "feature", "start", "end"),
     drop = FALSE
   ]
 
-  # Form GTF output columns
-  out <- combined[, c(
+  preview_n <- min(5L, nrow(missing_rows))
+  preview <- paste0(
+    missing_rows$Chr[seq_len(preview_n)],
+    ":",
+    missing_rows$feature[seq_len(preview_n)],
+    ":",
+    missing_rows$start[seq_len(preview_n)],
+    ":",
+    missing_rows$end[seq_len(preview_n)]
+  )
+
+  cli::cli_abort(
+    call = rlang::caller_env(),
+    c(
+      "Some GTF feature{?s} do not fit within any split-region interval.",
+      x = "{n_missing} unmatched feature{?s} found.",
+      i = "Example{?s}: {preview}",
+      i = "Ensure split regions fully cover the annotation coordinates.",
+      i = "Handle boundary-crossing features before calling {.fn process_gtf}."
+    ),
+    .envir = environment()
+  )
+}
+
+#' Restore the original GTF row order
+#'
+#' @param matched Data frame containing `unique_ID`.
+#' @param gtf_unique_ids Character vector of `unique_ID` values in the original
+#'   GTF order.
+#'
+#' @return `matched` reordered to match the input GTF order.
+#' @dev
+.restore_gtf_order <- function(matched, gtf_unique_ids) {
+  matched[match(gtf_unique_ids, matched$unique_ID), , drop = FALSE]
+}
+
+#' Build the output GTF data frame
+#'
+#' Selects and renames columns so the output matches GTF layout, replacing
+#' `Chr` with the split-region name stored in `NEW`.
+#'
+#' @param matched Data frame containing `NEW` and standard GTF columns.
+#'
+#' @return A data frame with GTF columns where the first column is `Chr`.
+#' @dev
+.build_gtf_output <- function(matched) {
+  out <- matched[, c(
     "NEW",
     "source",
     "feature",
@@ -140,43 +218,6 @@ process_gtf <- function(
     "attribute"
   )]
 
-  cli::cli_alert("Processing complete. Returning formatted GTF.")
-
-  return(out)
-}
-
-#' Assign NEW coordinate column to features
-#'
-#' @param df A data frame to receive the NEW column.
-#' @param chr Character vector for Chr component.
-#' @param start Numeric vector for start component.
-#' @param end Numeric vector for end component.
-#'
-#' @returns The input data frame with NEW column added.
-#' @dev
-
-.assign_coords <- function(df, chr, start, end) {
-  if (nrow(df) > 0L) {
-    df$NEW <- sprintf("%s-%s-%s", chr, start, end)
-  }
-  df
-}
-
-#' Recalculate start and end coordinates for features above centromere
-#'
-#' @param df A data frame of features above the centromere with start, end,
-#'   ChrEND, CentrStart columns.
-#'
-#' @returns The input data frame with recalculated start and end coordinates.
-#' @dev
-
-.recalculate_above_centromere_coords <- function(df) {
-  feature_length <- df$end - df$start
-  dist_chr_end_feat_end <- df$ChrEND - df$end
-  dist_centr_chr_end <- df$ChrEND - df$CentrStart
-
-  df$start <- dist_centr_chr_end - dist_chr_end_feat_end - feature_length
-  df$end <- dist_centr_chr_end - dist_chr_end_feat_end
-
-  df
+  colnames(out)[1] <- "Chr"
+  out
 }
