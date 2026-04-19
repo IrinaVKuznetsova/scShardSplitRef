@@ -3,7 +3,7 @@
 #' @param verbosity Character scalar: "quiet", "minimal", or "verbose".
 #'
 #' @return Named list of options to be set.
-#' @dev
+#' @keywords internal
 .map_verbosity <- function(verbosity) {
   v <- as.character(verbosity %||% "verbose")
   if (!v %in% c("quiet", "minimal", "verbose")) {
@@ -43,7 +43,7 @@
 #' Extracted from `.onLoad()` to allow direct testing.
 #'
 #' @return Invisibly NULL.
-#' @dev
+#' @keywords internal
 .init_package_options <- function() {
   penv <- parent.env(environment())
 
@@ -65,7 +65,7 @@
   }
 
   op.defaults <- list(
-    prepare.centromere.split.verbosity = "verbose"
+    scShardSplitRef.verbosity = "verbose"
   )
 
   toset <- !(names(op.defaults) %in% names(op))
@@ -73,14 +73,13 @@
     withr::local_options(op.defaults[toset], .local_envir = penv)
   }
 
-  verbosity <- getOption("prepare.centromere.split.verbosity")
+  verbosity <- getOption("scShardSplitRef.verbosity")
   mapped <- .map_verbosity(verbosity)
 
   withr::local_options(mapped, .local_envir = penv)
 
   invisible(NULL)
 }
-
 
 # nocov start
 .onLoad <- function(libname, pkgname) {
