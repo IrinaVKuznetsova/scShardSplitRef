@@ -2,46 +2,54 @@
 % Please edit documentation in R/11_process_gtf.R
 \name{process_gtf}
 \alias{process_gtf}
-\title{Process the GTF file}
+\title{Process a GTF file by assigning split-region sequence names}
 \usage{
-process_gtf(gtf_path, centromere_path, unchar_region, mito, chloro)
+process_gtf(gtf_path, split_regions_path)
 }
 \arguments{
-\item{gtf_path}{A string representing the file path to the GTF file.}
+\item{gtf_path}{Character scalar. File path to the GTF file.}
 
-\item{centromere_path}{A string representing the file path to the centromere
-coordinates BED file.}
-
-\item{unchar_region}{A string specifying the pattern for uncharacterized
-region chromosome names.}
-
-\item{mito}{A string specifying the mitochondrial chromosome name.}
-
-\item{chloro}{A string specifying the chloroplast chromosome name.}
+\item{split_regions_path}{Character scalar. File path to a BED-like file
+containing split intervals. The first three columns must be:
+\code{Chr}, \code{RegionStart}, \code{RegionEnd} (as produced by \code{\link[=validate_inputs]{validate_inputs()}}).}
 }
 \value{
-A data frame with formatted GTF columns.
+A data frame containing the updated GTF rows, with columns:
+\code{Chr}, \code{source}, \code{feature}, \code{start}, \code{end}, \code{score}, \code{strand}, \code{frame},
+\code{attribute}. The output row order matches the input GTF order.
 }
 \description{
-Process the GTF file
+Reads a GTF and a BED-like "split regions" file, assigns each GTF feature to
+exactly one split-region interval, and replaces the GTF \code{Chr} field with a
+split-region name of the form \code{Chr:RegionStart-RegionEnd}.
+}
+\details{
+A feature is considered inside a region when:
+\itemize{
+\item \code{start >= RegionStart}
+\item \code{start <  RegionEnd}
+\item \code{end   <= RegionEnd}
+}
+
+The function aborts if:
+\itemize{
+\item any GTF feature matches more than one region (overlapping regions), or
+\item any GTF feature matches no region (regions don't fully cover the GTF).
+}
 }
 \examples{
+# Minimal working example using temporary files
 
-gtf <- system.file("extdata",
-         "A3_toy_all_scenarios_2chr.gtf",
-         package = "scShardSplitRef",
-         mustWork = TRUE
-         )
-bed <- system.file("extdata",
+  gtf_file <- system.file("extdata",
+             "A3_toy_all_scenarios_2chr.gtf",
+             package = "scShardSplitRef",
+             mustWork = TRUE)
+  reg_file <- system.file("extdata",
                    "IN0_toy_centromeres_for_gtf.bed",
                    package = "scShardSplitRef",
                    mustWork = TRUE)
-result <- process_gtf(
-   gtf_path = gtf,
-   centromere_path = bed,
-   unchar_region = "CAJHDD.*",
-   mito = "Mt",
-   chloro = "Pt"
-   )
+
+out <- process_gtf(gtf_file, reg_file)
+out
 
 }

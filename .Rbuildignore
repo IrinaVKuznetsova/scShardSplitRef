@@ -50,3 +50,14 @@
 ^\.Rproj\.user$
 ^man/dot-recalculate_above_centromere_coords.Rd
 ^man/dot-assign_coords.Rd
+^man/dot-prepare_split_regions.Rd
+^man/dot-rows_within_region.Rd
+^man/dot-abort_if_ambiguous_matches.Rd
+^man/dot-abort_if_unmatched_features.Rd
+^man/dot-restore_gtf_order.Rd
+^man/dot-build_gtf_output.Rd
+^man/dot-scs_get_verbosity.Rd
+^man/dot-scs_emit_info.Rd
+^man/dot-scs_emit_success.Rd
+^man/scs_cli_alert_info.Rd
+^man/scs_cli_alert_success.Rd

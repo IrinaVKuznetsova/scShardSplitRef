@@ -13,5 +13,6 @@
 Named list of options to be set.
 }
 \description{
-Internal function: Map package verbosity to derived options (internal)
+Map package verbosity to derived options (internal)
 }
+\keyword{internal}

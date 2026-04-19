@@ -12,3 +12,4 @@ Invisibly NULL.
 \description{
 Extracted from \code{.onLoad()} to allow direct testing.
 }
+\keyword{internal}
