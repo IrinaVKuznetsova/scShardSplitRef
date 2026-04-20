@@ -64,6 +64,9 @@ process_gtf <- function(gtf_path, split_regions_path) {
   .abort_if_ambiguous_matches(matched)
   .abort_if_unmatched_features(matched, gtf)
 
+  matched$start <- matched$start - matched$RegionStart + 1
+  matched$end <- matched$end - matched$RegionStart + 1
+
   matched <- .restore_gtf_order(matched, gtf$unique_ID)
 
   out <- .build_gtf_output(matched)
