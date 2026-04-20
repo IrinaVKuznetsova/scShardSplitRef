@@ -13,10 +13,10 @@
 #' - any GTF feature matches more than one region (overlapping regions), or
 #' - any GTF feature matches no region (regions don't fully cover the GTF).
 #'
-#' @param gtf_path Character scalar. File path to the GTF file.
-#' @param split_regions_path Character scalar. File path to a BED-like file
-#'   containing split intervals. The first three columns must be:
-#'   `Chr`, `RegionStart`, `RegionEnd` (as produced by [validate_inputs()]).
+#' @param gtf_path Character: File path to the GTF file.
+#' @param split_regions_bed Character: File path to a BED-like file
+#'   containing split intervals as produced by [determine_split_regions()]. 
+#'   The first three columns must be: `Chr`, `RegionStart`, `RegionEnd`.
 #'
 #' @return A data frame containing the updated GTF rows, with columns:
 #' `Chr`, `source`, `feature`, `start`, `end`, `score`, `strand`, `frame`,
@@ -39,11 +39,11 @@
 #'
 #' @autoglobal
 #' @export
-process_gtf <- function(gtf_path, split_regions_path) {
+process_gtf <- function(gtf_path, split_regions_bed) {
   cli::cli_alert_info("Validating inputs and reading files...")
   validated <- validate_inputs(
     gtf_path = gtf_path,
-    bed_path = split_regions_path
+    bed_path = split_regions_bed
   )
   gtf <- validated$gtf
   regions <- validated$bed
