@@ -5,8 +5,8 @@
 #' - TAB-delimited format with correct number of columns
 #' - Valid BED coordinate ranges (start < end)
 #'
-#' @param gtf_path Character: file path to GTF file.
-#' @param bed_path Character: file path to BED file.
+#' @param gtf Character: file path to GTF file.
+#' @param bed Character: file path to BED file.
 #'
 #' @return List with named elements:
 #'   - `gtf`: Data frame with 9 GTF columns (Chr, source, feature, start,
@@ -40,14 +40,14 @@
 #'   bed
 #'
 #' @export
-validate_inputs <- function(gtf_path, bed_path) {
-  .check_files_exist(gtf_path, bed_path)
+validate_inputs <- function(gtf, bed) {
+  .check_files_exist(gtf, bed)
 
-  .check_tab_file(gtf_path, min_fields = 9L, label = "GTF")
-  .check_tab_file(bed_path, min_fields = 3L, label = "BED")
+  .check_tab_file(gtf, min_fields = 9L, label = "GTF")
+  .check_tab_file(bed, min_fields = 3L, label = "BED")
 
-  gtf <- .read_and_format_gtf(gtf_path)
-  bed <- .read_and_format_bed(bed_path)
+  gtf <- .read_and_format_gtf(gtf)
+  bed <- .read_and_format_bed(bed)
 
   .validate_bed_ranges(bed)
 

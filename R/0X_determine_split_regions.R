@@ -7,10 +7,10 @@
 #' gene intervals, and oversized chunks are repeatedly re-split until all
 #' segments satisfy the requested size limit.
 #'
-#' @param regions_bed Path to a 3-column BED-like file (chr, start, end).
+#' @param bed Path to a 3-column BED-like file (chr, start, end).
 #'   Columns should be TAB-delimited with chromosome name, region start
 #'   (0-based), and region end coordinates.
-#' @param genes_gtf Path to a GTF file containing gene annotations.
+#' @param gtf Path to a GTF file containing gene annotations.
 #'   Must contain standard 9 GTF columns. Comments starting with '#' are
 #'   ignored.
 #' @param output_bed Path to the BED file to be written. Directory must exist.
@@ -48,8 +48,8 @@
 #'              mustWork = TRUE)
 #'
 #'   determine_split_regions(
-#'     regions_bed = chromosomes,
-#'     genes_gtf = genes,
+#'     bed = chromosomes,
+#'     gtf = genes,
 #'     output_bed = file.path(tempdir(), "split_regions.bed"),
 #'     limit = 2L^29L,
 #'     shift_by = 1L
@@ -57,22 +57,22 @@
 #' @autoglobal
 #' @export
 determine_split_regions <- function(
-  regions_bed,
-  genes_gtf,
+  bed,
+  gtf,
   output_bed,
   limit = 2L^29L,
   shift_by = 1L
 ) {
   cli::cli_inform(
-    "Preparing split regions from {.file regions_bed} and \\
-     {.file genes_gtf} into {.file output_bed} \\
+    "Preparing split regions from {.file bed} and \\
+     {.file gtf} into {.file output_bed} \\
      ({.var limit} = {limit}, {.var shift_by} = {shift_by}). 
     \n
     \n"
   )
 
-  regions <- .read_bed_file(regions_bed, 3L)
-  genes <- .read_gtf_file(genes_gtf)
+  regions <- .read_bed_file(bed, 3L)
+  genes <- .read_gtf_file(gtf)
   genes <- genes[genes$feature == "gene", , drop = FALSE]
 
   .assert_feasible_limit(genes, limit, shift_by)
