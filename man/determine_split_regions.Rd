@@ -4,20 +4,14 @@
 \alias{determine_split_regions}
 \title{Determine split regions for reference sharding}
 \usage{
-determine_split_regions(
-  regions_bed,
-  genes_gtf,
-  output_bed,
-  limit = 2L^29L,
-  shift_by = 1L
-)
+determine_split_regions(bed, gtf, output_bed, limit = 2L^29L, shift_by = 1L)
 }
 \arguments{
-\item{regions_bed}{Path to a 3-column BED-like file (chr, start, end).
+\item{bed}{Path to a 3-column BED-like file (chr, start, end).
 Columns should be TAB-delimited with chromosome name, region start
 (0-based), and region end coordinates.}
 
-\item{genes_gtf}{Path to a GTF file containing gene annotations.
+\item{gtf}{Path to a GTF file containing gene annotations.
 Must contain standard 9 GTF columns. Comments starting with '#' are
 ignored.}
 
@@ -69,8 +63,8 @@ satisfy the constraint.
              mustWork = TRUE)
 
   determine_split_regions(
-    regions_bed = chromosomes,
-    genes_gtf = genes,
+    bed = chromosomes,
+    gtf = genes,
     output_bed = file.path(tempdir(), "split_regions.bed"),
     limit = 2L^29L,
     shift_by = 1L

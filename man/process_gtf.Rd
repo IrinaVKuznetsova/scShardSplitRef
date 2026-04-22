@@ -4,14 +4,16 @@
 \alias{process_gtf}
 \title{Process a GTF file by assigning split-region sequence names}
 \usage{
-process_gtf(gtf_path, split_regions_path)
+process_gtf(gtf, split_regions_bed)
 }
 \arguments{
-\item{gtf_path}{Character scalar. File path to the GTF file.}
+\item{gtf}{Path to a GTF file containing gene annotations.
+Must contain standard 9 GTF columns. Comments starting with '#' are
+ignored.}
 
-\item{split_regions_path}{Character scalar. File path to a BED-like file
-containing split intervals. The first three columns must be:
-\code{Chr}, \code{RegionStart}, \code{RegionEnd} (as produced by \code{\link[=validate_inputs]{validate_inputs()}}).}
+\item{split_regions_bed}{Character: File path to a BED-like file
+containing split intervals as produced by \code{\link[=determine_split_regions]{determine_split_regions()}}.
+The first three columns must be: \code{Chr}, \code{RegionStart}, \code{RegionEnd}.}
 }
 \value{
 A data frame containing the updated GTF rows, with columns:
@@ -49,7 +51,7 @@ The function aborts if:
                    package = "scShardSplitRef",
                    mustWork = TRUE)
 
-out <- process_gtf(gtf_file, reg_file)
+out <- process_gtf(gtf, reg_file)
 out
 
 }

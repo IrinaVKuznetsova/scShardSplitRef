@@ -5,8 +5,7 @@
 #' - TAB-delimited format with correct number of columns
 #' - Valid BED coordinate ranges (start < end)
 #'
-#' @param gtf Character: file path to GTF file.
-#' @param bed Character: file path to BED file.
+#' @inheritParams determine_split_regions
 #'
 #' @return List with named elements:
 #'   - `gtf`: Data frame with 9 GTF columns (Chr, source, feature, start,

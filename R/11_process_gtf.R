@@ -13,7 +13,7 @@
 #' - any GTF feature matches more than one region (overlapping regions), or
 #' - any GTF feature matches no region (regions don't fully cover the GTF).
 #'
-#' @param gtf Character: File path to the GTF file.
+#' @inheritParams determine_split_regions
 #' @param split_regions_bed Character: File path to a BED-like file
 #'   containing split intervals as produced by [determine_split_regions()]. 
 #'   The first three columns must be: `Chr`, `RegionStart`, `RegionEnd`.

@@ -4,12 +4,16 @@
 \alias{validate_inputs}
 \title{Validate GTF and BED files}
 \usage{
-validate_inputs(gtf_path, bed_path)
+validate_inputs(gtf, bed)
 }
 \arguments{
-\item{gtf_path}{Character: file path to GTF file.}
+\item{gtf}{Path to a GTF file containing gene annotations.
+Must contain standard 9 GTF columns. Comments starting with '#' are
+ignored.}
 
-\item{bed_path}{Character: file path to BED file.}
+\item{bed}{Path to a 3-column BED-like file (chr, start, end).
+Columns should be TAB-delimited with chromosome name, region start
+(0-based), and region end coordinates.}
 }
 \value{
 List with named elements:
