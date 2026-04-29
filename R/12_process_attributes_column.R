@@ -23,7 +23,6 @@
 #' #   genome_name = "Rye_Lo7",
 #' #   genome_version = "v1p1p1"
 #' # )
-#' @autoglobal
 #' @export
 
 process_attributes_column <- function(
@@ -68,28 +67,22 @@ process_attributes_column <- function(
 #'
 #' @dev
 .filter_attributes <- function(attributes, keep_attributes) {
-  filtered <- character(length(attributes))
+  pattern <- paste0("^(?:", paste(keep_attributes, collapse = "|"), ")\\s+")
 
-  for (i in seq_along(attributes)) {
-    attr_str <- attributes[i]
-    pairs <- strsplit(attr_str, ";\\s*")[[1L]]
-    pairs <- pairs[nzchar(pairs)]
+  str_list <- stringi::stri_split_regex(attributes, ";\\s*")
 
-    kept_pairs <- character(0)
-
-    for (keep_attr in keep_attributes) {
-      pattern <- paste0("^", keep_attr, "\\s+")
-      matching <- pairs[grepl(pattern, pairs)]
-
-      if (length(matching) > 0L) {
-        kept_pairs <- c(kept_pairs, matching)
+  vapply(
+    str_list,
+    FUN.VALUE = character(1L),
+    FUN = function(pairs) {
+      pairs <- pairs[nzchar(pairs)]
+      keep <- stringi::stri_detect_regex(pairs, pattern)
+      if (!any(keep)) {
+        return("")
       }
+      paste(pairs[keep], collapse = "; ")
     }
-
-    filtered[i] <- paste(kept_pairs, collapse = "; ")
-  }
-
-  filtered
+  )
 }
 
 #' Check filtered attributes completeness
@@ -103,7 +96,10 @@ process_attributes_column <- function(
 #'
 #' @dev
 .check_filtered_completeness <- function(filtered, original) {
-  empty_idx <- which(!nzchar(filtered) & nzchar(original) > 0L)
+  is_empty_filtered <- !nzchar(filtered)
+  is_nonempty_original <- nzchar(original)
+
+  empty_idx <- which(is_empty_filtered & is_nonempty_original)
 
   if (length(empty_idx) > 0L) {
     cli::cli_warn(

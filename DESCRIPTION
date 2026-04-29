@@ -24,6 +24,7 @@ Depends: R (>= 4.3.0)
 Imports: 
     cli,
     rlang,
+    stringi,
     utils
 Suggests: 
     knitr,
