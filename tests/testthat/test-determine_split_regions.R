@@ -84,7 +84,7 @@ test_that(".merge_overlapping_gene_ranges handles edge cases", {
 test_that(".subdivide_oversized identifies needed splits", {
   # No splits needed - all intervals within limit
   result <- .subdivide_oversized(c(0L, 100L, 200L), limit = 250L)
-  expect_identical(result, integer(0L))
+  expect_identical(result, integer(0))
 
   # Splits needed - 500bp interval with 100bp limit
   # Should create ~4 boundaries to split into 5 chunks of ~100bp each
