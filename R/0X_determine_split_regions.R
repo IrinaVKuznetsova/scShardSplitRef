@@ -338,7 +338,8 @@ determine_split_regions <- function(
   if (start >= end) {
     cli::cli_abort(
       call = rlang::caller_env(),
-      "Invalid BED region: {.var start} ({start}) must be < {.var end} ({end}) for {.var chr}={chr}."
+      "Invalid BED region: {.var start} ({start}) must be < {.var end}
+      ({end}) for {.var chr}={chr}."
     )
   }
 
@@ -613,7 +614,7 @@ determine_split_regions <- function(
     cli::cli_abort(
       call = rlang::caller_env(),
       "Unable to split chromosome {chr} to satisfy limit={limit}.
-       Oversized intervals at positions: {bad_idx}"
+       Oversized intervals at positions: {bad_idx}."
     )
   }
 
@@ -641,25 +642,25 @@ determine_split_regions <- function(
 #'
 #' @dev
 .subdivide_oversized <- function(points, limit) {
-  extra <- integer(0L)
+  widths <- diff(points)
+  idx <- which(widths > limit)
+  n <- ceiling(widths[idx] / limit)
 
-  for (i in seq_len(length(points) - 1L)) {
-    width <- points[i + 1L] - points[i]
-    if (width > limit) {
-      n <- ceiling(width / limit)
-      step <- width / n
-      extra <- c(
-        extra,
+  unlist(
+    Map(
+      function(i, k) {
+        step <- widths[i] / k
         as.integer(round(seq(
           points[i] + step,
-          points[i + 1L] - step,
+          points[i + 1] - step,
           by = step
         )))
-      )
-    }
-  }
-
-  return(extra)
+      },
+      idx,
+      n
+    ),
+    use.names = FALSE
+  )
 }
 
 #' Shift boundaries past genes
@@ -695,17 +696,18 @@ determine_split_regions <- function(
     return(boundaries)
   }
 
-  for (i in seq_along(boundaries)) {
-    boundaries[i] <- .shift_single_boundary(
-      boundaries[i],
-      gene_ranges,
-      chr_end,
-      shift_by
-    )
-  }
+  # Vectorised apply over boundaries
+  shifted <- vapply(
+    boundaries,
+    FUN.VALUE = integer(1),
+    FUN = function(b) {
+      .shift_single_boundary(b, gene_ranges, chr_end, shift_by)
+    }
+  )
 
-  boundaries <- sort(unique(boundaries))
-  boundaries[boundaries > 0L & boundaries < chr_end]
+  # Deduplicate, sort, and keep only valid boundaries
+  shifted <- sort(unique(shifted))
+  shifted[shifted > 0L & shifted < chr_end]
 }
 
 #' Shift a single boundary past genes
@@ -838,33 +840,20 @@ determine_split_regions <- function(
     return(data.frame(start = integer(0), end = integer(0)))
   }
 
-  ranges <- data.frame(
-    start = as.integer(chr_genes$start),
-    end = as.integer(chr_genes$end),
-    stringsAsFactors = FALSE
-  )
+  ranges <- chr_genes[, c("start", "end")]
   ranges <- ranges[order(ranges$start, ranges$end), , drop = FALSE]
 
-  merged_list <- list()
-  merged_start <- ranges$start[1L]
-  merged_end <- ranges$end[1L]
+  s <- ranges$start
+  e <- ranges$end
 
-  for (i in seq_len(nrow(ranges))[-1L]) {
-    if (ranges$start[i] <= merged_end) {
-      merged_end <- max(merged_end, ranges$end[i])
-    } else {
-      merged_list[[length(merged_list) + 1L]] <- data.frame(
-        start = merged_start,
-        end = merged_end
-      )
-      merged_start <- ranges$start[i]
-      merged_end <- ranges$end[i]
-    }
-  }
+  # A new block starts whenever the next start is > current end
+  new_block <- c(TRUE, s[-1] > cummax(e)[-length(e)])
 
-  merged_list[[length(merged_list) + 1L]] <- data.frame(
-    start = merged_start,
-    end = merged_end
+  block_id <- cumsum(new_block)
+
+  data.frame(
+    start = tapply(s, block_id, min),
+    end = tapply(e, block_id, max),
+    row.names = NULL
   )
-  return(do.call(rbind, merged_list))
 }
