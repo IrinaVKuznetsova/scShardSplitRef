@@ -368,7 +368,7 @@ determine_split_regions <- function(
 .split_region_core <- function(chr, start, end, limit) {
   width <- end - start
   boundaries <- if (width <= limit) {
-    integer(0L)
+    integer(0)
   } else {
     .build_boundaries(start, end, limit)
   }
@@ -404,7 +404,7 @@ determine_split_regions <- function(
 .build_boundaries <- function(start, end, limit) {
   width <- end - start
   if (width <= limit) {
-    return(integer(0L))
+    return(integer(0))
   }
 
   n_chunks <- ceiling(width / limit)
