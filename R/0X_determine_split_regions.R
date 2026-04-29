@@ -644,12 +644,18 @@ determine_split_regions <- function(
 .subdivide_oversized <- function(points, limit) {
   widths <- diff(points)
   idx <- which(widths > limit)
+
+  if (length(idx) == 0L) {
+    return(integer(0L))
+  }
+
   n <- ceiling(widths[idx] / limit)
 
-  unlist(
+  extra <- unlist(
     Map(
       function(i, k) {
-        step <- widths[i] / k
+        width <- widths[i]
+        step <- width / k
         as.integer(round(seq(
           points[i] + step,
           points[i + 1] - step,
@@ -661,6 +667,8 @@ determine_split_regions <- function(
     ),
     use.names = FALSE
   )
+
+  extra
 }
 
 #' Shift boundaries past genes
