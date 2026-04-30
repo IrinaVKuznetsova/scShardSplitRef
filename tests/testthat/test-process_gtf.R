@@ -33,17 +33,26 @@ test_that("process_gtf works on example files and preserves order", {
   ))
 
   # Chr column must contain split-region names
-  expect_true(all(grepl(":", out$Chr)))
-  expect_true(all(grepl("-", out$Chr)))
+  expect_true(all(grepl(":", out$Chr, fixed = TRUE)))
+  expect_true(all(grepl("-", out$Chr, fixed = TRUE)))
 
   # Start/end must be positive after shifting
-  expect_true(all(out$start >= 1))
+  expect_true(all(out$start >= 1L))
   expect_true(all(out$end >= out$start))
 
   # Output row order must match input GTF order
-  gtf_raw <- readr::read_tsv(gtf_file, show_col_types = FALSE)
-  expect_equal(nrow(out), nrow(gtf_raw))
-  expect_equal(out$attribute, gtf_raw$attribute)
+  gtf_raw <- read.table(
+    gtf_file,
+    sep = "\t",
+    header = FALSE,
+    quote = "",
+    comment.char = "#",
+    stringsAsFactors = FALSE
+  )
+
+  # attribute is column 9
+  expect_identical(nrow(out), nrow(gtf_raw))
+  expect_identical(out$attribute, gtf_raw[[9]])
 })
 
 
@@ -55,23 +64,34 @@ test_that("process_gtf aborts when split regions overlap (ambiguous)", {
     mustWork = TRUE
   )
 
-  # Load example BED and artificially create overlapping regions
-  reg <- readr::read_tsv(
+  # Load BED using base R
+  reg <- read.table(
     system.file(
       "extdata",
       "IN0_toy_centromeres_for_gtf.bed",
       package = "scShardSplitRef",
       mustWork = TRUE
     ),
-    show_col_types = FALSE
+    sep = "\t",
+    header = FALSE,
+    stringsAsFactors = FALSE
   )
+
+  colnames(reg)[1:3] <- c("Chr", "RegionStart", "RegionEnd")
 
   # Force overlap on chr1
   reg$RegionStart[1] <- reg$RegionStart[2] - 5
   reg$RegionEnd[1] <- reg$RegionEnd[2] + 5
 
   reg_file <- tempfile(fileext = ".bed")
-  readr::write_tsv(reg, reg_file)
+  write.table(
+    reg,
+    reg_file,
+    sep = "\t",
+    col.names = FALSE,
+    row.names = FALSE,
+    quote = FALSE
+  )
 
   expect_error(
     process_gtf(gtf_file, reg_file),
@@ -88,25 +108,37 @@ test_that("process_gtf aborts when some features match no region", {
     mustWork = TRUE
   )
 
-  # Load example BED and remove all chr2 regions
-  reg <- readr::read_tsv(
+  # Load BED using base R
+  reg <- read.table(
     system.file(
       "extdata",
       "IN0_toy_centromeres_for_gtf.bed",
       package = "scShardSplitRef",
       mustWork = TRUE
     ),
-    show_col_types = FALSE
+    sep = "\t",
+    header = FALSE,
+    stringsAsFactors = FALSE
   )
 
-  reg <- reg[which(reg$Chr != "chr2"), ]
+  colnames(reg)[1:3] <- c("Chr", "RegionStart", "RegionEnd")
+
+  # Remove all chr2 regions
+  reg <- reg[reg$Chr != "chr2", , drop = FALSE]
 
   reg_file <- tempfile(fileext = ".bed")
-  readr::write_tsv(reg, reg_file)
+  write.table(
+    reg,
+    reg_file,
+    sep = "\t",
+    col.names = FALSE,
+    row.names = FALSE,
+    quote = FALSE
+  )
 
   expect_error(
     process_gtf(gtf_file, reg_file),
-    "do not fit within any split-region interval"
+    "do not fall within any split-region interval"
   )
 })
 
@@ -115,14 +147,14 @@ test_that(".prepare_split_regions constructs NEW correctly", {
   regions <- data.frame(
     Chr = "chrX",
     RegionStart = 100,
-    RegionEnd = 200
+    RegionEnd = 200,
+    stringsAsFactors = FALSE
   )
 
   out <- scShardSplitRef:::`.prepare_split_regions`(regions)
 
-  expect_equal(out$NEW, "chrX:100-200")
+  expect_identical(out$NEW, "chrX:100-200")
 })
-
 
 test_that(".rows_within_region applies matching rules correctly", {
   df <- data.frame(
