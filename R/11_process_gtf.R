@@ -96,14 +96,19 @@ process_gtf <- function(gtf, split_regions_bed) {
 
 #' Identify rows where a feature lies fully within a split region
 #'
-#' Applies the matching rule used by [process_gtf()].
+#' Applies the matching rule used by [process_gtf()]. A feature `start`, `end`
+#' should be fully inside a region:
+#'  `RegionStart`, `RegionEnd`:
+#'  `start >= RegionStart`
+#'  `end <= RegionEnd`
+#'
 #'
 #' @param df Data frame containing `start`, `end`, `RegionStart`, `RegionEnd`.
 #'
 #' @return Logical vector of length `nrow(df)`.
 #' @dev
 .rows_within_region <- function(df) {
-  df$start >= df$RegionStart & df$start < df$RegionEnd & df$end <= df$RegionEnd
+  df$start >= df$RegionStart & df$end <= df$RegionEnd
 }
 
 #' Abort if any feature matches multiple split regions

@@ -131,7 +131,7 @@ test_that(".rows_within_region applies matching rules correctly", {
     RegionEnd = 20
   )
 
-  expect_equal(
+  expect_identical(
     scShardSplitRef:::`.rows_within_region`(df),
     c(FALSE, TRUE, TRUE, FALSE)
   )
