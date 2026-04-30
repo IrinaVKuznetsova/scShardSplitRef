@@ -99,7 +99,7 @@ test_that("process_gtf aborts when some features match no region", {
     show_col_types = FALSE
   )
 
-  reg <- reg[reg$Chr != "chr2", ]
+  reg <- reg[which(reg$Chr != "chr2"), ]
 
   reg_file <- tempfile(fileext = ".bed")
   readr::write_tsv(reg, reg_file)
