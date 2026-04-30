@@ -42,8 +42,8 @@
 process_gtf <- function(gtf, split_regions_bed) {
   cli::cli_alert_info("Validating inputs and reading files...")
   validated <- validate_inputs(
-    gtf_path = gtf,
-    bed_path = split_regions_bed
+    gtf = gtf,
+    bed = split_regions_bed
   )
   gtf <- validated$gtf
   regions <- validated$bed
