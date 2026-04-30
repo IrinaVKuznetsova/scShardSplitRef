@@ -282,7 +282,7 @@ test_that("validate_inputs returns correct structure", {
 
   result <- validate_inputs(gtf_tmp, bed_tmp)
 
-  expect_true(is.list(result))
+  expect_type(result, "list")
   expect_true("gtf" %in% names(result))
   expect_true("bed" %in% names(result))
   expect_identical(nrow(result$gtf), 2L)
@@ -300,9 +300,7 @@ test_that("validate_inputs rejects invalid BED ranges", {
   })
 
   writeLines(
-    c(
-      "chr1\tensembl\tgene\t1\t100\t.\t+\t.\tgene_id \"G1\";"
-    ),
+    "chr1\tensembl\tgene\t1\t100\t.\t+\t.\tgene_id \"G1\";",
     gtf_tmp
   )
   writeLines("chr1\t1000\t500", bed_tmp)
