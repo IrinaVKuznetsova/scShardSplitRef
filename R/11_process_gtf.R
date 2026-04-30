@@ -121,7 +121,6 @@ process_gtf <- function(gtf, split_regions_bed) {
 #' @return Invisibly `TRUE` if ok; otherwise aborts.
 #' @dev
 .abort_if_ambiguous_matches <- function(matched) {
-  # no matches is okay here; missing-features check handles that
   if (nrow(matched) == 0L) {
     return(invisible(TRUE))
   }
@@ -133,11 +132,11 @@ process_gtf <- function(gtf, split_regions_bed) {
     cli::cli_abort(
       call = rlang::caller_env(),
       c(
-        "Ambiguous split-region matches detected for GTF feature{?s}.",
+        "{n_dup} ambiguous split‑region match{?es} detected.",
         x = "{n_dup} feature ID{?s} matched multiple intervals.",
-        i = "Feature ID{?s}: {dup_ids}",
-        i = "Ensure the split-regions BED has no overlapping intervals per
-             chromosome."
+        i = "Affected IDs:",
+        i = paste0("• {.val ", dup_ids, "}"),
+        i = "Ensure the split‑regions BED has no overlapping intervals per chromosome."
       ),
       .envir = environment()
     )
