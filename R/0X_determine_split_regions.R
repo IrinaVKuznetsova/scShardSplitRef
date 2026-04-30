@@ -704,16 +704,15 @@ determine_split_regions <- function(
     return(boundaries)
   }
 
-  # Vectorised apply over boundaries
   shifted <- vapply(
     boundaries,
-    FUN.VALUE = integer(1),
-    FUN = function(b) {
-      .shift_single_boundary(b, gene_ranges, chr_end, shift_by)
-    }
+    FUN = .shift_single_boundary,
+    FUN.VALUE = integer(1L),
+    gene_ranges = gene_ranges,
+    chr_end = chr_end,
+    shift_by = shift_by
   )
 
-  # Deduplicate, sort, and keep only valid boundaries
   shifted <- sort(unique(shifted))
   shifted[shifted > 0L & shifted < chr_end]
 }
@@ -845,7 +844,7 @@ determine_split_regions <- function(
 #' @dev
 .merge_overlapping_gene_ranges <- function(chr_genes) {
   if (nrow(chr_genes) == 0L) {
-    return(data.frame(start = integer(0), end = integer(0)))
+    return(data.frame(start = integer(0L), end = integer(0L)))
   }
 
   ranges <- chr_genes[, c("start", "end")]
@@ -855,7 +854,7 @@ determine_split_regions <- function(
   e <- ranges$end
 
   # A new block starts whenever the next start is > current end
-  new_block <- c(TRUE, s[-1] > cummax(e)[-length(e)])
+  new_block <- c(TRUE, s[-1L] > cummax(e)[-length(e)])
 
   block_id <- cumsum(new_block)
 
