@@ -168,13 +168,11 @@ process_gtf <- function(gtf, split_regions_bed) {
   ]
 
   preview_n <- min(5L, nrow(missing_rows))
-  preview <- paste0(
+  preview_items <- sprintf(
+    "{.code %s:%s:%s-%s}",
     missing_rows$Chr[seq_len(preview_n)],
-    ":",
     missing_rows$feature[seq_len(preview_n)],
-    ":",
     missing_rows$start[seq_len(preview_n)],
-    ":",
     missing_rows$end[seq_len(preview_n)]
   )
 
