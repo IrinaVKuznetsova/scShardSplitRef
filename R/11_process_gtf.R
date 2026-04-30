@@ -15,7 +15,7 @@
 #'
 #' @inheritParams determine_split_regions
 #' @param split_regions_bed Character: File path to a BED-like file
-#'   containing split intervals as produced by [determine_split_regions()]. 
+#'   containing split intervals as produced by [determine_split_regions()].
 #'   The first three columns must be: `Chr`, `RegionStart`, `RegionEnd`.
 #'
 #' @return A data frame containing the updated GTF rows, with columns:
@@ -120,6 +120,7 @@ process_gtf <- function(gtf, split_regions_bed) {
 #'
 #' @return Invisibly `TRUE` if ok; otherwise aborts.
 #' @dev
+
 .abort_if_ambiguous_matches <- function(matched) {
   if (nrow(matched) == 0L) {
     return(invisible(TRUE))
@@ -153,6 +154,7 @@ process_gtf <- function(gtf, split_regions_bed) {
 #'
 #' @return Invisibly `TRUE` if ok; otherwise aborts.
 #' @dev
+
 .abort_if_unmatched_features <- function(matched, gtf) {
   missing_ids <- setdiff(gtf$unique_ID, matched$unique_ID)
   n_missing <- length(missing_ids)
@@ -179,11 +181,12 @@ process_gtf <- function(gtf, split_regions_bed) {
   cli::cli_abort(
     call = rlang::caller_env(),
     c(
-      "Some GTF feature{?s} do not fit within any split-region interval.",
+      "{n_missing} GTF feature{?s} do not fall within any split‑region interval.",
       x = "{n_missing} unmatched feature{?s} found.",
-      i = "Example{?s}: {preview}",
+      i = "Example:",
+      i = paste0("• ", preview_items),
       i = "Ensure split regions fully cover the annotation coordinates.",
-      i = "Handle boundary-crossing features before calling {.fn process_gtf}."
+      i = "Handle boundary‑crossing features before calling {.fn process_gtf}."
     ),
     .envir = environment()
   )
