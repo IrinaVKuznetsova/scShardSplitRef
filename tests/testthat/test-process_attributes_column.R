@@ -76,9 +76,9 @@ test_that(".filter_attributes keeps specified attributes", {
 
   result <- .filter_attributes(attributes, c("gene_id", "gene_name"))
 
-  expect_true(all(grepl("gene_id", result)))
-  expect_true(all(grepl("gene_name", result)))
-  expect_false(any(grepl("gene_type", result)))
+  expect_true(all(grepl("gene_id", result, fixed = TRUE)))
+  expect_true(all(grepl("gene_name", result, fixed = TRUE)))
+  expect_false(any(grepl("gene_type", result, fixed = TRUE)))
 })
 
 test_that(".check_filtered_completeness warns on empty results", {
