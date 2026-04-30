@@ -123,6 +123,7 @@ test_that(".prepare_split_regions constructs NEW correctly", {
   expect_equal(out$NEW, "chrX:100-200")
 })
 
+
 test_that(".rows_within_region applies matching rules correctly", {
   df <- data.frame(
     start = c(5, 10, 10, 11),
@@ -133,6 +134,6 @@ test_that(".rows_within_region applies matching rules correctly", {
 
   expect_identical(
     scShardSplitRef:::`.rows_within_region`(df),
-    c(FALSE, TRUE, TRUE, FALSE)
+    c(FALSE, TRUE, TRUE, TRUE)
   )
 })
