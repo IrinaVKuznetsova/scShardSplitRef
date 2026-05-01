@@ -8,10 +8,10 @@
 #' @inheritParams determine_split_regions
 #'
 #' @return List with named elements:
-#'   - `gtf`: Data frame with 9 GTF columns (Chr, source, feature, start,
-#'     end, score, strand, frame, attribute)
 #'   - `bed`: Data frame with at least 3 BED columns (Chr, RegionStart,
 #'      RegionEnd) plus any additional columns from the input file.
+#'   - `gtf`: Data frame with 9 GTF columns (Chr, source, feature, start,
+#'     end, score, strand, frame, attribute)
 #'
 #' @details
 #' Performs four checks in sequence:
@@ -21,38 +21,38 @@
 #' 4. All BED ranges satisfy RegionStart < RegionEnd
 #'
 #' @examples
-#'   genes <- system.file("extdata",
-#'              "A3_toy_all_scenarios_2chr.gtf",
-#'              package = "scShardSplitRef",
-#'              mustWork = TRUE)
 #'   regions <- system.file("extdata",
 #'                    "IN0_toy_centromeres_for_gtf.bed",
 #'                    package = "scShardSplitRef",
 #'                    mustWork = TRUE)
+#'   genes <- system.file("extdata",
+#'              "A3_toy_all_scenarios_2chr.gtf",
+#'              package = "scShardSplitRef",
+#'              mustWork = TRUE)
 #'
-#'   result <- validate_inputs(genes, regions)
+#'   result <- validate_inputs(regions, genes)
 #'
-#'   gtf <- result$gtf
 #'   bed <- result$bed
+#'   gtf <- result$gtf
 #'
 #'   gtf
 #'   bed
 #'
 #' @export
-validate_inputs <- function(gtf, bed) {
-  .check_files_exist(gtf, bed)
+validate_inputs <- function(bed, gtf) {
+  .check_files_exist(bed, gtf)
 
-  .check_tab_file(gtf, min_fields = 9L, label = "GTF")
   .check_tab_file(bed, min_fields = 3L, label = "BED")
+  .check_tab_file(gtf, min_fields = 9L, label = "GTF")
 
-  gtf <- .read_and_format_gtf(gtf)
   bed <- .read_and_format_bed(bed)
+  gtf <- .read_and_format_gtf(gtf)
 
   .validate_bed_ranges(bed)
 
   cli::cli_inform("{.bold All files loaded and validated successfully.}")
 
-  return(list(gtf = gtf, bed = bed))
+  return(list(bed = bed, gtf = gtf))
 }
 
 #' Check TAB-delimited file structure
@@ -184,30 +184,30 @@ validate_inputs <- function(gtf, bed) {
 
 #' Check that files exist
 #'
-#' Validates that both GTF and BED file paths point to existing files.
+#' Validates that both BED and GTF file paths point to existing files.
 #'
-#' @param gtf_path Character: GTF file path.
 #' @param bed_path Character: BED file path.
+#' @param gtf_path Character: GTF file path.
 #'
 #' @return Invisible TRUE if both files exist. Raises error otherwise.
 #'
 #' @examples
 #' \dontrun{
-#'   .check_files_exist("genes.gtf", "regions.bed")
+#'   .check_files_exist("regions.bed", "genes.gtf")
 #' }
 #'
 #' @dev
-.check_files_exist <- function(gtf_path, bed_path) {
-  if (!file.exists(gtf_path)) {
-    cli::cli_abort(
-      call = rlang::caller_env(),
-      "GTF file does not exist: {.file {gtf_path}}"
-    )
-  }
+.check_files_exist <- function(bed_path, gtf_path) {
   if (!file.exists(bed_path)) {
     cli::cli_abort(
       call = rlang::caller_env(),
       "BED file does not exist: {.file {bed_path}}"
+    )
+  }
+  if (!file.exists(gtf_path)) {
+    cli::cli_abort(
+      call = rlang::caller_env(),
+      "GTF file does not exist: {.file {gtf_path}}"
     )
   }
   return(invisible(TRUE))

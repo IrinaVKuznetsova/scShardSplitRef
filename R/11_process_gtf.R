@@ -1,6 +1,6 @@
 #' Process a GTF file by assigning split-region sequence names
 #'
-#' Reads a GTF and a BED-like "split regions" file, assigns each GTF feature to
+#' Reads a BED-like "split regions" file and a GTF, assigns each GTF feature to
 #' exactly one split-region interval, and replaces the GTF `Chr` field with a
 #' split-region name of the form `Chr:RegionStart-RegionEnd`.
 #'
@@ -13,10 +13,10 @@
 #' - any GTF feature matches more than one region (overlapping regions), or
 #' - any GTF feature matches no region (regions don't fully cover the GTF).
 #'
-#' @inheritParams determine_split_regions
 #' @param split_regions_bed Character: File path to a BED-like file
 #'   containing split intervals as produced by [determine_split_regions()].
 #'   The first three columns must be: `Chr`, `RegionStart`, `RegionEnd`.
+#' @inheritParams determine_split_regions
 #'
 #' @return A data frame containing the updated GTF rows, with columns:
 #' `Chr`, `source`, `feature`, `start`, `end`, `score`, `strand`, `frame`,
@@ -25,28 +25,28 @@
 #' @examples
 #' # Minimal working example using temporary files
 #'
-#'   gtf_file <- system.file("extdata",
-#'              "A3_toy_all_scenarios_2chr.gtf",
-#'              package = "scShardSplitRef",
-#'              mustWork = TRUE)
 #'   reg_file <- system.file("extdata",
 #'                    "IN0_toy_centromeres_for_gtf.bed",
 #'                    package = "scShardSplitRef",
 #'                    mustWork = TRUE)
+#'   gtf_file <- system.file("extdata",
+#'              "A3_toy_all_scenarios_2chr.gtf",
+#'              package = "scShardSplitRef",
+#'              mustWork = TRUE)
 #'
-#' out <- process_gtf(gtf, reg_file)
+#' out <- process_gtf(reg_file, gtf_file)
 #' out
 #'
 #' @autoglobal
 #' @export
-process_gtf <- function(gtf, split_regions_bed) {
+process_gtf <- function(split_regions_bed, gtf) {
   cli::cli_alert_info("Validating inputs and reading files...")
   validated <- validate_inputs(
-    gtf = gtf,
-    bed = split_regions_bed
+    bed = split_regions_bed,
+    gtf = gtf
   )
-  gtf <- validated$gtf
   regions <- validated$bed
+  gtf <- validated$gtf
 
   gtf$unique_ID <- sprintf("ID%i", seq_len(nrow(gtf)))
   regions <- .prepare_split_regions(regions)
