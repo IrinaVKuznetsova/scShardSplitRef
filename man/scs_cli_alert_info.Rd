@@ -17,6 +17,6 @@ scs_cli_alert_info(text, ..., .envir = parent.frame())
 Invisibly \code{TRUE}.
 }
 \description{
-Wrapper for \code{\link[cli:cli_alert]{cli::cli_alert_info()}} that respects
+Wrapper for \code{\link[cli:cli_alert_info]{cli::cli_alert_info()}} that respects
 \code{options(scShardSplitRef.verbosity = "quiet"|"minimal"|"verbose")}.
 }

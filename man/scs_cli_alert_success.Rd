@@ -17,6 +17,6 @@ scs_cli_alert_success(text, ..., .envir = parent.frame())
 Invisibly \code{TRUE}.
 }
 \description{
-Wrapper for \code{\link[cli:cli_alert]{cli::cli_alert_success()}} that respects
+Wrapper for \code{\link[cli:cli_alert_success]{cli::cli_alert_success()}} that respects
 \code{options(scShardSplitRef.verbosity = "quiet"|"minimal"|"verbose")}.
 }

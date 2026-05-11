@@ -4,16 +4,16 @@
 \alias{process_gtf}
 \title{Process a GTF file by assigning split-region sequence names}
 \usage{
-process_gtf(gtf, split_regions_bed)
+process_gtf(split_regions_bed, gtf)
 }
 \arguments{
-\item{gtf}{Path to a GTF file containing gene annotations.
-Must contain standard 9 GTF columns. Comments starting with '#' are
-ignored.}
-
 \item{split_regions_bed}{Character: File path to a BED-like file
 containing split intervals as produced by \code{\link[=determine_split_regions]{determine_split_regions()}}.
 The first three columns must be: \code{Chr}, \code{RegionStart}, \code{RegionEnd}.}
+
+\item{gtf}{Path to a GTF file containing gene annotations.
+Must contain standard 9 GTF columns. Comments starting with '#' are
+ignored.}
 }
 \value{
 A data frame containing the updated GTF rows, with columns:
@@ -21,7 +21,7 @@ A data frame containing the updated GTF rows, with columns:
 \code{attribute}. The output row order matches the input GTF order.
 }
 \description{
-Reads a GTF and a BED-like "split regions" file, assigns each GTF feature to
+Reads a BED-like "split regions" file and a GTF, assigns each GTF feature to
 exactly one split-region interval, and replaces the GTF \code{Chr} field with a
 split-region name of the form \code{Chr:RegionStart-RegionEnd}.
 }
@@ -42,16 +42,16 @@ The function aborts if:
 \examples{
 # Minimal working example using temporary files
 
-  gtf_file <- system.file("extdata",
-             "A3_toy_all_scenarios_2chr.gtf",
-             package = "scShardSplitRef",
-             mustWork = TRUE)
   reg_file <- system.file("extdata",
                    "IN0_toy_centromeres_for_gtf.bed",
                    package = "scShardSplitRef",
                    mustWork = TRUE)
+  gtf_file <- system.file("extdata",
+             "A3_toy_all_scenarios_2chr.gtf",
+             package = "scShardSplitRef",
+             mustWork = TRUE)
 
-out <- process_gtf(gtf, reg_file)
+out <- process_gtf(reg_file, gtf_file)
 out
 
 }

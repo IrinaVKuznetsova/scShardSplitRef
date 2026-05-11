@@ -4,22 +4,22 @@
 \alias{.check_files_exist}
 \title{Check that files exist}
 \usage{
-.check_files_exist(gtf_path, bed_path)
+.check_files_exist(bed_path, gtf_path)
 }
 \arguments{
-\item{gtf_path}{Character: GTF file path.}
-
 \item{bed_path}{Character: BED file path.}
+
+\item{gtf_path}{Character: GTF file path.}
 }
 \value{
 Invisible TRUE if both files exist. Raises error otherwise.
 }
 \description{
-Validates that both GTF and BED file paths point to existing files.
+Validates that both BED and GTF file paths point to existing files.
 }
 \examples{
 \dontrun{
-  .check_files_exist("genes.gtf", "regions.bed")
+  .check_files_exist("regions.bed", "genes.gtf")
 }
 
 }

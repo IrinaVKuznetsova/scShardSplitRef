@@ -13,5 +13,9 @@
 Logical vector of length \code{nrow(df)}.
 }
 \description{
-Applies the matching rule used by \code{\link[=process_gtf]{process_gtf()}}.
+Applies the matching rule used by \code{\link[=process_gtf]{process_gtf()}}. A feature \code{start}, \code{end}
+should be fully inside a region:
+\code{RegionStart}, \code{RegionEnd}:
+\code{start >= RegionStart}
+\code{end <= RegionEnd}
 }

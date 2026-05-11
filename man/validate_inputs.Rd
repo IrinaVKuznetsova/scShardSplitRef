@@ -4,24 +4,23 @@
 \alias{validate_inputs}
 \title{Validate GTF and BED files}
 \usage{
-validate_inputs(gtf, bed)
+validate_inputs(bed, gtf)
 }
 \arguments{
-\item{gtf}{Path to a GTF file containing gene annotations.
-Must contain standard 9 GTF columns. Comments starting with '#' are
-ignored.}
-
 \item{bed}{Path to a 3-column BED-like file (chr, start, end).
 Columns should be TAB-delimited with chromosome name, region start
 (0-based), and region end coordinates.}
+
+\item{gtf}{Path to a GTF file containing gene annotations.
+Must contain standard 9 GTF columns. Comments starting with '#' are
+ignored.}
 }
 \value{
 List with named elements:
 \itemize{
-\item \code{gtf}: Data frame with 9 GTF columns (Chr, source, feature, start,
-end, score, strand, frame, attribute)
-\item \code{bed}: Data frame with at least 3 BED columns (Chr, RegionStart,
-RegionEnd) plus any additional columns from the input file.
+\item \code{bed}: Data frame with at least 3 BED columns plus any
+additional columns from the input file.
+\item \code{gtf}: Data frame with 9 GTF columns
 }
 }
 \description{
@@ -42,19 +41,19 @@ Performs four checks in sequence:
 }
 }
 \examples{
-  genes <- system.file("extdata",
-             "A3_toy_all_scenarios_2chr.gtf",
-             package = "scShardSplitRef",
-             mustWork = TRUE)
   regions <- system.file("extdata",
                    "IN0_toy_centromeres_for_gtf.bed",
                    package = "scShardSplitRef",
                    mustWork = TRUE)
+  genes <- system.file("extdata",
+             "A3_toy_all_scenarios_2chr.gtf",
+             package = "scShardSplitRef",
+             mustWork = TRUE)
 
-  result <- validate_inputs(genes, regions)
+  result <- validate_inputs(regions, genes)
 
-  gtf <- result$gtf
   bed <- result$bed
+  gtf <- result$gtf
 
   gtf
   bed
