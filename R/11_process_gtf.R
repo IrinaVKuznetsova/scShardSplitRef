@@ -17,10 +17,17 @@
 #'   containing split intervals as produced by [determine_split_regions()].
 #'   The first three columns must be: `Chr`, `RegionStart`, `RegionEnd`.
 #' @inheritParams determine_split_regions
+#' @param keep_attributes Character vector of attribute keys to keep (e.g.,
+#'   `c("gene_id", "transcript_id", "gene_name")`). If provided, the GTF
+#'   attribute column will be filtered to keep only these fields. Defaults to
+#'   `NULL` (no filtering).
+#' @param genome_name Genome identifier used in the output filename.
+#' @param genome_version Genome version string used in the output filename.
+#' @param out_path Directory where the output GTF will be written. Defaults to
+#'   the current working directory (`"."`).
 #'
-#' @return A data frame containing the updated GTF rows, with columns:
-#' `Chr`, `source`, `feature`, `start`, `end`, `score`, `strand`, `frame`,
-#' `attribute`. The output row order matches the input GTF order.
+#' @return The function writes the filtered GTF file to disk
+#'   at `out_path`.
 #'
 #' @examples
 #' # Minimal working example using temporary files
@@ -34,13 +41,40 @@
 #'              package = "scShardSplitRef",
 #'              mustWork = TRUE)
 #'
-#' out <- process_gtf(reg_file, gtf_file)
-#' out
+#'   process_gtf(
+#'     split_regions_bed = reg_file,
+#'     gtf = gtf_file,
+#'     genome_name = "Example",
+#'     genome_version = "v1.0",
+#'     out_path = "."
+#'   )
 #'
 #' @autoglobal
 #' @export
-process_gtf <- function(split_regions_bed, gtf) {
+process_gtf <- function(
+  split_regions_bed,
+  gtf,
+  keep_attributes = NULL,
+  genome_name,
+  genome_version,
+  out_path = "."
+) {
   cli::cli_alert_info("Validating inputs and reading files...")
+  
+  # Validate that genome_name and genome_version are provided
+  if (missing(genome_name) || is.null(genome_name)) {
+    cli::cli_abort(
+      call = rlang::caller_env(),
+      "Parameter {.arg genome_name} is required."
+    )
+  }
+  
+  if (missing(genome_version) || is.null(genome_version)) {
+    cli::cli_abort(
+      call = rlang::caller_env(),
+      "Parameter {.arg genome_version} is required."
+    )
+  }
   validated <- validate_inputs(
     bed = split_regions_bed,
     gtf = gtf
@@ -71,8 +105,25 @@ process_gtf <- function(split_regions_bed, gtf) {
 
   out <- .build_gtf_output(matched)
 
-  cli::cli_alert_success("Processing complete. Returning formatted GTF.")
-  out
+  # Handle attribute filtering if parameters are provided
+  if (!is.null(keep_attributes)) {
+    filtered <- .filter_attributes(out$attribute, keep_attributes)
+    .check_filtered_completeness(filtered, out$attribute)
+    out$attribute <- filtered
+  }
+
+  # Write to file
+  if (!dir.exists(out_path)) {
+    cli::cli_abort(
+      call = rlang::caller_env(),
+      "Output directory does not exist: {.file {out_path}}"
+    )
+  }
+  output_file <- .build_output_filename(out_path, genome_name, genome_version)
+  .write_filtered_gtf(out, output_file)
+  cli::cli_inform("{.bold Finished writing processed GTF: {output_file}}")
+
+  invisible(NULL)
 }
 
 #' Prepare split regions by adding `NEW` region names
@@ -228,4 +279,104 @@ process_gtf <- function(split_regions_bed, gtf) {
 
   colnames(out)[1] <- "Chr"
   out
+}
+
+#' Filter GTF attributes
+#'
+#' Extract and keep only specified attributes from GTF attribute column
+#'
+#' @param attributes Character vector of GTF attribute strings
+#' @param keep_attributes Character vector of attribute names to keep
+#'
+#' @return Character vector of filtered attribute strings
+#'
+#' @details
+#' Extracts key-value pairs from GTF attribute column and keeps only
+#' specified attributes in the original order.
+#'
+#' @dev
+.filter_attributes <- function(attributes, keep_attributes) {
+  pattern <- paste0("^(?:", paste(keep_attributes, collapse = "|"), ")\\s+")
+
+  str_list <- stringi::stri_split_regex(attributes, ";\\s*")
+
+  vapply(
+    str_list,
+    FUN.VALUE = character(1L),
+    FUN = function(pairs) {
+      pairs <- pairs[nzchar(pairs)]
+      keep <- stringi::stri_detect_regex(pairs, pattern)
+      if (!any(keep)) {
+        return("")
+      }
+      paste(pairs[keep], collapse = "; ")
+    }
+  )
+}
+
+#' Check filtered attributes completeness
+#'
+#' Verify that filtering didn't result in empty attributes
+#'
+#' @param filtered Character vector of filtered attributes
+#' @param original Character vector of original attributes
+#'
+#' @return Invisible TRUE if valid
+#'
+#' @dev
+.check_filtered_completeness <- function(filtered, original) {
+  is_empty_filtered <- !nzchar(filtered)
+  is_nonempty_original <- nzchar(original)
+
+  empty_idx <- which(is_empty_filtered & is_nonempty_original)
+
+  if (length(empty_idx) > 0L) {
+    cli::cli_warn(
+      c(
+        "{length(empty_idx)} lines had no matching attributes.",
+        i = "Check your keep_attributes list."
+      )
+    )
+  }
+
+  invisible(TRUE)
+}
+
+#' Build output filename for filtered GTF
+#'
+#' @param out_path Character: output directory
+#' @param genome_name Character: genome name
+#' @param genome_version Character: genome version
+#'
+#' @return Character: full file path
+#'
+#' @dev
+.build_output_filename <- function(out_path, genome_name, genome_version) {
+  filename <- sprintf(
+    "B1_FINAL_MODIFIED_GTF_%s_%s.gtf",
+    genome_name,
+    genome_version
+  )
+  file.path(out_path, filename)
+}
+
+#' Write filtered GTF file
+#'
+#' @param result Data frame with filtered GTF data
+#' @param output_file Character: output file path
+#'
+#' @return Called for its side-effects of writing a file, returns an invisible
+#'  `TRUE`.
+#'
+#' @dev
+.write_filtered_gtf <- function(result, output_file) {
+  invisible(utils::write.table(
+    result,
+    file = output_file,
+    quote = FALSE,
+    row.names = FALSE,
+    col.names = FALSE,
+    sep = "\t"
+  ))
+  invisible(TRUE)
 }
