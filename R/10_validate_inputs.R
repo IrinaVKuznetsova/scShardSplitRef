@@ -49,7 +49,7 @@ validate_inputs <- function(bed, gtf) {
   # mapply() is used here rather than Map since we just need a check, no return list
   mapply(
     .check_tab_file,
-    file = list(bed, gtf),
+    path = list(bed, gtf),
     min_fields = c(3L, 9L),
     label = c("BED", "GTF"),
     SIMPLIFY = FALSE
