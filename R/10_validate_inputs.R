@@ -41,8 +41,19 @@
 validate_inputs <- function(bed, gtf) {
   .check_files_exist(bed, gtf)
 
-  .check_tab_file(bed, min_fields = 3L, label = "BED")
-  .check_tab_file(gtf, min_fields = 9L, label = "GTF")
+  # check ends with to use .bed or .gtf
+  #
+  # check end of line encoding
+  # check that files are tab delimited
+
+  # mapply() is used here rather than Map since we just need a check, no return list
+  mapply(
+    .check_tab_file,
+    file = list(bed, gtf),
+    min_fields = c(3L, 9L),
+    label = c("BED", "GTF"),
+    SIMPLIFY = FALSE
+  )
 
   bed <- .read_and_format_bed(bed)
   gtf <- .read_and_format_gtf(gtf)
