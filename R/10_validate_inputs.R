@@ -99,16 +99,25 @@ validate_inputs <- function(bed, gtf) {
   label,
   max_fields = NA_integer_
 ) {
-  lines <- readLines(path)
-  lines <- lines[!startsWith(lines, "#")]
-  lines <- lines[nzchar(lines)]
+  if (!endsWith(tolower(path), sprintf(".%s", tolower(label)))) {
+    cli::cli_abort(c(
+      "File extension does not match expected format for {label}.",
+      "i" = "Expected extension: {sprintf('.%s', tolower(label))}",
+      "x" = "Got: {path}"
+    ))
+  }
 
+  lines <- readLines(path)
+  lines <- lines[!startsWith(lines, "#") & nzchar(trimws(lines))]
   if (length(lines) == 0L) {
     return(invisible(TRUE))
   }
 
-  split_lines <- strsplit(lines, "\t", fixed = TRUE)
-  field_counts <- lengths(split_lines)
+  field_counts <- lengths(stringi::stri_split_fixed(lines, "\t", fixed = TRUE))
+
+  if (!all(field_counts >= 1L)) {
+    cli::cli_abort("File does not appear to be tab-separated.")
+  }
 
   invalid_idx <- .find_invalid_field_counts(
     field_counts,
@@ -119,7 +128,6 @@ validate_inputs <- function(bed, gtf) {
   if (length(invalid_idx) > 0L) {
     example_bad <- lines[invalid_idx[1L]]
     expected <- .format_field_expectation(min_fields, max_fields)
-
     cli::cli_abort(
       call = rlang::caller_env(),
       c(
