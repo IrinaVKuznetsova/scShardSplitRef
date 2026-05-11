@@ -113,7 +113,7 @@ validate_inputs <- function(bed, gtf) {
     return(invisible(TRUE))
   }
 
-  field_counts <- lengths(stringi::stri_split_fixed(lines, "\t", fixed = TRUE))
+  field_counts <- lengths(stringi::stri_split_fixed(lines, "\t"))
 
   if (!all(field_counts >= 1L)) {
     cli::cli_abort("File does not appear to be tab-separated.")
