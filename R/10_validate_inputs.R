@@ -8,10 +8,9 @@
 #' @inheritParams determine_split_regions
 #'
 #' @return List with named elements:
-#'   - `bed`: Data frame with at least 3 BED columns (Chr, RegionStart,
-#'      RegionEnd) plus any additional columns from the input file.
-#'   - `gtf`: Data frame with 9 GTF columns (Chr, source, feature, start,
-#'     end, score, strand, frame, attribute)
+#'   - `bed`: Data frame with at least 3 BED columns plus any
+#'      additional columns from the input file.
+#'   - `gtf`: Data frame with 9 GTF columns
 #'
 #' @details
 #' Performs four checks in sequence:
