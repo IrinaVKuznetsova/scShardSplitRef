@@ -1,82 +1,290 @@
-# .check_files_exist tests
-test_that(".check_files_exist validates file existence", {
-  expect_invisible(.check_files_exist(
-    system.file(
-      "extdata",
-      "A3_toy_all_scenarios_2chr.gtf",
-      package = "scShardSplitRef"
+test_that(".check_tab_file passes for valid BED file", {
+  tmp <- withr::local_tempfile(fileext = ".bed")
+  writeLines(
+    c(
+      "chr1\t100\t200",
+      "chr1\t300\t400"
     ),
-    system.file(
-      "extdata",
-      "IN0_toy_centromeres_for_gtf.bed",
-      package = "scShardSplitRef"
-    )
-  ))
+    tmp
+  )
+
+  expect_invisible(.check_tab_file(tmp, min_fields = 3L, label = "BED"))
 })
 
-test_that(".check_files_exist reports missing GTF", {
+test_that(".check_tab_file passes for valid GTF file", {
+  tmp <- withr::local_tempfile(fileext = ".gtf")
+  writeLines(
+    c(
+      "chr1\tsource\tgene\t1\t100\t.\t+\t.\tattribute"
+    ),
+    tmp
+  )
+
+  expect_invisible(.check_tab_file(tmp, min_fields = 9L, label = "GTF"))
+})
+
+test_that(".check_tab_file skips comment and blank lines", {
+  tmp <- withr::local_tempfile(fileext = ".bed")
+  writeLines(
+    c(
+      "# this is a comment",
+      "",
+      "   ",
+      "chr1\t100\t200"
+    ),
+    tmp
+  )
+
+  expect_invisible(.check_tab_file(tmp, min_fields = 3L, label = "BED"))
+})
+
+test_that(".check_tab_file returns invisible TRUE for all-comment file", {
+  tmp <- withr::local_tempfile(fileext = ".bed")
+  writeLines(c("# comment only", "# another comment"), tmp)
+
+  expect_invisible(.check_tab_file(tmp, min_fields = 3L, label = "BED"))
+  expect_true(.check_tab_file(tmp, min_fields = 3L, label = "BED"))
+})
+
+test_that(".check_tab_file errors on wrong file extension", {
+  tmp <- withr::local_tempfile(fileext = ".txt")
+  writeLines("chr1\t100\t200", tmp)
+
   expect_error(
-    .check_files_exist("/nonexistent/file.gtf", tempfile()),
-    regexp = "GTF file does not exist"
+    .check_tab_file(tmp, min_fields = 3L, label = "BED"),
+    "File extension does not match"
   )
 })
 
-test_that(".check_files_exist reports missing BED", {
-  gtf_path <- system.file(
-    "extdata",
-    "A3_toy_all_scenarios_2chr.gtf",
-    package = "scShardSplitRef"
+test_that(".check_tab_file errors on non-tab-separated file", {
+  tmp <- withr::local_tempfile(fileext = ".bed")
+  writeLines(
+    c(
+      "chr1,100,200",
+      "chr1,300,400"
+    ),
+    tmp
   )
+
   expect_error(
-    .check_files_exist(gtf_path, "/nonexistent/file.bed"),
-    regexp = "BED file does not exist"
+    .check_tab_file(tmp, min_fields = 3L, label = "BED"),
+    "tab-separated"
   )
 })
 
-# .find_invalid_field_counts tests
-test_that(".find_invalid_field_counts identifies too few fields", {
-  result <- .find_invalid_field_counts(c(2, 3, 2, 5), 3L, NA_integer_)
-  expect_identical(result, c(1L, 3L))
+test_that(".check_tab_file errors when too few fields", {
+  tmp <- withr::local_tempfile(fileext = ".bed")
+  writeLines(
+    c(
+      "chr1\t100", # only 2 fields, need 3
+      "chr1\t300"
+    ),
+    tmp
+  )
+
+  expect_error(
+    .check_tab_file(tmp, min_fields = 3L, label = "BED"),
+    "Invalid BED file format"
+  )
 })
 
-test_that(".find_invalid_field_counts identifies too many fields", {
-  result <- .find_invalid_field_counts(c(3, 6, 3, 8), 3L, 5L)
-  expect_identical(result, c(2L, 4L))
+test_that(".check_tab_file errors when too many fields and max_fields set", {
+  tmp <- withr::local_tempfile(fileext = ".bed")
+  writeLines(
+    c(
+      "chr1\t100\t200\textra\tfield"
+    ),
+    tmp
+  )
+
+  expect_error(
+    .check_tab_file(tmp, min_fields = 3L, max_fields = 3L, label = "BED"),
+    "Invalid BED file format"
+  )
 })
+
+test_that(".check_tab_file error message includes problematic line number", {
+  tmp <- withr::local_tempfile(fileext = ".bed")
+  writeLines(
+    c(
+      "chr1\t100\t200",
+      "chr1\t300", # line 2 is bad
+      "chr1\t400\t500"
+    ),
+    tmp
+  )
+
+  expect_error(
+    .check_tab_file(tmp, min_fields = 3L, label = "BED"),
+    "2"
+  )
+})
+
+# .find_invalid_field_counts --------------------------------------------------
 
 test_that(".find_invalid_field_counts returns empty for valid counts", {
-  result <- .find_invalid_field_counts(c(3, 4, 5), 3L, 5L)
-  expect_identical(result, integer(0))
+  expect_equal(
+    .find_invalid_field_counts(c(3L, 3L, 4L), min_fields = 3L),
+    integer(0)
+  )
 })
 
-# .format_field_expectation tests
-test_that(".format_field_expectation formats range correctly", {
-  result <- .format_field_expectation(3L, 9L)
-  expect_identical(result, "3-9 TAB-separated fields")
+test_that(".find_invalid_field_counts catches below min", {
+  expect_equal(
+    .find_invalid_field_counts(c(3L, 2L, 3L), min_fields = 3L),
+    2L
+  )
 })
 
-test_that(".format_field_expectation formats minimum only", {
-  result <- .format_field_expectation(9L, NA_integer_)
-  expect_identical(result, "at least 9 TAB-separated fields")
+test_that(".find_invalid_field_counts catches above max", {
+  expect_equal(
+    .find_invalid_field_counts(c(3L, 5L, 3L), min_fields = 3L, max_fields = 4L),
+    2L
+  )
 })
 
-# .read_and_format_gtf tests
-test_that(".read_and_format_gtf reads and formats", {
-  tmpfile <- tempfile(fileext = ".gtf")
-  on.exit(unlink(tmpfile))
+test_that(".find_invalid_field_counts catches both below and above bounds", {
+  result <- .find_invalid_field_counts(
+    c(2L, 3L, 6L),
+    min_fields = 3L,
+    max_fields = 4L
+  )
+  expect_equal(result, c(1L, 3L))
+})
+
+test_that(".find_invalid_field_counts deduplicates and sorts", {
+  result <- .find_invalid_field_counts(
+    c(5L, 1L, 5L),
+    min_fields = 3L,
+    max_fields = 4L
+  )
+  expect_equal(result, c(1L, 2L, 3L)) # 1 & 3 exceed max, 2 below min
+})
+
+# .format_field_expectation ---------------------------------------------------
+
+test_that(".format_field_expectation with no max", {
+  expect_equal(
+    .format_field_expectation(9L, NA_integer_),
+    "at least 9 TAB-separated fields"
+  )
+})
+
+test_that(".format_field_expectation with min and max", {
+  expect_equal(
+    .format_field_expectation(3L, 9L),
+    "3-9 TAB-separated fields"
+  )
+})
+
+# .check_files_exist ----------------------------------------------------------
+
+test_that(".check_files_exist passes when both files exist", {
+  bed <- withr::local_tempfile(fileext = ".bed")
+  gtf <- withr::local_tempfile(fileext = ".gtf")
+  file.create(bed)
+  file.create(gtf)
+
+  expect_invisible(.check_files_exist(bed, gtf))
+})
+
+test_that(".check_files_exist errors when BED missing", {
+  gtf <- withr::local_tempfile(fileext = ".gtf")
+  file.create(gtf)
+
+  expect_error(
+    .check_files_exist("nonexistent.bed", gtf),
+    "BED file does not exist"
+  )
+})
+
+test_that(".check_files_exist errors when GTF missing", {
+  bed <- withr::local_tempfile(fileext = ".bed")
+  file.create(bed)
+
+  expect_error(
+    .check_files_exist(bed, "nonexistent.gtf"),
+    "GTF file does not exist"
+  )
+})
+
+# .validate_bed_ranges --------------------------------------------------------
+
+test_that(".validate_bed_ranges passes for valid ranges", {
+  bed <- data.frame(RegionStart = c(100L, 300L), RegionEnd = c(200L, 400L))
+  expect_invisible(.validate_bed_ranges(bed))
+})
+
+test_that(".validate_bed_ranges errors when start == end", {
+  bed <- data.frame(RegionStart = c(100L, 200L), RegionEnd = c(200L, 200L))
+  expect_error(.validate_bed_ranges(bed), "Invalid BED coordinates")
+})
+
+test_that(".validate_bed_ranges errors when start > end", {
+  bed <- data.frame(RegionStart = c(500L), RegionEnd = c(100L))
+  expect_error(.validate_bed_ranges(bed), "Invalid BED coordinates")
+})
+
+test_that(".validate_bed_ranges error includes problematic row number", {
+  bed <- data.frame(
+    RegionStart = c(100L, 500L, 300L),
+    RegionEnd = c(200L, 100L, 400L)
+  )
+  expect_error(.validate_bed_ranges(bed), "2")
+})
+
+# validate_inputs (integration) -----------------------------------------------
+
+test_that("validate_inputs returns list with bed and gtf", {
+  bed_tmp <- withr::local_tempfile(fileext = ".bed")
+  gtf_tmp <- withr::local_tempfile(fileext = ".gtf")
 
   writeLines(
     c(
-      "chr1\tensembl\tgene\t1\t100\t.\t+\t.\tgene_id \"G1\";",
-      "chr1\tensembl\texon\t10\t50\t.\t+\t.\tgene_id \"G1\"; exon_id \"E1\";"
+      "chr1\t100\t200",
+      "chr1\t300\t400"
     ),
-    tmpfile
+    bed_tmp
   )
 
-  result <- .read_and_format_gtf(tmpfile)
+  writeLines(
+    c(
+      "chr1\tsource\tgene\t1\t100\t.\t+\t.\tattribute",
+      "chr1\tsource\texon\t1\t50\t.\t+\t.\tattribute"
+    ),
+    gtf_tmp
+  )
 
-  expect_identical(
-    colnames(result),
+  result <- validate_inputs(bed_tmp, gtf_tmp)
+
+  expect_named(result, c("bed", "gtf"))
+  expect_s3_class(result$bed, "data.frame")
+  expect_s3_class(result$gtf, "data.frame")
+})
+
+test_that("validate_inputs assigns correct BED column names", {
+  bed_tmp <- withr::local_tempfile(fileext = ".bed")
+  gtf_tmp <- withr::local_tempfile(fileext = ".gtf")
+
+  writeLines("chr1\t100\t200", bed_tmp)
+  writeLines("chr1\tsource\tgene\t1\t100\t.\t+\t.\tattribute", gtf_tmp)
+
+  result <- validate_inputs(bed_tmp, gtf_tmp)
+
+  expect_equal(colnames(result$bed)[1:3], c("Chr", "RegionStart", "RegionEnd"))
+})
+
+test_that("validate_inputs assigns correct GTF column names", {
+  bed_tmp <- withr::local_tempfile(fileext = ".bed")
+  gtf_tmp <- withr::local_tempfile(fileext = ".gtf")
+
+  writeLines("chr1\t100\t200", bed_tmp)
+  writeLines("chr1\tsource\tgene\t1\t100\t.\t+\t.\tattribute", gtf_tmp)
+
+  result <- validate_inputs(bed_tmp, gtf_tmp)
+
+  expect_equal(
+    colnames(result$gtf),
     c(
       "Chr",
       "source",
@@ -89,224 +297,14 @@ test_that(".read_and_format_gtf reads and formats", {
       "attribute"
     )
   )
-  expect_identical(nrow(result), 2L)
 })
 
-test_that(".read_and_format_gtf skips comments", {
-  tmpfile <- tempfile(fileext = ".gtf")
-  on.exit(unlink(tmpfile))
+test_that("validate_inputs errors on invalid BED ranges", {
+  bed_tmp <- withr::local_tempfile(fileext = ".bed")
+  gtf_tmp <- withr::local_tempfile(fileext = ".gtf")
 
-  writeLines(
-    c(
-      "# This is a comment",
-      "chr1\tensembl\tgene\t1\t100\t.\t+\t.\tgene_id \"G1\";",
-      "# Another comment",
-      "chr1\tensembl\texon\t10\t50\t.\t+\t.\tgene_id \"G1\"; exon_id \"E1\";"
-    ),
-    tmpfile
-  )
+  writeLines("chr1\t500\t100", bed_tmp) # start > end
+  writeLines("chr1\tsource\tgene\t1\t100\t.\t+\t.\tattribute", gtf_tmp)
 
-  result <- .read_and_format_gtf(tmpfile)
-  expect_identical(nrow(result), 2L)
-})
-
-# .read_and_format_bed tests
-test_that(".read_and_format_bed reads and formats", {
-  tmpfile <- tempfile(fileext = ".bed")
-  on.exit(unlink(tmpfile))
-
-  writeLines(
-    c(
-      "chr1\t0\t1000",
-      "chr2\t500\t2000"
-    ),
-    tmpfile
-  )
-
-  result <- .read_and_format_bed(tmpfile)
-
-  expect_identical(colnames(result)[1:3], c("Chr", "RegionStart", "RegionEnd"))
-  expect_identical(nrow(result), 2L)
-  expect_identical(result$RegionStart, c(0L, 500L)) # Use integers
-})
-
-test_that(".read_and_format_bed preserves extra columns", {
-  tmpfile <- tempfile(fileext = ".bed")
-  on.exit(unlink(tmpfile))
-
-  writeLines(
-    c(
-      "chr1\t0\t1000\textra1\textra2",
-      "chr2\t500\t2000\textra3\textra4"
-    ),
-    tmpfile
-  )
-
-  result <- .read_and_format_bed(tmpfile)
-
-  expect_identical(ncol(result), 5L)
-  expect_identical(colnames(result)[4:5], c("V4", "V5"))
-})
-
-# .validate_bed_ranges tests
-test_that(".validate_bed_ranges accepts valid ranges", {
-  bed <- data.frame(
-    Chr = c("chr1", "chr2"),
-    RegionStart = c(0L, 100L),
-    RegionEnd = c(1000L, 2000L),
-    stringsAsFactors = FALSE
-  )
-
-  expect_invisible(.validate_bed_ranges(bed))
-})
-
-test_that(".validate_bed_ranges rejects invalid ranges", {
-  bed <- data.frame(
-    Chr = c("chr1", "chr2"),
-    RegionStart = c(0L, 2000L),
-    RegionEnd = c(1000L, 100L),
-    stringsAsFactors = FALSE
-  )
-
-  expect_error(
-    .validate_bed_ranges(bed),
-    regexp = "Invalid BED coordinates"
-  )
-})
-
-test_that(".validate_bed_ranges rejects equal start and end", {
-  bed <- data.frame(
-    Chr = "chr1",
-    RegionStart = 100L,
-    RegionEnd = 100L,
-    stringsAsFactors = FALSE
-  )
-
-  expect_error(
-    .validate_bed_ranges(bed),
-    regexp = "Invalid BED coordinates"
-  )
-})
-
-# .check_tab_file tests
-test_that(".check_tab_file accepts valid files", {
-  tmpfile <- tempfile(fileext = ".bed")
-  on.exit(unlink(tmpfile))
-
-  writeLines(
-    c(
-      "chr1\t0\t1000",
-      "chr2\t500\t2000"
-    ),
-    tmpfile
-  )
-
-  expect_invisible(.check_tab_file(tmpfile, min_fields = 3L, label = "BED"))
-})
-
-test_that(".check_tab_file skips comments", {
-  tmpfile <- tempfile(fileext = ".bed")
-  on.exit(unlink(tmpfile))
-
-  writeLines(
-    c(
-      "# Comment line",
-      "chr1\t0\t1000",
-      "# Another comment",
-      "chr2\t500\t2000"
-    ),
-    tmpfile
-  )
-
-  expect_invisible(.check_tab_file(tmpfile, min_fields = 3L, label = "BED"))
-})
-
-test_that(".check_tab_file validates field counts", {
-  tmpfile <- tempfile(fileext = ".bed")
-  on.exit(unlink(tmpfile))
-
-  writeLines(
-    c(
-      "chr1\t0\t1000",
-      "chr2\t500",
-      "chr3\t100\t200\t300"
-    ),
-    tmpfile
-  )
-
-  expect_error(
-    .check_tab_file(tmpfile, min_fields = 3L, label = "BED"),
-    regexp = "Invalid BED file format"
-  )
-})
-
-# validate_inputs integration tests
-test_that("validate_inputs validates all inputs", {
-  skip_if_not_installed("cli")
-
-  gtf_tmp <- tempfile(fileext = ".gtf")
-  bed_tmp <- tempfile(fileext = ".bed")
-  on.exit({
-    unlink(gtf_tmp)
-    unlink(bed_tmp)
-  })
-
-  # Create invalid GTF (too few columns)
-  writeLines("chr1 ensembl gene", gtf_tmp)
-  writeLines("chr1\t0\t1000", bed_tmp)
-
-  expect_error(
-    validate_inputs(gtf_tmp, bed_tmp),
-    regexp = "Invalid GTF file format"
-  )
-})
-
-test_that("validate_inputs returns correct structure", {
-  skip_if_not_installed("cli")
-
-  gtf_tmp <- tempfile(fileext = ".gtf")
-  bed_tmp <- tempfile(fileext = ".bed")
-  on.exit({
-    unlink(gtf_tmp)
-    unlink(bed_tmp)
-  })
-
-  writeLines(
-    c(
-      "chr1\tensembl\tgene\t1\t100\t.\t+\t.\tgene_id \"G1\";",
-      "chr1\tensembl\texon\t10\t50\t.\t+\t.\tgene_id \"G1\"; exon_id \"E1\";"
-    ),
-    gtf_tmp
-  )
-  writeLines("chr1\t0\t1000", bed_tmp)
-
-  result <- validate_inputs(gtf_tmp, bed_tmp)
-
-  expect_type(result, "list")
-  expect_true("gtf" %in% names(result))
-  expect_true("bed" %in% names(result))
-  expect_identical(nrow(result$gtf), 2L)
-  expect_identical(nrow(result$bed), 1L)
-})
-
-test_that("validate_inputs rejects invalid BED ranges", {
-  skip_if_not_installed("cli")
-
-  gtf_tmp <- tempfile(fileext = ".gtf")
-  bed_tmp <- tempfile(fileext = ".bed")
-  on.exit({
-    unlink(gtf_tmp)
-    unlink(bed_tmp)
-  })
-
-  writeLines(
-    "chr1\tensembl\tgene\t1\t100\t.\t+\t.\tgene_id \"G1\";",
-    gtf_tmp
-  )
-  writeLines("chr1\t1000\t500", bed_tmp)
-
-  expect_error(
-    validate_inputs(gtf_tmp, bed_tmp),
-    regexp = "Invalid BED coordinates"
-  )
+  expect_error(validate_inputs(bed_tmp, gtf_tmp), "Invalid BED coordinates")
 })
