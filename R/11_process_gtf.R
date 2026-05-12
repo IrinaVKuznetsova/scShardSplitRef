@@ -65,14 +65,14 @@ process_gtf <- function(
   if (missing(genome_name) || is.null(genome_name)) {
     cli::cli_abort(
       call = rlang::caller_env(),
-      "Parameter {.arg genome_name} is required."
+      c(x = "Parameter {.arg genome_name} is required.")
     )
   }
 
   if (missing(genome_version) || is.null(genome_version)) {
     cli::cli_abort(
       call = rlang::caller_env(),
-      "Parameter {.arg genome_version} is required."
+      c(x = "Parameter {.arg genome_version} is required.")
     )
   }
   validated <- validate_inputs(
@@ -121,7 +121,9 @@ process_gtf <- function(
   }
   output_file <- .build_output_filename(out_path, genome_name, genome_version)
   .write_filtered_gtf(out, output_file)
-  cli::cli_inform("{.bold Finished writing processed GTF: {output_file}}")
+  cli::cli_alert_info(
+    i = "{.bold Finished writing processed GTF: {output_file}}"
+  )
 
   invisible(NULL)
 }
