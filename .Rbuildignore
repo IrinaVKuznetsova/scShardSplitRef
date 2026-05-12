@@ -103,3 +103,6 @@
 ^man/dot-scs_emit_success\.Rd$
 ^man/scs_cli_alert_info\.Rd$
 ^man/scs_cli_alert_success\.Rd$
+
+
+^CONTRIBUTING\.md$
