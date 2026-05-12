@@ -4,7 +4,14 @@
 \alias{process_gtf}
 \title{Process a GTF file by assigning split-region sequence names}
 \usage{
-process_gtf(split_regions_bed, gtf)
+process_gtf(
+  split_regions_bed,
+  gtf,
+  keep_attributes = NULL,
+  genome_name,
+  genome_version,
+  out_path = "."
+)
 }
 \arguments{
 \item{split_regions_bed}{Character: File path to a BED-like file
@@ -14,11 +21,22 @@ The first three columns must be: \code{Chr}, \code{RegionStart}, \code{RegionEnd
 \item{gtf}{Path to a GTF file containing gene annotations.
 Must contain standard 9 GTF columns. Comments starting with '#' are
 ignored.}
+
+\item{keep_attributes}{Character vector of attribute keys to keep (e.g.,
+\code{c("gene_id", "transcript_id", "gene_name")}). If provided, the GTF
+attribute column will be filtered to keep only these fields. Defaults to
+\code{NULL} (no filtering).}
+
+\item{genome_name}{Genome identifier used in the output filename.}
+
+\item{genome_version}{Genome version string used in the output filename.}
+
+\item{out_path}{Directory where the output GTF will be written. Defaults to
+the current working directory (\code{"."}).}
 }
 \value{
-A data frame containing the updated GTF rows, with columns:
-\code{Chr}, \code{source}, \code{feature}, \code{start}, \code{end}, \code{score}, \code{strand}, \code{frame},
-\code{attribute}. The output row order matches the input GTF order.
+The function writes the filtered GTF file to disk
+at \code{out_path}.
 }
 \description{
 Reads a BED-like "split regions" file and a GTF, assigns each GTF feature to
@@ -51,7 +69,12 @@ The function aborts if:
              package = "scShardSplitRef",
              mustWork = TRUE)
 
-out <- process_gtf(reg_file, gtf_file)
-out
+  process_gtf(
+    split_regions_bed = reg_file,
+    gtf = gtf_file,
+    genome_name = "Example",
+    genome_version = "v1.0",
+    out_path = "."
+  )
 
 }

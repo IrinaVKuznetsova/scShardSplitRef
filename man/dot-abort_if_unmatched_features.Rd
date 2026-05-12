@@ -16,5 +16,6 @@
 Invisibly \code{TRUE} if ok; otherwise aborts.
 }
 \description{
-Internal function: Abort if any GTF features match no split region
+Abort if any GTF features match no split region
 }
+\keyword{internal}

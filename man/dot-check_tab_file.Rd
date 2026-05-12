@@ -40,3 +40,4 @@ Reports line numbers and examples of problematic lines.
   )
 }
 }
+\keyword{internal}

@@ -23,3 +23,4 @@ Validates that both BED and GTF file paths point to existing files.
 }
 
 }
+\keyword{internal}

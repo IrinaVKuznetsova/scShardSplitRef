@@ -16,3 +16,4 @@ A data frame with GTF columns where the first column is \code{Chr}.
 Selects and renames columns so the output matches GTF layout, replacing
 \code{Chr} with the split-region name stored in \code{NEW}.
 }
+\keyword{internal}

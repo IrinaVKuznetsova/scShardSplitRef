@@ -20,3 +20,4 @@ Invisibly \code{TRUE}.
 Wrapper for \code{\link[cli:cli_alert_info]{cli::cli_alert_info()}} that respects
 \code{options(scShardSplitRef.verbosity = "quiet"|"minimal"|"verbose")}.
 }
+\keyword{internal}

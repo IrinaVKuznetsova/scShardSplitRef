@@ -26,3 +26,4 @@ Identifies line indices where the field count violates min/max constraints.
 }
 
 }
+\keyword{internal}

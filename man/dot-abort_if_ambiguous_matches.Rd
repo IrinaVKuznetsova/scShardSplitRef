@@ -16,3 +16,4 @@ Invisibly \code{TRUE} if ok; otherwise aborts.
 Detects duplicated \code{unique_ID} values in the matched table, which indicates
 overlapping split regions (or otherwise ambiguous assignments).
 }
+\keyword{internal}

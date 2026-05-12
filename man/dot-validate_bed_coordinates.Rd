@@ -26,3 +26,4 @@ start >= 0 and start < end.
 }
 
 }
+\keyword{internal}

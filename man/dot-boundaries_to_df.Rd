@@ -34,3 +34,4 @@ intervals [start, end) between consecutive boundaries.
 }
 
 }
+\keyword{internal}

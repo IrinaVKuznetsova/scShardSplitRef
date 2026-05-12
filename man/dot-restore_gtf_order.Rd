@@ -16,5 +16,6 @@ GTF order.}
 \code{matched} reordered to match the input GTF order.
 }
 \description{
-Internal function: Restore the original GTF row order
+Restore the original GTF row order
 }
+\keyword{internal}

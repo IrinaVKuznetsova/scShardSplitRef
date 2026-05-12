@@ -19,3 +19,4 @@ should be fully inside a region:
 \code{start >= RegionStart}
 \code{end <= RegionEnd}
 }
+\keyword{internal}

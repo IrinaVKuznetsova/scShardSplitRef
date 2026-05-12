@@ -14,3 +14,4 @@ Policy matches info by default (only in verbose).
 If you prefer success in minimal too, change to:
 \code{.scs_get_verbosity() \%in\% c("minimal", "verbose")}.
 }
+\keyword{internal}

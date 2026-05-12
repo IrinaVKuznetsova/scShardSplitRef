@@ -10,5 +10,6 @@
 Character scalar: "quiet", "minimal", or "verbose".
 }
 \description{
-Internal function: Get scShardSplitRef verbosity (internal)
+Get scShardSplitRef verbosity (internal)
 }
+\keyword{internal}

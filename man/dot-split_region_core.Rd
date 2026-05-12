@@ -29,3 +29,4 @@ base pairs. Returns a data frame with the resulting intervals.
 }
 
 }
+\keyword{internal}

@@ -27,3 +27,4 @@ Assumes TAB-delimited format with no header.
 }
 
 }
+\keyword{internal}

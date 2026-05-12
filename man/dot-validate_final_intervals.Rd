@@ -29,3 +29,4 @@ Raises an error if any interval exceeds the limit.
 }
 
 }
+\keyword{internal}
