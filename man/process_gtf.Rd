@@ -7,9 +7,9 @@
 process_gtf(
   split_regions_bed,
   gtf,
-  keep_attributes = NULL,
   genome_name,
   genome_version,
+  keep_attributes = NULL,
   out_path = "."
 )
 }
@@ -22,14 +22,14 @@ The first three columns must be: \code{Chr}, \code{RegionStart}, \code{RegionEnd
 Must contain standard 9 GTF columns. Comments starting with '#' are
 ignored.}
 
+\item{genome_name}{Genome identifier used in the output filename.}
+
+\item{genome_version}{Genome version string used in the output filename.}
+
 \item{keep_attributes}{Character vector of attribute keys to keep (e.g.,
 \code{c("gene_id", "transcript_id", "gene_name")}). If provided, the GTF
 attribute column will be filtered to keep only these fields. Defaults to
 \code{NULL} (no filtering).}
-
-\item{genome_name}{Genome identifier used in the output filename.}
-
-\item{genome_version}{Genome version string used in the output filename.}
 
 \item{out_path}{Directory where the output GTF will be written. Defaults to
 the current working directory (\code{"."}).}

@@ -54,13 +54,13 @@
 process_gtf <- function(
   split_regions_bed,
   gtf,
-  keep_attributes = NULL,
   genome_name,
   genome_version,
+  keep_attributes = NULL,
   out_path = "."
 ) {
   cli::cli_alert_info("Validating inputs and reading files...")
-  
+
   # Validate that genome_name and genome_version are provided
   if (missing(genome_name) || is.null(genome_name)) {
     cli::cli_abort(
@@ -68,7 +68,7 @@ process_gtf <- function(
       "Parameter {.arg genome_name} is required."
     )
   }
-  
+
   if (missing(genome_version) || is.null(genome_version)) {
     cli::cli_abort(
       call = rlang::caller_env(),
