@@ -15,7 +15,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-## 1. Package overview
+## Package overview
 
 *scShardSplitRef* designed for researchers working with single-cell data from species that require building a custom reference genome, particularly when one or more contigs in the reference FASTA exceed the Cell Ranger ARC limit of 536.8Mb (2\^29 bases). *scShardSplitRef* automates this splitting process, generating contig fragments that comply with Cell Ranger requirements. The software outputs FASTA and GTF files containing the split contigs, which can be directly processed by `cellranger-arc mkref`.
 
@@ -23,100 +23,220 @@ This real-world example demonstrates a step-by-step workflow for downloading and
 
 To familiarise yourself with the package and workflow of preparing reference genome sequence (FASTA file) and gene annotations (GTF file) to be compatible with Cell Ranger ARC we suggest starting with a guided walk through that uses MOREXv3 available from our GitHub page.
 
-To get familiar with the package and its workflow, we recommend starting with a guided walkthrough. It covers how to prepare a reference genome sequence (FASTA file) and gene annotations (GTF file) that are compatible with Cell Ranger ARC, using MOREXv3 as an example genome. available from our GitHub page.
+To get familiar with the package and its workflow, we recommend starting with a guided walkthrough. It covers how to prepare a reference genome sequence (FASTA file) and gene annotations (GTF file) that are compatible with Cell Ranger ARC, using MOREXv3 as an example genome. GTF file and BED are available from our GitHub page from `inst/extdata`.
 
+## Setup the scShardSplitRef package
 
+For this tutorial, we will be using a genome sequence (FASTA file) and gene annotations (GTF file) of the barley genome (*Hordeum Vulgare, Morex V3*) available from [Ensembl](https://ftp.ensemblgenomes.ebi.ac.uk) and centromere coordinates from [GrainGenes](https://graingenes.org/GG3/content/morex-v3-files-2021).
 
-## 2. Accessing Package Help and Vignettes
+We start by assessing genome and checking if there are any gene overlaps with the centromere coordinate and these is the case adjust cooridnates. Then we validate tha all
 
-```{r, eval=TRUE, setup}
-library(scShardSplitRef)
-help(package = "scShardSplitRef")
+```{r}
+# Install the package
+install.packages("pak")
 
-vignette(package = "scShardSplitRef")
-
-help("scShardSplitRef")
+# Load the package 
+pak::pak("scShardSplitRef")
 ```
 
-## 4. Quick start
+<details>
 
-### 1) Check if gene features are overlapping with the centromere position
+<summary><b>**What do GTF and centromere files for MOREX V3 look like?**</b></summary>
 
-```{r, check_gene_features}
- regions <- system.file(
-   "extdata",
-   "IN0_toy_centromeres_for_gtf.bed",
-   package = "scShardSplitRef",
-   mustWork = TRUE
- )
- genes <- system.file(
-   "extdata",
-   "A3_toy_all_scenarios_2chr.gtf",
-   package = "scShardSplitRef",
-   mustWork = TRUE
- )
+```{r}
+# Gene annotations (GTF) file: "/inst/extdata/01_Hordeum_vulgare.Mt_Pt_v49_Barley_v62_COMBINED.gtf"
+gtf_df <- read.table(file = GTF_IN, header = FALSE, sep = "\t")
+dim(gtf_df)     ### 524562 x 9
+gtf_df[1:10, ]
 
- determine_split_regions(
-   regions_bed = regions,
-   genes_gtf = genes,
-   output_bed = file.path(tempdir(), "split_regions.bed"),
-   limit = 2L^29L,
-   shift_by = 1L
- )
+#!genome-build MorexV3_pseudomolecules_assembly
+#!genome-version MorexV3_pseudomolecules_assembly
+#!genome-date 2021-04
+#!genome-build-accession GCA_904849725.1
+#!genebuild-last-updated 2021-04
 ```
 
-### 2) Validate inputs
-
-```{r, validate_inputs}
-gtf_path <- system.file(
-  "extdata",
-  "A3_toy_all_scenarios_2chr.gtf",
-  package = "scShardSplitRef",
-  mustWork = TRUE
-)
-
-centromere_path2 <- system.file(
-  "extdata",
-  "RECAL1_FINAL_SPLIT_coord_for_GTF.bed",
-  package = "scShardSplitRef",
-  mustWork = TRUE
-)
-
-validate_inputs(
-  gtf_path,
-  centromere_path2
-)
+```         
+2H      IPK     gene    601169528       601171444       .       -       .       gene_id "HORVU.MOREX.r3.2HG0191020"; gene_source "IPK"; gene_biotype "protein_coding";
+2H      IPK     transcript      601169528       601171444       .       -       .       gene_id "HORVU.MOREX.r3.2HG0191020"; transcript_id "HORVU.MOREX.r3.2HG0191020.1"; gene_source "IPK"; gene_biotype "protein_coding"; transcript_source "IPK"; transcript_biotype "protein_coding"; tag "Ensembl_canonical";
+2H      IPK     exon    601169754       601171444       .       -       .       gene_id "HORVU.MOREX.r3.2HG0191020"; transcript_id "HORVU.MOREX.r3.2HG0191020.1"; exon_number "1"; gene_source "IPK"; gene_biotype "protein_coding"; transcript_source "IPK"; transcript_biotype "protein_coding"; exon_id "HORVU.MOREX.r3.2HG0191020.1-E1"; tag "Ensembl_canonical";
+2H      IPK     CDS     601169754       601171444       .       -       0       gene_id "HORVU.MOREX.r3.2HG0191020"; transcript_id "HORVU.MOREX.r3.2HG0191020.1"; exon_number "1"; gene_source "IPK"; gene_biotype "protein_coding"; transcript_source "IPK"; transcript_biotype "protein_coding"; protein_id "HORVU.MOREX.r3.2HG0191020.1"; tag "Ensembl_canonical";
+2H      IPK     start_codon     601171442       601171444       .       -       0       gene_id "HORVU.MOREX.r3.2HG0191020"; transcript_id "HORVU.MOREX.r3.2HG0191020.1"; exon_number "1"; gene_source "IPK"; gene_biotype "protein_coding"; transcript_source "IPK"; transcript_biotype "protein_coding"; tag "Ensembl_canonical";
 ```
 
-### 3) Process GTF
+The GTF file conatins 9 columns.
 
-```{r, process_gtf}
-processed_GTF_First_Fith_Sixth_Col <- process_gtf(
-  gtf_path,
-  centromere_path2
-)
+```{r}
+# Centromere file: 02_MorexV3_centromere_coordinates.bed
+centr_bed_df <- read.table(file = CENTR_BED, header = FALSE, sep = "\t")
+dim(centr_bed_df)  ## 292 x 3
+centr_bed_df[1:10, ]
 
-processed_GTF_First_Fith_Sixth_Col
 ```
 
-### 4) Process 9th column of the GTF file
-
-```{r, process_col_9}
-keep_attributes <- c("gene_id", "transcript_id", "gene_name")
-out_path <- tempdir() # write only to R's tempdirectory
-genome_name <- "BarleyMOREXV3_toy"
-genome_version <- "v51_ENSEMBL"
-
-final_result <- process_attributes_column(
-  result = processed_GTF_First_Fith_Sixth_Col,
-  keep_attributes,
-  out_path,
-  genome_name,
-  genome_version
-)
-
-final_result
+```         
+1H      206486643       516505932
+2H      301293086       665585731
+3H      267852507       621516506
+4H      276149121       610333535
+5H      204878572       588218686
+6H      256319444       561794515
+7H      328847192       632540561
+CAJHDD010000004.1       0       972986
+CAJHDD010000001.1       0       680018
+CAJHDD010000005.1       0       517010
 ```
+
+</details>
+
+## scShardSplitRef processing workflow
+
+##### Step-0
+
+All files need to be decompressed. The format of the centromere coordinate file is a tab-delimited 3-column file, where the 1st column contains chromosome/contig names, the 2nd column contains the centromere coordinate, and the 3rd column contains chromosome/contig region end coordinates.
+
+```{r}
+# Load MOREX V3 files
+# Note1: all files need to be decompressed
+# Note2: use correctly formatted BED file with centromere coordinates 
+GTF_IN="/inst/extdata/01_Hordeum_vulgare.Mt_Pt_v49_Barley_v62_COMBINED.gtf"
+BED_CENTROM_IN="/inst/extdata/02_MorexV3_centromere_coordinates.bed"
+```
+
+##### Step-1
+
+The initial step is to check if required files are provided in the correct format.
+
+```{r}
+input_verif <- validate_inputs(bed=BED_CENTROM_IN, 
+                               gtf=GTF_IN)
+```
+
+If GTF and BED formats are correct, a confirmation message will be printed to the console.
+
+```         
+All files loaded and validated successfully.
+```
+
+##### Step-2
+
+The next step is to prepare split coordinates in BED format, ensuring that chromosomes are not split in the middle of a gene region. To do this, we first test whether our centromere coordinates overlap with any gene features.
+
+```{r}
+# Build BED-like split intervals from genomic regions (BED) and gene annotations (GTF)
+OUTPUT_DIR_BED="/outdata"
+get_split_reg <- determine_split_regions(bed=BED_CENTROM_IN, 
+                        gtf=GTF_IN, 
+                        file.path("/outdata/", "F1_Split_regions.bed"), 
+                        limit = 2L^29L, 
+                        shift_by = 20L)
+```
+
+<details>
+
+<summary><b>**What do the results "F1_Split_regions.bed" looks like?**</b></summary>
+
+```         
+1H  0   206486643
+1H  206486643   516505932
+2H  0   301293086
+2H  301293086   665585731
+3H  0   267852507
+3H  267852507   621516506
+4H  0   276149121
+4H  276149121   610333535
+5H  0   204878572
+5H  204878572   588218686
+6H  0   256319444
+6H  256319444   561794515
+7H  0   328847192
+7H  328847192   632540561
+CAJHDD010000004.1   0   972986
+CAJHDD010000001.1   0   680018
+```
+
+</details>
+
+##### Step-3
+
+Generate gene annotation (GTF) file in compatible to Cell Ranger ARC format, wher the first column of GTF file should be in the following form `Chr-RegionStart-RegionEnd`. None that the output file name is hardcoded and starts with *"B1_FINAL_MODIFIED_GTF"*
+
+```{r}
+GTF_FIN_OUT="/outdata/"
+GTF_processed <- process_gtf(split_regions_bed="/outdata/F1_Split_regions.bed", 
+                          gtf=GTF_IN, 
+                          genome_name="barley", 
+                          genome_version="3", 
+                          out_path=GTF_FIN_OUT )
+
+```
+
+
+<details>
+
+<summary><b>**What do the results in "B1_FINAL_MODIFIED_GTF_barley_3.gtf" looks like?**</b></summary>
+```
+2H-301293086-665585731  IPK     gene    299876443       299878359       .       -       .       gene_id "HORVU.MOREX.r3.2HG0191020"; gene_source "IPK"; gene_biotype "protein_coding";
+2H-301293086-665585731  IPK     transcript      299876443       299878359       .       -       .       gene_id "HORVU.MOREX.r3.2HG0191020"; transcript_id "HORVU.MOREX.r3.2HG0191020.1"; gene_source "IPK"; gene_biotype "protein_coding"; transcript_source "IPK"; transcript_biotype "protein_coding"; tag "Ensembl_canonical";
+2H-301293086-665585731  IPK     exon    299876669       299878359       .       -       .       gene_id "HORVU.MOREX.r3.2HG0191020"; transcript_id "HORVU.MOREX.r3.2HG0191020.1"; exon_number "1"; gene_source "IPK"; gene_biotype "protein_coding"; transcript_source "IPK"; transcript_biotype "protein_coding"; exon_id "HORVU.MOREX.r3.2HG0191020.1-E1"; tag "Ensembl_canonical";
+2H-301293086-665585731  IPK     CDS     299876669       299878359       .       -       0       gene_id "HORVU.MOREX.r3.2HG0191020"; transcript_id "HORVU.MOREX.r3.2HG0191020.1"; exon_number "1"; gene_source "IPK"; gene_biotype "protein_coding"; transcript_source "IPK"; transcript_biotype "protein_coding"; protein_id "HORVU.MOREX.r3.2HG0191020.1"; tag "Ensembl_canonical";
+```
+</details>
+
+
+
+##### Step-4
+Final steps is tor split FASTA file and formatted to be compitable with Cell Ranger ARC
+
+```{linux}
+#Please note that due to file size limitations, the barley genome FASTA file is not available on our GitHub repository at /inst/extdata/
+IN_FA=/input/01_Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly_COMBINED_Mt_Pt_v49_Barley_v62.fa
+BED_FIN_OUT=/outdata/F1_Split_regions.bed
+FASTA_FIN_OUT=/outdata/
+
+# Split FASTA 
+bedtools getfasta -fi ${IN_FA} -bed ${BED_FIN_OUT} -fo ${FASTA_FIN_OUT}/F1_FASTA_split.fasta
+
+# Convert FASTA heading in Cell Ranger ARC compatible format: Chr-RegionStart-RegionEnd
+sed '/^>/s/:/-/g' ${FASTA_FIN_OUT}/F1_FASTA_split.fasta > ${FASTA_FIN_OUT}/F1_FASTA_split_final.fasta
+
+```
+
+<details>
+
+<summary><b>**What do the results in "F1_FASTA_split_final.fasta" looks like?**</b></summary>
+```
+>1H-0-206486643
+ATTTGTAGTGCTTTTCAATTTCAGGGTCAA.....
+>1H-206486643-516505932
+ACTGGCCAAAATAGATCAAAATTGCGAGTTTTGACGAGTTCCCCGTAAGCGGACTTCGG...........
+>2H-0-301293086
+GTGAGAATAGGCC.........
+>2H-301293086-665585731
+```
+</details>
+
+
+##### Step-5
+Cell Ranger ARC
+
+#### prepaper confif file
+```
+{
+    organism: "barley"
+    genome: ["MOREX3_v3"]
+    input_fasta: ["F1_FASTA_split_final.fasta"]
+    input_gtf: ["/outdata/B1_FINAL_MODIFIED_GTF_barley_3.gtf"]
+    non_nuclear_contigs: ["Mt-0-525599", "Pt-0-115974"]
+
+}
+```
+#### run Cell Ranger
+```
+cellranger-arc mkref --config=${CONFIG_IN} --nthreads 24 > mkref.log 2>&1
+```
+
+
 
 ## Acknowledgements
 
