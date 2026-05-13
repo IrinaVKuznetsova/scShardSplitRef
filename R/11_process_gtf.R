@@ -2,7 +2,7 @@
 #'
 #' Reads a BED-like "split regions" file and a GTF, assigns each GTF feature to
 #' exactly one split-region interval, and replaces the GTF `Chr` field with a
-#' split-region name of the form `Chr:RegionStart-RegionEnd`.
+#' split-region name of the form `Chr-RegionStart-RegionEnd`.
 #'
 #' A feature is considered inside a region when:
 #' - `start >= RegionStart`

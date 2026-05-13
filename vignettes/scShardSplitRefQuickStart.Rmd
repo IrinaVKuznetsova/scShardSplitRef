@@ -17,11 +17,15 @@ knitr::opts_chunk$set(
 
 ## 1. Package overview
 
-*scShardSplitRef* designed for researchers working with single-cell data from species that require building a custom reference genome, particularly when one or more contigs in the reference FASTA exceed the Cell Ranger limit of 536.8Mb (2\^29 bases).
-*scShardSplitRef* automates this splitting process, generating contig fragments that comply with Cell Ranger requirements.
-The software outputs FASTA and GTF files containing the split contigs, which can be directly processed by `cellranger-arc mkref`.
+*scShardSplitRef* designed for researchers working with single-cell data from species that require building a custom reference genome, particularly when one or more contigs in the reference FASTA exceed the Cell Ranger ARC limit of 536.8Mb (2\^29 bases). *scShardSplitRef* automates this splitting process, generating contig fragments that comply with Cell Ranger requirements. The software outputs FASTA and GTF files containing the split contigs, which can be directly processed by `cellranger-arc mkref`.
 
 This real-world example demonstrates a step-by-step workflow for downloading and preparing barley (MOREXv3) reference files (GTF and FASTA) for `cellranger-arc mkref`.
+
+To familiarise yourself with the package and workflow of preparing reference genome sequence (FASTA file) and gene annotations (GTF file) to be compatible with Cell Ranger ARC we suggest starting with a guided walk through that uses MOREXv3 available from our GitHub page.
+
+To get familiar with the package and its workflow, we recommend starting with a guided walkthrough. It covers how to prepare a reference genome sequence (FASTA file) and gene annotations (GTF file) that are compatible with Cell Ranger ARC, using MOREXv3 as an example genome. available from our GitHub page.
+
+
 
 ## 2. Accessing Package Help and Vignettes
 

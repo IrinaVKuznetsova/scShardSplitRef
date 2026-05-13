@@ -1,6 +1,6 @@
-#' Validate GTF and BED files
+#' Validate BED and GTF files
 #'
-#' Reads and validates GTF and BED files, checking for:
+#' Reads and validates BED and GTF files, checking for:
 #' - File existence
 #' - TAB-delimited format with correct number of columns
 #' - Valid BED coordinate ranges (start < end)
