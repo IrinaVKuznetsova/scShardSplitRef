@@ -139,7 +139,7 @@ process_gtf <- function(
 #' @dev
 .prepare_split_regions <- function(regions) {
   regions$NEW <- sprintf(
-    "%s:%s-%s",
+    "%s-%s-%s",
     regions$Chr,
     regions$RegionStart,
     regions$RegionEnd
