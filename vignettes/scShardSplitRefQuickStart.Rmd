@@ -33,10 +33,13 @@ We start by assessing genome and checking if there are any gene overlaps with th
 
 ```{r}
 # Install the package
-install.packages("pak")
+#install.packages("pak")
 
 # Load the package 
 pak::pak("scShardSplitRef")
+
+# Load all the code in an R package you're currently developing
+devtools::load_all() 
 ```
 
 <details>
@@ -127,7 +130,7 @@ The next step is to prepare split coordinates in BED format, ensuring that chrom
 OUTPUT_DIR_BED="/outdata"
 get_split_reg <- determine_split_regions(bed=BED_CENTROM_IN, 
                         gtf=GTF_IN, 
-                        file.path("/outdata/", "F1_Split_regions.bed"), 
+                        file.path("/outdata/", "B1_Split_regions.bed"), 
                         limit = 2L^29L, 
                         shift_by = 20L)
 ```
@@ -163,7 +166,7 @@ Generate gene annotation (GTF) file in compatible to Cell Ranger ARC format, whe
 
 ```{r}
 GTF_FIN_OUT="/outdata/"
-GTF_processed <- process_gtf(split_regions_bed="/outdata/F1_Split_regions.bed", 
+GTF_processed <- process_gtf(split_regions_bed="/outdata/B1_Split_regions.bed", 
                           gtf=GTF_IN, 
                           genome_name="barley", 
                           genome_version="3", 
@@ -191,20 +194,20 @@ Final steps is tor split FASTA file and formatted to be compitable with Cell Ran
 ```{linux}
 #Please note that due to file size limitations, the barley genome FASTA file is not available on our GitHub repository at /inst/extdata/
 IN_FA=/input/01_Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly_COMBINED_Mt_Pt_v49_Barley_v62.fa
-BED_FIN_OUT=/outdata/F1_Split_regions.bed
+BED_FIN_OUT=/outdata/B1_Split_regions.bed
 FASTA_FIN_OUT=/outdata/
 
 # Split FASTA 
-bedtools getfasta -fi ${IN_FA} -bed ${BED_FIN_OUT} -fo ${FASTA_FIN_OUT}/F1_FASTA_split.fasta
+bedtools getfasta -fi ${IN_FA} -bed ${BED_FIN_OUT} -fo ${FASTA_FIN_OUT}/B1_FASTA_split.fasta
 
 # Convert FASTA heading in Cell Ranger ARC compatible format: Chr-RegionStart-RegionEnd
-sed '/^>/s/:/-/g' ${FASTA_FIN_OUT}/F1_FASTA_split.fasta > ${FASTA_FIN_OUT}/F1_FASTA_split_final.fasta
+sed '/^>/s/:/-/g' ${FASTA_FIN_OUT}/B1_FASTA_split.fasta > ${FASTA_FIN_OUT}/B1_FASTA_split_final.fasta
 
 ```
 
 <details>
 
-<summary><b>**What do the results in "F1_FASTA_split_final.fasta" looks like?**</b></summary>
+<summary><b>**What do the results in "B1_FASTA_split_final.fasta" looks like?**</b></summary>
 ```
 >1H-0-206486643
 ATTTGTAGTGCTTTTCAATTTCAGGGTCAA.....
@@ -225,7 +228,7 @@ Cell Ranger ARC
 {
     organism: "barley"
     genome: ["MOREX3_v3"]
-    input_fasta: ["F1_FASTA_split_final.fasta"]
+    input_fasta: ["B1_FASTA_split_final.fasta"]
     input_gtf: ["/outdata/B1_FINAL_MODIFIED_GTF_barley_3.gtf"]
     non_nuclear_contigs: ["Mt-0-525599", "Pt-0-115974"]
 
