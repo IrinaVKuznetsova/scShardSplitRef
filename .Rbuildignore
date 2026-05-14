@@ -61,6 +61,9 @@
 ^man/dot-scs_emit_success.Rd
 ^man/scs_cli_alert_info.Rd
 ^man/scs_cli_alert_success.Rd
+
+
+^CONTRIBUTING\.md$
 ^man/dot-read_bed_file\.Rd$
 ^man/dot-read_gtf_file\.Rd$
 ^man/dot-write_bed_file\.Rd$
@@ -94,15 +97,8 @@
 ^man/dot-check_filtered_completeness\.Rd$
 ^man/dot-build_output_filename\.Rd$
 ^man/dot-write_filtered_gtf\.Rd$
-^man/dot-filter_attributes\.Rd$
-^man/dot-check_filtered_completeness\.Rd$
-^man/dot-build_output_filename\.Rd$
-^man/dot-write_filtered_gtf\.Rd$
 ^man/dot-scs_get_verbosity\.Rd$
 ^man/dot-scs_emit_info\.Rd$
 ^man/dot-scs_emit_success\.Rd$
 ^man/scs_cli_alert_info\.Rd$
 ^man/scs_cli_alert_success\.Rd$
-
-
-^CONTRIBUTING\.md$

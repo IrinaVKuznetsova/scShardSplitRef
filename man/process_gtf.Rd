@@ -36,12 +36,12 @@ the current working directory (\code{"."}).}
 }
 \value{
 The function writes the filtered GTF file to disk
-at \code{out_path}.
+at \code{out_path}. Hardcoded file name \link{IK --edit}
 }
 \description{
 Reads a BED-like "split regions" file and a GTF, assigns each GTF feature to
 exactly one split-region interval, and replaces the GTF \code{Chr} field with a
-split-region name of the form \code{Chr:RegionStart-RegionEnd}.
+split-region name of the form \code{Chr-RegionStart-RegionEnd}.
 }
 \details{
 A feature is considered inside a region when:

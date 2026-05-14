@@ -2,7 +2,7 @@
 % Please edit documentation in R/10_validate_inputs.R
 \name{validate_inputs}
 \alias{validate_inputs}
-\title{Validate GTF and BED files}
+\title{Validate BED and GTF files}
 \usage{
 validate_inputs(bed, gtf)
 }
@@ -24,7 +24,7 @@ additional columns from the input file.
 }
 }
 \description{
-Reads and validates GTF and BED files, checking for:
+Reads and validates BED and GTF files, checking for:
 \itemize{
 \item File existence
 \item TAB-delimited format with correct number of columns

@@ -2,7 +2,7 @@
 #'
 #' Reads a BED-like "split regions" file and a GTF, assigns each GTF feature to
 #' exactly one split-region interval, and replaces the GTF `Chr` field with a
-#' split-region name of the form `Chr-RegionStart-RegionEnd`.
+#' split-region name of the form `Chr-RegionStart-RegionEnd`. 
 #'
 #' A feature is considered inside a region when:
 #' - `start >= RegionStart`
@@ -27,7 +27,7 @@
 #'   the current working directory (`"."`).
 #'
 #' @return The function writes the filtered GTF file to disk
-#'   at `out_path`.
+#'   at `out_path`. Hardcoded file name [IK --edit]
 #'
 #' @examples
 #' # Minimal working example using temporary files
