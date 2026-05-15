@@ -3,4 +3,6 @@ inst/doc
 /Meta/
 .Rproj.user
 .RData
-.gtf
+v62_COMBINED.gtf
+.bam
+.sam
