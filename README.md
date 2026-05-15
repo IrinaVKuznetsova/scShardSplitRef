@@ -105,8 +105,8 @@ All files need to be decompressed. The format of the centromere coordinate file 
 # Load MOREX V3 files
 # Note1: all files need to be decompressed
 # Note2: use correctly formatted BED file with centromere coordinates 
-GTF_IN="/inst/extdata/01_Hordeum_vulgare.Mt_Pt_v49_Barley_v62_COMBINED.gtf"
-BED_CENTROM_IN="/inst/extdata/02_MorexV3_centromere_coordinates.bed"
+GTF_IN = "/inst/extdata/01_Hordeum_vulgare.Mt_Pt_v49_Barley_v62_COMBINED.gtf"
+BED_CENTROM_IN = "/inst/extdata/02_MorexV3_centromere_coordinates.bed"
 ```
 
 #### Step-1
@@ -128,6 +128,7 @@ The next step is to prepare split coordinates in BED-like format. This function 
 ```{r}
 # Build BED-like split intervals from genomic regions (BED) and gene annotations (GTF)
 OUTPUT_DIR_BED = "/outdata"
+?determine_split_regions
 get_split_reg <- determine_split_regions(bed=BED_CENTROM_IN, 
                         gtf = GTF_IN, 
                         file.path("/outdata/", "B1_Split_regions.bed"), 
@@ -172,8 +173,9 @@ GTF_processed <- process_gtf(split_regions_bed = "/outd ata/B1_Split_regions.bed
 ```
 
 <details>
-<summary><b>**What do the results in "B1_FINAL_MODIFIED_GTF_barley_3.gtf" looks like?**</b></summary>
-The output file is in GTF format. Note that the first column has been reformatted — the regions are now split. The chromosome name is formatted as ```1H-0-206486643```, which is the region from the beginning of the chromosome to the split position; ```1H-206486643-516505932`` is the region from the split position to the end of the chromosome
+<summary><b>What do the results in "B1_FINAL_MODIFIED_GTF_barley_3.gtf" looks like?</b></summary>
+The output file is in GTF format. Note that the first column has been reformatted — the regions are now split. The chromosome name is formatted as ```1H-0-206486643```, which is the region from the beginning of the chromosome to the split position; ```1H-206486643-516505932`` is the region from the split position to the end of the chromosome. 
+  
 ```         
 1H-0-206486643	IPK	gene	151788036	151791331	.	-	.	gene_id "HORVU.MOREX.r3.1HG0030850"; gene_source "IPK"; gene_biotype "protein_coding";
 1H-0-206486643	IPK	transcript	151788036	151791331	.	-	.	gene_id "HORVU.MOREX.r3.1HG0030850"; transcript_id "HORVU.MOREX.r3.1HG0030850.1"; gene_source "IPK"; gene_biotype "protein_coding"; transcript_source "IPK"; transcript_biotype "protein_coding"; tag "Ensembl_canonical";
@@ -224,7 +226,9 @@ The genome sequence (FASTA) and gene annotation (GTF) files are now split and fo
 
 <details>
 <summary><b>What do the ".config" file looks like?</b></summary>
-```         
+
+  ```
+      
 {
     organism: "barley"
     genome: ["MOREX3_v3"]
@@ -232,6 +236,7 @@ The genome sequence (FASTA) and gene annotation (GTF) files are now split and fo
     input_gtf: ["/outdata/B1_FINAL_MODIFIED_GTF_barley_3.gtf"]
     non_nuclear_contigs: ["Mt-0-525599", "Pt-0-115974"]
 }
+
 ```
  </details> 
 
@@ -240,7 +245,8 @@ The genome sequence (FASTA) and gene annotation (GTF) files are now split and fo
 ## R package session information 
 
 <details>
-<summary>sessionInfo()</summary>
+<summary><b>sessionInfo()</b></summary>
+  
 ```
 R version 4.5.3 (2026-03-11)
 Platform: x86_64-pc-linux-gnu
@@ -275,7 +281,9 @@ loaded via a namespace (and not attached):
 [43] pkgconfig_2.0.3   desc_1.4.3        callr_3.7.6       pillar_1.11.1     later_1.4.8       glue_1.8.1       
 [49] profvis_0.4.0     Rcpp_1.1.1-1.1    xfun_0.57         tibble_3.3.1      rstudioapi_0.18.0 knitr_1.51       
 [55] xtable_1.8-8      htmltools_0.5.9   rmarkdown_2.31    testthat_3.3.2    compiler_4.5.3    roxygen2_8.0.0 
+
 ```
+
  </details> 
 
 
@@ -283,7 +291,7 @@ loaded via a namespace (and not attached):
 ## Citation
 Please cite this tool if you use it
 
-``` r
+``` {r}
 library("scShardSplitRef")
 citation("scShardSplitRef")
 #> Warning in citation("scShardSplitRef"): could not determine year for 'scShardSplitRef'
