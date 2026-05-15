@@ -99,8 +99,7 @@ CAJHDD010000005.1       0       517010
 
 ## scShardSplitRef guided walk through
 
-##### Step-0
-
+#### Step-0
 All files need to be decompressed. The format of the centromere coordinate file is a tab-delimited 3-column file, where the 1st column contains chromosome/contig names, the 2nd column contains the centromere coordinate, and the 3rd column contains chromosome/contig region end coordinates.
 
 ```{r}
@@ -111,8 +110,7 @@ GTF_IN="/inst/extdata/01_Hordeum_vulgare.Mt_Pt_v49_Barley_v62_COMBINED.gtf"
 BED_CENTROM_IN="/inst/extdata/02_MorexV3_centromere_coordinates.bed"
 ```
 
-##### Step-1
-
+#### Step-1
 The initial step is to check if required files are provided in the correct format.
 
 ```{r}
@@ -125,13 +123,12 @@ If GTF and BED formats are correct, a confirmation message will be printed to th
 All files loaded and validated successfully.
 ```
 
-##### Step-2
-
+#### Step-2
 The next step is to prepare split coordinates in BED-like format. This function ensures that chromosomes are not split in the middle of a gene region. To achieve this, we first check whether the centromere coordinates overlap with any gene features, and if they do, we shift the split position by a specified length in base pairs (bp).
 
 ```{r}
 # Build BED-like split intervals from genomic regions (BED) and gene annotations (GTF)
-OUTPUT_DIR_BED="/outdata"
+OUTPUT_DIR_BED = "/outdata"
 get_split_reg <- determine_split_regions(bed=BED_CENTROM_IN, 
                         gtf = GTF_IN, 
                         file.path("/outdata/", "B1_Split_regions.bed"), 
@@ -163,46 +160,45 @@ CAJHDD010000001.1   0   680018
 
 </details>
 
-##### Step-3
-
-Generate gene annotation (GTF) file in compatible to Cell Ranger ARC format. The first column of the GTF file should be in the following form `Chr-RegionStart-RegionEnd`. Note that the output file name is hardcoded and starts with **"B1_FINAL_MODIFIED_GTF_[genome_name]_[genome_version].gtf"**
+#### Step-3
+Generate gene annotation (GTF) file in compatible to Cell Ranger ARC format. The first column of the GTF file should be in the following form `Chr-RegionStart-RegionEnd`. Note that the output file name is hardcoded and starts with "B1_FINAL_MODIFIED_GTF_[*genome_name*]_[*genome_version*].gtf". 
 
 ```{r}
-GTF_FIN_OUT="/outdata/"
-GTF_processed <- process_gtf(split_regions_bed="/outdata/B1_Split_regions.bed", 
-                          gtf=GTF_IN, 
-                          genome_name="barley", 
-                          genome_version="3", 
-                          out_path=GTF_FIN_OUT )
-
+GTF_FIN_OUT = "/outdata/"
+GTF_processed <- process_gtf(split_regions_bed = "/outd ata/B1_Split_regions.bed", 
+                          gtf = GTF_IN, 
+                          genome_name = "barley", 
+                          genome_version = "3", 
+                          out_path = GTF_FIN_OUT )
 ```
 
 <details>
 <summary><b>**What do the results in "B1_FINAL_MODIFIED_GTF_barley_3.gtf" looks like?**</b></summary>
-
+The output file is in GTF format. Note that the first column has been reformatted — the regions are now split. The chromosome name is formatted as ```1H-0-206486643```, which is the region from the beginning of the chromosome to the split position; ```1H-206486643-516505932`` is the region from the split position to the end of the chromosome
 ```         
-2H-301293086-665585731  IPK     gene    299876443       299878359       .       -       .       gene_id "HORVU.MOREX.r3.2HG0191020"; gene_source "IPK"; gene_biotype "protein_coding";
-2H-301293086-665585731  IPK     transcript      299876443       299878359       .       -       .       gene_id "HORVU.MOREX.r3.2HG0191020"; transcript_id "HORVU.MOREX.r3.2HG0191020.1"; gene_source "IPK"; gene_biotype "protein_coding"; transcript_source "IPK"; transcript_biotype "protein_coding"; tag "Ensembl_canonical";
-2H-301293086-665585731  IPK     exon    299876669       299878359       .       -       .       gene_id "HORVU.MOREX.r3.2HG0191020"; transcript_id "HORVU.MOREX.r3.2HG0191020.1"; exon_number "1"; gene_source "IPK"; gene_biotype "protein_coding"; transcript_source "IPK"; transcript_biotype "protein_coding"; exon_id "HORVU.MOREX.r3.2HG0191020.1-E1"; tag "Ensembl_canonical";
-2H-301293086-665585731  IPK     CDS     299876669       299878359       .       -       0       gene_id "HORVU.MOREX.r3.2HG0191020"; transcript_id "HORVU.MOREX.r3.2HG0191020.1"; exon_number "1"; gene_source "IPK"; gene_biotype "protein_coding"; transcript_source "IPK"; transcript_biotype "protein_coding"; protein_id "HORVU.MOREX.r3.2HG0191020.1"; tag "Ensembl_canonical";
+1H-0-206486643	IPK	gene	151788036	151791331	.	-	.	gene_id "HORVU.MOREX.r3.1HG0030850"; gene_source "IPK"; gene_biotype "protein_coding";
+1H-0-206486643	IPK	transcript	151788036	151791331	.	-	.	gene_id "HORVU.MOREX.r3.1HG0030850"; transcript_id "HORVU.MOREX.r3.1HG0030850.1"; gene_source "IPK"; gene_biotype "protein_coding"; transcript_source "IPK"; transcript_biotype "protein_coding"; tag "Ensembl_canonical";
+...
+1H-206486643-516505932	IPK	gene	132967560	132971272	.	-	.	gene_id "HORVU.MOREX.r3.1HG0050880"; gene_source "IPK"; gene_biotype "protein_coding";
+1H-206486643-516505932	IPK	transcript	132967560	132971272	.	-	.	gene_id "HORVU.MOREX.r3.1HG0050880"; transcript_id "HORVU.MOREX.r3.1HG0050880.1"; gene_source "IPK"; gene_biotype "protein_coding"; transcript_source "IPK"; transcript_biotype "protein_coding"; tag "Ensembl_canonical";
+...
 ```
-
 </details>
 
-##### Step-4
 
-Final steps is to split FASTA file and format to be compitable with the Cell Ranger ARC
+#### Step-4
+Final steps is to split FASTA file, the fatsa headers should have the same chrosomome annotations as GTF file. 
 
 ```{linux}
-#Please note that due to file size limitations, the barley genome FASTA file is not available on our GitHub repository at /inst/extdata/
-IN_FA=/input/01_Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly_COMBINED_Mt_Pt_v49_Barley_v62.fa
-BED_FIN_OUT=/outdata/B1_Split_regions.bed
-FASTA_FIN_OUT=/outdata/
+# Please note that due to file size limitations, the barley genome FASTA file is not available on our GitHub repository at /inst/extdata/
+IN_FA = "01_Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly_COMBINED_Mt_Pt_v49_Barley_v62.fa"
+BED_FIN_OUT = "/outd ata/B1_Split_regions.bed"
+FASTA_FIN_OUT = "/outdata/"
 
 # Split FASTA 
 bedtools getfasta -fi ${IN_FA} -bed ${BED_FIN_OUT} -fo ${FASTA_FIN_OUT}/B1_FASTA_split.fasta
 
-# Convert FASTA heading in Cell Ranger ARC compatible format: Chr-RegionStart-RegionEnd
+# Convert FASTA heading to Chr-RegionStart-RegionEnd form
 sed '/^>/s/:/-/g' ${FASTA_FIN_OUT}/B1_FASTA_split.fasta > ${FASTA_FIN_OUT}/B1_FASTA_split_final.fasta
 
 ```
@@ -219,37 +215,33 @@ ACTGGCCAAAATAGATCAAAATTGCGAGTTTTGACGAGTTCCCCGTAAGCGGACTTCGG...........
 >2H-0-301293086
 GTGAGAATAGGCC.........
 >2H-301293086-665585731
+...
 ```
 
 </details>
 
-##### Step-5
+#### Step-5
+The genome sequence (FASTA) and gene annotation (GTF) files are now split and formatted for Cell Ranger ARC. The file paths are specified in the ```.config`` file and Cell Ranger ARC can now be run.
 
-Cell Ranger ARC
-
-#### prepaper confif file
-
+<details>
+<summary><b>**What do the ".config" file looks like?**</b></summary>
 ```         
 {
     organism: "barley"
     genome: ["MOREX3_v3"]
-    input_fasta: ["B1_FASTA_split_final.fasta"]
+    input_fasta: ["/outdata/B1_FASTA_split_final.fasta"]
     input_gtf: ["/outdata/B1_FINAL_MODIFIED_GTF_barley_3.gtf"]
     non_nuclear_contigs: ["Mt-0-525599", "Pt-0-115974"]
-
 }
 ```
-  
+ </details> 
 
 
-## **Installation** 
-`scShardSplitRef` 
-```{r}
-sessionInfo()
-```
+
+## **R package session information** 
 
 <details>
-<summary>sessionInfo</summary>
+<summary>sessionInfo()</summary>
 ```
 R version 4.5.3 (2026-03-11)
 Platform: x86_64-pc-linux-gnu
@@ -289,18 +281,8 @@ loaded via a namespace (and not attached):
 
 
 
-## **Limitations / Notes**  
-Please note that this package has been developed for use with diploid organisms. What the tool does not do.
-
-* Does not validate biological correctness of annotations
-* Does not merge or reorder GTF entries
-* Does not handle circular genomes  
-
-
-
 ## **Citation**
 Please cite this tool if you use it
-
 
 ``` r
 library("scShardSplitRef")
@@ -323,6 +305,7 @@ citation("scShardSplitRef")
 #>   }
 ```
 
+
 ## **License**
 This project is licensed under the [GPL-3.0 license](LICENSE.md).  
 
@@ -336,4 +319,6 @@ Remember that improving tools is important, but keeping them neat and not over-c
 
 ## **Acknowledgements**  
 This work was supported by resources provided by the [Pawsey Supercomputing Research Centres](https://pawsey.org.au/) Nimbus Research Cloud (https://doi.org/10.48569/v0j3-qd51), with funding from the Australian Government and the Government of Western Australia.
+
+GRDC (?)
 
