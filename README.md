@@ -21,7 +21,7 @@ To familiarise yourself with the package and workflow of preparing reference gen
 >![screenshot of the error](man/figures/scr_10x_CR_arc_error.png)  
 
 
-Barley genome has several chromosomes (*2H=665.59Mb, 3H=621.52Mb, 4H=610.33Mb, 5H=588.22Mb, 6H=561.79Mb, 7H=632.54Mb*) that exceed this size limit. As a result, `cellranger-arc mkref` cannot build a reference unless "oversized" chromosomes are divided into smaller fragments.  
+For example, barley genome has several chromosomes (*2H=665.59Mb, 3H=621.52Mb, 4H=610.33Mb, 5H=588.22Mb, 6H=561.79Mb, 7H=632.54Mb*) that exceed this size limit. As a result, `cellranger-arc mkref` cannot build a reference unless "oversized" chromosomes are divided into smaller fragments.  
 
 
 
@@ -38,11 +38,14 @@ library("dplyr")
 library("scShardSplitRef")
 ```
 
-For this tutorial, we will be using a genome sequence (FASTA file) and gene annotations (GTF file) of the barley genome (*Hordeum Vulgare, Morex V3*) available from [Ensembl](https://ftp.ensemblgenomes.ebi.ac.uk) and centromere coordinates from [GrainGenes](https://graingenes.org/GG3/content/morex-v3-files-2021).
+#### Required data
+scShardSplitRef requires a genome sequence (FASTA), gene annotations (GTF), and centromere coordinates (BED-like format). If centromere coordinates are not available for your species, you can manually create a BED-like file with the midpoint position of each chromosome. scShardSplitRef will then check for any overlaps with genic regions and generate the correct BED files for splitting.
+
+For this tutorial, we will be using a genome sequence (FASTA) and gene annotations (GTF) of the barley genome (*Hordeum Vulgare, Morex V3*) available from [Ensembl](https://ftp.ensemblgenomes.ebi.ac.uk) and centromere coordinates from [GrainGenes](https://graingenes.org/GG3/content/morex-v3-files-2021).
 
 We begin by assessing the formatting of the input GTF and BED files provided by the user, followed by checking and, if necessary, modifying the split coordinates in the BED file. The GTF file is then updated according to the split position. Finally, FASTA file is split and formatted for compatibility with Cell Ranger ARC.
 <details>
-<summary><b>What do GTF and centromere files for MOREX V3 look like?</b></summary>
+<summary><b>What do GTF and BED-like centromere files for MOREX V3 look like?</b></summary>
 
 ```{r, eval = FALSE}
 # Gene annotations (GTF) file: 
