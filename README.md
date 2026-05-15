@@ -27,6 +27,13 @@ For example, barley genome has several chromosomes (*2H=665.59Mb, 3H=621.52Mb, 4
 
 
 ## scShardSplitRef guided walk through
+#### Prerequisites
+
+| Software | Version | Purpose |
+|----------|---------|---------|
+| R | ≥ 4.0 | Core package |
+| bedtools | ≥ 2.30 | BED file operations |
+| Cell Ranger ARC | ≥ 2.0 | Single-cell multiome processing |
 
 #### Installation  
 ```{r}
@@ -38,12 +45,25 @@ library("dplyr")
 library("scShardSplitRef")
 ```
 
-#### Required data
-scShardSplitRef requires a genome sequence (FASTA), gene annotations (GTF), and centromere coordinates (BED-like format). If centromere coordinates are not available for your species, you can manually create a BED-like file with the midpoint position of each chromosome. scShardSplitRef will then check for any overlaps with genic regions and generate the correct BED files for splitting.
+#### Input files
+| File | Format | Description |
+|------|--------|-------------|
+| Genome sequence | FASTA | Reference genome sequence |
+| Gene annotations | GTF | Gene features and coordinates |
+| Centromere coordinates | BED-like | Centromere positions per chromosome (x) |
+
+> (x) **Note:** If centromere coordinates are not available for your species, you can manually 
+> create a BED-like file with the midpoint position of each chromosome. scShardSplitRef 
+> will then check for any overlaps with genic regions and generate the correct BED files 
+> for splitting.
+> 
+
 
 For this tutorial, we will be using a genome sequence (FASTA) and gene annotations (GTF) of the barley genome (*Hordeum Vulgare, Morex V3*) available from [Ensembl](https://ftp.ensemblgenomes.ebi.ac.uk) and centromere coordinates from [GrainGenes](https://graingenes.org/GG3/content/morex-v3-files-2021).
 
-We begin by assessing the formatting of the input GTF and BED files provided by the user, followed by checking and, if necessary, modifying the split coordinates in the BED file. The GTF file is then updated according to the split position. Finally, FASTA file is split and formatted for compatibility with Cell Ranger ARC.
+
+
+
 <details>
 <summary><b>What do GTF and BED-like centromere files for MOREX V3 look like?</b></summary>
 
@@ -100,6 +120,10 @@ CAJHDD010000005.1       0       517010
 </details>
 
 
+
+#### Step-by-step Guide
+
+We begin by assessing the formatting of the input GTF and BED files provided by the user, followed by checking and, if necessary, modifying the split coordinates in the BED file. The GTF file is then updated according to the split position. Finally, FASTA file is split and formatted for compatibility with Cell Ranger ARC.
 
 #### Step-0
 All files need to be decompressed. The format of the centromere coordinate file is a tab-delimited 3-column file, where the 1st column contains chromosome/contig names, the 2nd column contains the centromere coordinate, and the 3rd column contains chromosome/contig region end coordinates.
@@ -168,6 +192,7 @@ Generate gene annotation (GTF) file in compatible to Cell Ranger ARC format. The
 
 ```{r}
 GTF_FIN_OUT = "/outdata/"
+?process_gtf
 GTF_processed <- process_gtf(split_regions_bed = "/outd ata/B1_Split_regions.bed", 
                           gtf = GTF_IN, 
                           genome_name = "barley", 
@@ -225,7 +250,7 @@ GTGAGAATAGGCC.........
 </details>
 
 #### Step-5
-The genome sequence (FASTA) and gene annotation (GTF) files are now split and formatted for Cell Ranger ARC. The file paths are specified in the ```.config`` file and Cell Ranger ARC can now be run.
+The genome sequence (FASTA) and gene annotation (GTF) files are now split and formatted for Cell Ranger ARC. The file paths are specified in the ```.config``` file and Cell Ranger ARC can now be run.
 
 <details>
 <summary><b>What do the ".config" file looks like?</b></summary>
