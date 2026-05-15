@@ -10,7 +10,7 @@ output: github_document
 ## **scShardSplitRef**  
 *scShardSplitRef* designed for researchers working with multiome single-cell data from species that require building a custom reference genome, particularly when one or more chromosomes/contigs in the reference FASTA exceed the Cell Ranger ARC limit of 536.8Mb (2\^29 bases). *scShardSplitRef* enables splitting of long chromosomes/contigs generating shorter fragments that are compitable with Cell Ranger ARC requirements. The software outputs FASTA and GTF files containing the split chromosomes/contigs, which can be directly processed by `cellranger-arc mkref`.
 
-To familiarise yourself with the package and workflow of preparing reference genome sequence (FASTA file) and gene annotations (GTF file) for Cell Ranger ARC we suggest starting with a guided walk through. 
+To familiarise yourself with the package and workflow of preparing reference genome sequence (FASTA) and gene annotations (GTF) files for Cell Ranger ARC we suggest starting with a guided walk through. 
 
 
 ## **Problem overview**  
@@ -26,11 +26,9 @@ Barley genome has several chromosomes (*2H=665.59Mb, 3H=621.52Mb, 4H=610.33Mb, 5
 
 
 
-## **Setup the scShardSplitRef package**  
-For this tutorial, we will be using a genome sequence (FASTA file) and gene annotations (GTF file) of the barley genome (*Hordeum Vulgare, Morex V3*) available from [Ensembl](https://ftp.ensemblgenomes.ebi.ac.uk) and centromere coordinates from [GrainGenes](https://graingenes.org/GG3/content/morex-v3-files-2021).
+## scShardSplitRef guided walk through
 
-We begin by assessing the formatting of the input GTF and BED files provided by the user, followed by checking and, if necessary, modifying the split coordinates in the BED file. The GTF file is then updated according to the split position. Finally, FASTA file is split and formatted for compatibility with Cell Ranger ARC.
-  
+#### Installation  
 ```{r}
 # Install the package
 # install.packages("pak")
@@ -40,10 +38,11 @@ library("dplyr")
 library("scShardSplitRef")
 ```
 
+For this tutorial, we will be using a genome sequence (FASTA file) and gene annotations (GTF file) of the barley genome (*Hordeum Vulgare, Morex V3*) available from [Ensembl](https://ftp.ensemblgenomes.ebi.ac.uk) and centromere coordinates from [GrainGenes](https://graingenes.org/GG3/content/morex-v3-files-2021).
 
+We begin by assessing the formatting of the input GTF and BED files provided by the user, followed by checking and, if necessary, modifying the split coordinates in the BED file. The GTF file is then updated according to the split position. Finally, FASTA file is split and formatted for compatibility with Cell Ranger ARC.
 <details>
-
-<summary><b>**What do GTF and centromere files for MOREX V3 look like?**</b></summary>
+<summary><b>What do GTF and centromere files for MOREX V3 look like?</b></summary>
 
 ```{r, eval = FALSE}
 # Gene annotations (GTF) file: 
@@ -97,7 +96,7 @@ CAJHDD010000005.1       0       517010
 
 </details>
 
-## scShardSplitRef guided walk through
+
 
 #### Step-0
 All files need to be decompressed. The format of the centromere coordinate file is a tab-delimited 3-column file, where the 1st column contains chromosome/contig names, the 2nd column contains the centromere coordinate, and the 3rd column contains chromosome/contig region end coordinates.
@@ -137,7 +136,7 @@ get_split_reg <- determine_split_regions(bed=BED_CENTROM_IN,
 ```
 
 <details>
-<summary><b>**What do the results "B1_Split_regions.bed" looks like?**</b></summary>
+<summary><b>What do the results "B1_Split_regions.bed" looks like?</b></summary>
 
 ```         
 1H  0   206486643
@@ -205,7 +204,7 @@ sed '/^>/s/:/-/g' ${FASTA_FIN_OUT}/B1_FASTA_split.fasta > ${FASTA_FIN_OUT}/B1_FA
 
 <details>
 
-<summary><b>**What do the results in "B1_FASTA_split_final.fasta" looks like?**</b></summary>
+<summary><b>What do the results in "B1_FASTA_split_final.fasta" looks like?</b></summary>
 
 ```         
 >1H-0-206486643
@@ -224,7 +223,7 @@ GTGAGAATAGGCC.........
 The genome sequence (FASTA) and gene annotation (GTF) files are now split and formatted for Cell Ranger ARC. The file paths are specified in the ```.config`` file and Cell Ranger ARC can now be run.
 
 <details>
-<summary><b>**What do the ".config" file looks like?**</b></summary>
+<summary><b>What do the ".config" file looks like?</b></summary>
 ```         
 {
     organism: "barley"
@@ -238,7 +237,7 @@ The genome sequence (FASTA) and gene annotation (GTF) files are now split and fo
 
 
 
-## **R package session information** 
+## R package session information 
 
 <details>
 <summary>sessionInfo()</summary>
@@ -277,11 +276,11 @@ loaded via a namespace (and not attached):
 [49] profvis_0.4.0     Rcpp_1.1.1-1.1    xfun_0.57         tibble_3.3.1      rstudioapi_0.18.0 knitr_1.51       
 [55] xtable_1.8-8      htmltools_0.5.9   rmarkdown_2.31    testthat_3.3.2    compiler_4.5.3    roxygen2_8.0.0 
 ```
-</details>
+ </details> 
 
 
 
-## **Citation**
+## Citation
 Please cite this tool if you use it
 
 ``` r
@@ -306,18 +305,18 @@ citation("scShardSplitRef")
 ```
 
 
-## **License**
+## License
 This project is licensed under the [GPL-3.0 license](LICENSE.md).  
 
 
 
-## **Contributing**  
+## Contributing  
 If you'd like to help improve this tool, please send your suggestions via email.  
 Please clearly outline the feature(s) you think should be added. As the tool develops, new features can be added as separate package functions and contributed back to the project.    
 Remember that improving tools is important, but keeping them neat and not over-complicated is just as essential. 
 
 
-## **Acknowledgements**  
+## Acknowledgements  
 This work was supported by resources provided by the [Pawsey Supercomputing Research Centres](https://pawsey.org.au/) Nimbus Research Cloud (https://doi.org/10.48569/v0j3-qd51), with funding from the Australian Government and the Government of Western Australia.
 
 GRDC (?)
