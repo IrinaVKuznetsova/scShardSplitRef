@@ -10,19 +10,18 @@ output: github_document
 ## **scShardSplitRef**  
 *scShardSplitRef* designed for researchers working with multiome single-cell data from species that require building a custom reference genome, particularly when one or more chromosomes/contigs in the reference FASTA exceed the Cell Ranger ARC limit of 536.8Mb (2\^29 bases). *scShardSplitRef* enables splitting of long chromosomes/contigs generating shorter fragments that are compitable with Cell Ranger ARC requirements. The software outputs FASTA and GTF files containing the split chromosomes/contigs, which can be directly processed by `cellranger-arc mkref`.
 
-To familiarise yourself with the package and workflow of preparing reference genome sequence (FASTA file) and gene annotations (GTF file) for Cell Ranger ARC we suggest starting with a guided walk through. We are using barley genome (MOREX V3) as an example genome. It starts with GTF file and BED are available from our GitHub page from `inst/extdata`.
-
+To familiarise yourself with the package and workflow of preparing reference genome sequence (FASTA file) and gene annotations (GTF file) for Cell Ranger ARC we suggest starting with a guided walk through. 
 
 
 ## **Problem overview**  
-*Cell Ranger* provides pre-built reference genomes for common species such as human and mouse. For less common species, users must build a custom reference using `cellranger-arc mkref` for the multiome ATAC + Gene Expression sequencing data. When working with species that have very large chromosomes or scaffolds, users may encounter the following error:  
+*Cell Ranger* provides pre-built reference genomes for common species such as human and mouse. For less common species, users must build a custom reference. For example, for multiome ATAC + Gene Expression sequencing data the command is `cellranger-arc mkref`tha requires geneome sequence (FASTA) and gene annotations (GTF) files. When working with species that have very large chromosomes or scaffolds, users may encounter the following error:  
 >*Due to limitations of the BAM index format, a contig in the reference FASTA file cannot exceed *536.8Mb (2^29 bases)*. If a contig exceeds that size you will have to split it into smaller contigs and make corresponding modifications to the GTF file.* 
 [Source: 10x Genomics Documentation](https://www.10xgenomics.com/support/software/cell-ranger-arc/latest/analysis/inputs/mkref)  
 
 >![screenshot of the error](man/figures/scr_10x_CR_arc_error.png)  
 
 
-For example, in large genomes such as barley, several chromosomes (*2H=665.59Mb, 3H=621.52Mb, 4H=610.33Mb, 5H=588.22Mb, 6H=561.79Mb, 7H=632.54Mb*) exceed this size threshold. These contigs cannot be processed by `cellranger-arc mkref`. As a result, `cellranger-arc mkref` cannot build a reference unless "oversized" chromosomes are divided into smaller fragments.  
+Barley genome has several chromosomes (*2H=665.59Mb, 3H=621.52Mb, 4H=610.33Mb, 5H=588.22Mb, 6H=561.79Mb, 7H=632.54Mb*) that exceed this size limit. As a result, `cellranger-arc mkref` cannot build a reference unless "oversized" chromosomes are divided into smaller fragments.  
 
 
 
@@ -47,25 +46,22 @@ library("scShardSplitRef")
 <summary><b>**What do GTF and centromere files for MOREX V3 look like?**</b></summary>
 
 ```{r, eval = FALSE}
-# Gene annotations (GTF) file: "/inst/extdata/01_Hordeum_vulgare.Mt_Pt_v49_Barley_v62_COMBINED.gtf"
-# data.dir = "path/to/this/data.gdf"
-gtf_df <- read.table(file = GTF_IN, header = FALSE, sep = "\t")
+# Gene annotations (GTF) file: 
+# data.dir = "/inst/extdata/01_Hordeum_vulgare.Mt_Pt_v49_Barley_v62_COMBINED.gtf"
+
+gtf_df <- read.table(file = "01_Hordeum_vulgare.Mt_Pt_v49_Barley_v62_COMBINED.gtf",
+  header = FALSE,
+  sep = "\t")
 dim(gtf_df)     ### 524562 x 9
 gtf_df[1:10, ]
-
-gtf_file <- system.file("extdata",
-              "A3_toy_all_scenarios_2chr.gtf",
-              package = "scShardSplitRef",
-              mustWork = TRUE)
-
+```
+The GTF file conatins 9 columns.
+```
 #!genome-build MorexV3_pseudomolecules_assembly
 #!genome-version MorexV3_pseudomolecules_assembly
 #!genome-date 2021-04
 #!genome-build-accession GCA_904849725.1
-#!genebuild-last-updated 2021-04
-```
-
-```         
+#!genebuild-last-updated 2021-04       
 2H      IPK     gene    601169528       601171444       .       -       .       gene_id "HORVU.MOREX.r3.2HG0191020"; gene_source "IPK"; gene_biotype "protein_coding";
 2H      IPK     transcript      601169528       601171444       .       -       .       gene_id "HORVU.MOREX.r3.2HG0191020"; transcript_id "HORVU.MOREX.r3.2HG0191020.1"; gene_source "IPK"; gene_biotype "protein_coding"; transcript_source "IPK"; transcript_biotype "protein_coding"; tag "Ensembl_canonical";
 2H      IPK     exon    601169754       601171444       .       -       .       gene_id "HORVU.MOREX.r3.2HG0191020"; transcript_id "HORVU.MOREX.r3.2HG0191020.1"; exon_number "1"; gene_source "IPK"; gene_biotype "protein_coding"; transcript_source "IPK"; transcript_biotype "protein_coding"; exon_id "HORVU.MOREX.r3.2HG0191020.1-E1"; tag "Ensembl_canonical";
@@ -73,14 +69,17 @@ gtf_file <- system.file("extdata",
 2H      IPK     start_codon     601171442       601171444       .       -       0       gene_id "HORVU.MOREX.r3.2HG0191020"; transcript_id "HORVU.MOREX.r3.2HG0191020.1"; exon_number "1"; gene_source "IPK"; gene_biotype "protein_coding"; transcript_source "IPK"; transcript_biotype "protein_coding"; tag "Ensembl_canonical";
 ```
 
-The GTF file conatins 9 columns.
+
 
 ```{r}
-# Centromere file: 02_MorexV3_centromere_coordinates.bed
-centr_bed_df <- read.table(file = CENTR_BED, header = FALSE, sep = "\t")
+# Manually formatted centromere file (please check what it should look like below and check **Step-0** description): 
+# data.dir = "/inst/extdata/02_MorexV3_centromere_coordinates.bed"
+
+centr_bed_df <- read.table(file = "02_MorexV3_centromere_coordinates.bed",
+  header = FALSE,
+  sep = "\t")
 dim(centr_bed_df)  ## 292 x 3
 centr_bed_df[1:10, ]
-
 ```
 
 ```         
@@ -98,7 +97,7 @@ CAJHDD010000005.1       0       517010
 
 </details>
 
-## scShardSplitRef processing workflow
+## scShardSplitRef guided walk through
 
 ##### Step-0
 
@@ -117,33 +116,31 @@ BED_CENTROM_IN="/inst/extdata/02_MorexV3_centromere_coordinates.bed"
 The initial step is to check if required files are provided in the correct format.
 
 ```{r}
-input_verif <- validate_inputs(bed=BED_CENTROM_IN, 
-                               gtf=GTF_IN)
+?validate_inputs
+input_verif <- validate_inputs(bed = BED_CENTROM_IN, 
+                               gtf = GTF_IN)
 ```
-
 If GTF and BED formats are correct, a confirmation message will be printed to the console.
-
 ```         
 All files loaded and validated successfully.
 ```
 
 ##### Step-2
 
-The next step is to prepare split coordinates in BED format, ensuring that chromosomes are not split in the middle of a gene region. To do this, we first test whether our centromere coordinates overlap with any gene features.
+The next step is to prepare split coordinates in BED-like format. This function ensures that chromosomes are not split in the middle of a gene region. To achieve this, we first check whether the centromere coordinates overlap with any gene features, and if they do, we shift the split position by a specified length in base pairs (bp).
 
 ```{r}
 # Build BED-like split intervals from genomic regions (BED) and gene annotations (GTF)
 OUTPUT_DIR_BED="/outdata"
 get_split_reg <- determine_split_regions(bed=BED_CENTROM_IN, 
-                        gtf=GTF_IN, 
+                        gtf = GTF_IN, 
                         file.path("/outdata/", "B1_Split_regions.bed"), 
                         limit = 2L^29L, 
                         shift_by = 20L)
 ```
 
 <details>
-
-<summary><b>**What do the results "F1_Split_regions.bed" looks like?**</b></summary>
+<summary><b>**What do the results "B1_Split_regions.bed" looks like?**</b></summary>
 
 ```         
 1H  0   206486643
@@ -168,7 +165,7 @@ CAJHDD010000001.1   0   680018
 
 ##### Step-3
 
-Generate gene annotation (GTF) file in compatible to Cell Ranger ARC format, wher the first column of GTF file should be in the following form `Chr-RegionStart-RegionEnd`. None that the output file name is hardcoded and starts with *"B1_FINAL_MODIFIED_GTF"*
+Generate gene annotation (GTF) file in compatible to Cell Ranger ARC format. The first column of the GTF file should be in the following form `Chr-RegionStart-RegionEnd`. Note that the output file name is hardcoded and starts with **"B1_FINAL_MODIFIED_GTF_[genome_name]_[genome_version].gtf"**
 
 ```{r}
 GTF_FIN_OUT="/outdata/"
@@ -181,7 +178,6 @@ GTF_processed <- process_gtf(split_regions_bed="/outdata/B1_Split_regions.bed",
 ```
 
 <details>
-
 <summary><b>**What do the results in "B1_FINAL_MODIFIED_GTF_barley_3.gtf" looks like?**</b></summary>
 
 ```         
@@ -195,7 +191,7 @@ GTF_processed <- process_gtf(split_regions_bed="/outdata/B1_Split_regions.bed",
 
 ##### Step-4
 
-Final steps is tor split FASTA file and formatted to be compitable with Cell Ranger ARC
+Final steps is to split FASTA file and format to be compitable with the Cell Ranger ARC
 
 ```{linux}
 #Please note that due to file size limitations, the barley genome FASTA file is not available on our GitHub repository at /inst/extdata/
