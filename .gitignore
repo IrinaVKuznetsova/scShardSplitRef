@@ -1,8 +1,25 @@
+# Built vignettes (HTML/PDF output)
 inst/doc
+
+# vignettes output location
 /doc/
+
+# Package metadata cache files
 /Meta/
-.Rproj.user
+
+# R Project files
+*.Rproj.user
+*.Rproj
+.Rhistory
 .RData
-v62_COMBINED.gtf
-.bam
-.sam
+
+# Large size files
+*.bam
+*.bai
+*.sam
+
+# Large data files
+/vignettes/B1_FINAL_MODIFIED_GTF_barley_3.gtf
+/inst/extdata/01_Hordeum_vulgare.Mt_Pt_v49_Barley_v62_COMBINED.gtf
+
+
