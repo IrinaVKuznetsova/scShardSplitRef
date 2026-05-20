@@ -20,6 +20,7 @@ inst/doc
 
 # Large data files
 /vignettes/B1_FINAL_MODIFIED_GTF_barley_3.gtf
+/inst/outdata/B1_FINAL_MODIFIED_GTF_barley_3.gtf
 /inst/extdata/01_Hordeum_vulgare.Mt_Pt_v49_Barley_v62_COMBINED.gtf
 
 
