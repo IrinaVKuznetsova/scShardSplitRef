@@ -121,9 +121,9 @@ process_gtf <- function(
   }
   output_file <- .build_output_filename(out_path, genome_name, genome_version)
   .write_filtered_gtf(out, output_file)
-  cli::cli_alert_info(
+  cli::cli_alert_info(c(
     i = "{.bold Finished writing processed GTF: {output_file}}"
-  )
+  ))
 
   invisible(NULL)
 }
