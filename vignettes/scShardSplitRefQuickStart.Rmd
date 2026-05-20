@@ -13,7 +13,7 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
-devtools::load_all()  #### delete after publishing
+devtools::load_all() #### delete after publishing
 ```
 
 
