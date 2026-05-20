@@ -35,8 +35,7 @@ attribute column will be filtered to keep only these fields. Defaults to
 the current working directory (\code{"."}).}
 }
 \value{
-The function writes the filtered GTF file to disk
-at \code{out_path}. Hardcoded file name \link{IK --edit}
+The function writes the filtered GTF file to disk.
 }
 \description{
 Reads a BED-like "split regions" file and a GTF, assigns each GTF feature to
@@ -57,24 +56,34 @@ The function aborts if:
 \item any GTF feature matches no region (regions don't fully cover the GTF).
 }
 }
+\section{Output file}{
+
+The function will automatically name the file based on the input file and
+prepends the following string onto the filename:
+"B1_FINAL_MODIFIED_GTF_\emph{genome_name}_\emph{genome_version}.gtf", placing
+the file in the directory specified in the \code{out_path}.
+}
+
 \examples{
-# Minimal working example using temporary files
+reg_file <- system.file(
+  "extdata",
+  "IN0_toy_centromeres_for_gtf.bed",
+  package = "scShardSplitRef",
+  mustWork = TRUE
+)
+gtf_file <- system.file(
+  "extdata",
+  "A3_toy_all_scenarios_2chr.gtf",
+  package = "scShardSplitRef",
+  mustWork = TRUE
+)
 
-  reg_file <- system.file("extdata",
-                   "IN0_toy_centromeres_for_gtf.bed",
-                   package = "scShardSplitRef",
-                   mustWork = TRUE)
-  gtf_file <- system.file("extdata",
-             "A3_toy_all_scenarios_2chr.gtf",
-             package = "scShardSplitRef",
-             mustWork = TRUE)
-
-  process_gtf(
-    split_regions_bed = reg_file,
-    gtf = gtf_file,
-    genome_name = "Example",
-    genome_version = "v1.0",
-    out_path = "."
-  )
+process_gtf(
+  split_regions_bed = reg_file,
+  gtf = gtf_file,
+  genome_name = "Example",
+  genome_version = "v1.0",
+  out_path = tempdir()
+)
 
 }
