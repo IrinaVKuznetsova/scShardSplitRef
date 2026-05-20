@@ -199,7 +199,7 @@ Generate a gene annotation (GTF) file in compatible to Cell Ranger ARC format.
 The first column of the GTF file should be in the following form `Chr-RegionStart-RegionEnd`.
 Note that the output file name is hardcoded and starts with "B1_FINAL_MODIFIED_GTF\_[*genome_name*]\_[*genome_version*].gtf".
 
-##### The help page for the `process_gtf()` function
+#### The help page for the `process_gtf()` function
 
 ```{r, eval=FALSE}
 ?process_gtf
