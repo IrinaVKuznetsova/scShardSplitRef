@@ -51,13 +51,14 @@ library("scShardSplitRef")
 
 > (x) **Note:** If centromere coordinates are not available for your species, you can manually create a BED-like file with the midpoint position of each chromosome. scShardSplitRef will then check for any overlaps with genic regions and generate the correct BED files for splitting.
 
+<br>
 For this tutorial, we will be using a genome sequence (FASTA) and gene annotations (GTF) of the barley genome (*Hordeum Vulgare, Morex V3*) available from [Ensembl](https://ftp.ensemblgenomes.ebi.ac.uk) and centromere coordinates from [GrainGenes](https://graingenes.org/GG3/content/morex-v3-files-2021).
 
-<details>
-
-<summary><b>What does GTF file for MOREX V3 look like?</b></summary>
+<br>
 
 The format of the GTF file is a tab-delimited 9-column file
+<details>
+<summary><b>What does the GTF file for MOREX V3 look like?</b></summary>
 
 ```{r}
 # Gene annotations (GTF) file: 
@@ -74,11 +75,14 @@ gtf_df[1:10, ]
 
 </details>
 
+<br>
+
+
 The format of the centromere coordinates file is a tab-delimited 3-column file, where the 1st column contains chromosome/contig names, the 2nd column contains the centromere coordinate, and the 3rd column contains chromosome/contig region end coordinates.
 
 <details>
 
-<summary><b>What does BED-like centromere files for MOREX V3 look like?</b></summary>
+<summary><b>What does the BED-like centromere files for MOREX V3 look like?</b></summary>
 
 ```{r}
 # Manually formatted centromere file (please check what it should look like below and check **Step-0** description): 
@@ -92,18 +96,20 @@ centr_bed_df <- read.table(file = bed_file,
 dim(centr_bed_df)  ## 292 x 3
 centr_bed_df[1:10, ]
 ```
-
 </details>
+
+<br>
+
 
 #### Step-by-step Guide
 
 We begin by assessing the formatting of the input GTF and BED files provided by the user, followed by checking and, if necessary, modifying the split coordinates in the BED file. The GTF file is then updated according to the split position. Finally, FASTA file is split and formatted for compatibility with Cell Ranger ARC. All files need to be decompressed.
-
+<br>
 #### Step-1
 
 The first function called *alidate_inputs()* checks the correct format of (FASTA and BED-like) input files. The centromere coordinate file is manually created in BED-like format and should be tab-delimited. All files need to be decompressed.   
 
-##### The help page for the validate_inputs() 
+###### The help page for the validate_inputs() 
 
 ```{r}
 ?validate_inputs
@@ -124,13 +130,15 @@ input_verif <- validate_inputs(bed = bed_path,
                                gtf = gtf_path)
 ```
 
-> If GTF and BED formats are correct, a confirmation message will be printed to the console:\ *"All files loaded and validated successfully"*
+> If GTF and BED formats are correct, a confirmation message will be printed to the console:
+> <br>
+> *"All files loaded and validated successfully"*
 
 ##### Step-2
 
 The next step is to prepare split coordinates in appropriate BED-like format. This function ensures that chromosomes are not split in the middle of a gene region. To achieve this, we first check whether the centromere coordinates overlap with any gene features, and if they do, we shift the split position by a specified length in base pairs (bp).
 
-##### The help page for the determine_split_regions() function 
+###### The help page for the determine_split_regions() function 
 ```{r}
 ?determine_split_regions
 ```
@@ -182,7 +190,7 @@ split_region_bed_df[1:10, ]
 
 Generate a gene annotation (GTF) file in compatible to Cell Ranger ARC format. The first column of the GTF file should be in the following form `Chr-RegionStart-RegionEnd`. Note that the output file name is hardcoded and starts with "B1_FINAL_MODIFIED_GTF\_[*genome_name*]\_[*genome_version*].gtf".
 
-##### The help page for the process_gtf() function
+###### The help page for the process_gtf() function
 
 ```{r}
 ?process_gtf
@@ -290,8 +298,10 @@ The genome sequence (FASTA) and gene annotation (GTF) files are now split and fo
 
 #### Prepare config file
 
+Note that the format of the non-nuclear contig names must match the format of the contig names generated in the GTF file. For instructions on how to make a contig file, please see: [10x Genomics "4. Create a configuration file with reference information"](https://www.10xgenomics.com/support/software/cell-ranger-arc/latest/analysis/inputs/mkref)
+
 ```{bash, eval=FALSE}
-cat S0_cellranger_arc_barley.config
+cat extdata/S0_cellranger_arc_barley.config
 ```
 
 ``` json
@@ -305,6 +315,8 @@ cat S0_cellranger_arc_barley.config
 ```
 
 #### Run Cell Ranger ARC
+
+For more details on ```cellranger-arc mkref``` command, please see: [10x Genomics "5. Run cellranger-arc mkref"](https://www.10xgenomics.com/support/software/cell-ranger-arc/latest/analysis/inputs/mkref)
 
 ```{bash, eval=FALSE}
 CONFIG_IN="S0_cellranger_arc_barley.config"
