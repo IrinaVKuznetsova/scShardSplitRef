@@ -18,9 +18,13 @@ devtools::load_all()  #### delete after publishing
 
 ## Package overview
 
-*scShardSplitRef* designed for researchers working with multiome single-cell data from species that require building a custom reference genome, particularly when one or more chromosomes/contigs in the reference FASTA exceed the Cell Ranger ARC limit of 536.8Mb (2\^29 bases). *scShardSplitRef* enables splitting of long chromosomes/contigs generating shorter fragments that are compitable with Cell Ranger ARC requirements. The software outputs FASTA and GTF files containing the split chromosomes/contigs, which can be directly processed by `cellranger-arc mkref`.
+{scShardSplitRef} designed for researchers working with multiome single-cell data from species that require building a custom reference genome, particularly when one or more chromosomes/contigs in the reference FASTA exceed the Cell Ranger ARC limit of 536.8Mb (2\^29 bases).
+{scShardSplitRef} enables splitting of long chromosomes/contigs generating shorter fragments that are compitable with Cell Ranger ARC requirements.
+The software outputs FASTA and GTF files containing the split chromosomes/contigs, which can be directly processed by `cellranger-arc mkref`.
 
-To familiarise yourself with the package and workflow of preparing reference genome sequence (FASTA file) and gene annotations (GTF file) for Cell Ranger ARC we suggest starting with a guided walk through. We are using barley genome (MOREX V3) as an example genome. It starts with GTF file and BED are available from our GitHub page from `inst/extdata`.
+To familiarise yourself with the package and workflow of preparing reference genome sequence (FASTA file) and gene annotations (GTF file) for Cell Ranger ARC we suggest starting with a guided walk through.
+We are using barley genome (MOREX V3) as an example genome.
+Example data files are distributed with the package for example purposes.
 
 ## scShardSplitRef guided walk through
 
