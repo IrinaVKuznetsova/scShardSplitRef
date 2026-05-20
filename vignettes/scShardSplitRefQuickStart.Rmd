@@ -56,7 +56,7 @@ For this tutorial, we will be using a genome sequence (FASTA) and gene annotatio
 
 <br>
 
-The format of the GTF file is a tab-delimited 9-column file
+The format of the GTF file is a tab-delimited 9-column file.
 <details>
 <summary><b>What does the GTF file for MOREX V3 look like?</b></summary>
 
@@ -104,19 +104,21 @@ centr_bed_df[1:10, ]
 #### Step-by-step Guide
 
 We begin by assessing the formatting of the input GTF and BED files provided by the user, followed by checking and, if necessary, modifying the split coordinates in the BED file. The GTF file is then updated according to the split position. Finally, FASTA file is split and formatted for compatibility with Cell Ranger ARC. All files need to be decompressed.
+
 <br>
+
 #### Step-1
 
 The first function called *alidate_inputs()* checks the correct format of (FASTA and BED-like) input files. The centromere coordinate file is manually created in BED-like format and should be tab-delimited. All files need to be decompressed.   
 
-###### The help page for the validate_inputs() 
+**The help page for the validate_inputs()** 
 
 ```{r}
 ?validate_inputs
 ```
 
 
-#####  Validate (FASTA and BED) input files
+**Validate (FASTA and BED) input files**
 ```{r}
 # Load MOREX V3 files
 # Note1: all files need to be decompressed
@@ -138,13 +140,14 @@ input_verif <- validate_inputs(bed = bed_path,
 
 The next step is to prepare split coordinates in appropriate BED-like format. This function ensures that chromosomes are not split in the middle of a gene region. To achieve this, we first check whether the centromere coordinates overlap with any gene features, and if they do, we shift the split position by a specified length in base pairs (bp).
 
-###### The help page for the determine_split_regions() function 
+**The help page for the determine_split_regions() function** 
+
 ```{r}
 ?determine_split_regions
 ```
 
 
-##### Define output directory
+**Define output directory**
 
 ```{r}
 # Build BED-like split intervals from genomic regions (BED) and gene annotations (GTF)
@@ -190,14 +193,14 @@ split_region_bed_df[1:10, ]
 
 Generate a gene annotation (GTF) file in compatible to Cell Ranger ARC format. The first column of the GTF file should be in the following form `Chr-RegionStart-RegionEnd`. Note that the output file name is hardcoded and starts with "B1_FINAL_MODIFIED_GTF\_[*genome_name*]\_[*genome_version*].gtf".
 
-###### The help page for the process_gtf() function
+**The help page for the process_gtf() function**
 
 ```{r}
 ?process_gtf
 ```
 
 
-##### Generate gene annotation (GTF) file in compatible to Cell Ranger ARC format 
+**Generate gene annotation (GTF) file in compatible to Cell Ranger ARC format** 
 
 ```{r}
 # Define output directory
@@ -296,7 +299,7 @@ TCCCACTAAACATGT...
 
 The genome sequence (FASTA) and gene annotation (GTF) files are now split and formatted for Cell Ranger ARC. The file paths are specified in the `.config` file and Cell Ranger ARC can now be run.
 
-#### Prepare config file
+**Prepare config file**
 
 Note that the format of the non-nuclear contig names must match the format of the contig names generated in the GTF file. For instructions on how to make a contig file, please see: [10x Genomics "4. Create a configuration file with reference information"](https://www.10xgenomics.com/support/software/cell-ranger-arc/latest/analysis/inputs/mkref)
 
@@ -314,7 +317,7 @@ cat extdata/S0_cellranger_arc_barley.config
 }
 ```
 
-#### Run Cell Ranger ARC
+**Run Cell Ranger ARC**
 
 For more details on ```cellranger-arc mkref``` command, please see: [10x Genomics "5. Run cellranger-arc mkref"](https://www.10xgenomics.com/support/software/cell-ranger-arc/latest/analysis/inputs/mkref)
 
