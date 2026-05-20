@@ -13,7 +13,7 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
-devtools::load_all() #### delete after publishing
+devtools::load_all()  #### delete after publishing
 ```
 
 
@@ -54,15 +54,17 @@ library("knitr") # used for a kable table later in the document
 | Gene annotations       | GTF      | Gene features and coordinates           |
 | Centromere coordinates | BED-like | Centromere positions per chromosome (x) |
 
-> (x) **Note:** If centromere coordinates are not available for your species, you can manually create a BED-like file with the midpoint position of each chromosome. scShardSplitRef will then check for any overlaps with genic regions and generate the correct BED files for splitting.
 
-For this tutorial, we will be using a genome sequence (FASTA) and gene annotations (GTF) of the barley genome (*Hordeum Vulgare, Morex V3*) available from [Ensembl](https://ftp.ensemblgenomes.ebi.ac.uk) and centromere coordinates from [GrainGenes](https://graingenes.org/GG3/content/morex-v3-files-2021).
+> (x) **Note:** If centromere coordinates are not available for your species, you can manually create a BED-like file with the midpoint position of each chromosome.
+> {scShardSplitRef} will then check for any overlaps with genic regions and generate the correct BED files for splitting.
+
+For this tutorial, we will be using a genome sequence (FASTA) and gene annotations (GTF) of the barley genome (*Hordeum Vulgare, Morex V3*) available from [Ensembl](https://ftp.ensemblgenomes..ebi.ac.uk) and centromere coordinates from [GrainGenes](https://graingenes.org/GG3/content/morex-v3-files-2021).
 
 <details>
 
-<summary><b>What does GTF file for MOREX V3 look like?</b></summary>
+<summary><b>What does a GTF file for MOREX V3 look like?</b></summary>
 
-The format of the GTF file is a tab-delimited 9-column file
+The format of the GTF file is a tab-delimited 9-column file.
 
 ```{r}
 # Gene annotations (GTF) file:
@@ -73,7 +75,7 @@ gtf_file <- system.file(
   package = "scShardSplitRef"
 )
 gtf_df <- read.table(file = gtf_file, header = FALSE, sep = "\t")
-dim(gtf_df) ### 524562 x 9
+dim(gtf_df)
 gtf_df[1:10, ]
 ```
 
@@ -102,11 +104,16 @@ centr_bed_df[1:10, ]
 
 ## Step-by-step Guide
 
-We begin by assessing the formatting of the input GTF and BED files provided by the user, followed by checking and, if necessary, modifying the split coordinates in the BED file. The GTF file is then updated according to the split position. Finally, FASTA file is split and formatted for compatibility with Cell Ranger ARC. All files need to be decompressed.
+We begin by assessing the formatting of the input GTF and BED files provided by the user, followed by checking and, if necessary, modifying the split coordinates in the BED file.
+The GTF file is then updated according to the split position.
+Finally, the FASTA file is split and formatted for compatibility with Cell Ranger ARC.
+All files need to be decompressed for use in CellRanger.
 
 ### Step-1
 
-The first function called *alidate_inputs()* checks the correct format of (FASTA and BED-like) input files. The centromere coordinate file is manually created in BED-like format and should be tab-delimited. All files need to be decompressed.   
+The first function called `validate_inputs()`, checks the correct format of (FASTA and BED-like) input files.
+The centromere coordinate file is manually created in BED-like format and should be tab-delimited.
+All files need to be decompressed for use in CellRanger.
 
 #### The help page for the validate_inputs() 
 
@@ -119,7 +126,7 @@ The first function called *alidate_inputs()* checks the correct format of (FASTA
 
 ```{r}
 # Load MOREX V3 files
-# Note1: all files need to be decompressed
+# Note1: all files need to be decompressed for use in CellRanger
 # Note2: use correctly formatted BED file with centromere coordinates
 bed_path <- system.file(
   "extdata/02_MorexV3_centromere_coordinates.bed",
@@ -131,16 +138,20 @@ gtf_path <- system.file(
 )
 # Validate input (FASTA and BED) files
 input_verif <- validate_inputs(bed = bed_path, gtf = gtf_path)
+input_verif
 ```
 
 > If GTF and BED formats are correct, a confirmation message will be printed to the console:\ *"All files loaded and validated successfully"*
 
 ### Step-2
 
-The next step is to prepare split coordinates in appropriate BED-like format. This function ensures that chromosomes are not split in the middle of a gene region. To achieve this, we first check whether the centromere coordinates overlap with any gene features, and if they do, we shift the split position by a specified length in base pairs (bp).
+The next step is to prepare split coordinates in appropriate BED-like format.
+This function ensures that chromosomes are not split in the middle of a gene region.
+To achieve this, we first check whether the centromere coordinates overlap with any gene features, and if they do, we shift the split position by a specified length in base pairs (bp).
 
-##### The help page for the determine_split_regions() function 
-```{r}
+### The help page for the determine_split_regions() function 
+
+```{r, eval=FALSE}
 ?determine_split_regions
 ```
 
@@ -162,8 +173,9 @@ get_split_reg <- determine_split_regions(
   limit = 2L^29L,
   shift_by = 20L
 )
-```
 
+get_split_reg
+```
 
 <details>
 
@@ -175,7 +187,7 @@ bed_f <- system.file(
   package = "scShardSplitRef"
 )
 split_region_bed_df <- read.table(file = bed_f, header = FALSE, sep = "\t")
-dim(split_region_bed_df) ## 299 x 3
+dim(split_region_bed_df)
 split_region_bed_df[1:10, ]
 ```
 
@@ -183,6 +195,9 @@ split_region_bed_df[1:10, ]
 
 ### Step-3
 
+Generate a gene annotation (GTF) file in compatible to Cell Ranger ARC format.
+The first column of the GTF file should be in the following form `Chr-RegionStart-RegionEnd`.
+Note that the output file name is hardcoded and starts with "B1_FINAL_MODIFIED_GTF\_[*genome_name*]\_[*genome_version*].gtf".
 
 ##### The help page for the `process_gtf()` function
 
@@ -213,9 +228,13 @@ GTF_processed <- process_gtf(
   genome_version = "3",
   out_path = "."
 )
+
+GTF_processed
 ```
 
-> The output file is in the GTF format. Note that the first column has been reformatted — the regions are now split. The chromosome name is formatted as `1H-0-206486643`, which is the region from the beginning of the chromosome to the split position; \``1H-206486643-516505932` is the region from the split position to the end of the chromosome.
+> The output file is in the GTF format.
+> Note that the first column has been reformatted — the regions are now split.
+> The chromosome name is formatted as `1H-0-206486643`, which is the region from the beginning of the chromosome to the split position; \``1H-206486643-516505932` is the region from the split position to the end of the chromosome.
 
 <details>
 
@@ -227,12 +246,12 @@ gtf_f <- system.file(
   package = "scShardSplitRef"
 )
 processed_gtf <- read.table(file = gtf_f, header = FALSE, sep = "\t")
-dim(processed_gtf) ## 524562 x 9
-#processed_gtf[1:4, 1:5]
-#rbind(processed_gtf[200:205,1:5], processed_gtf[(nrow(processed_gtf)-4):nrow(processed_gtf),1:5])
+dim(processed_gtf)
+
 sep <- as.data.frame(matrix("...", nrow = 1, ncol = 5))
 colnames(sep) <- colnames(processed_gtf)[1:5]
-knitr::kable(rbind(
+
+kable(rbind(
   processed_gtf[200:203, 1:5],
   sep,
   processed_gtf[(nrow(processed_gtf) - 2):nrow(processed_gtf), 1:5]
@@ -257,7 +276,6 @@ bedtools getfasta -fi ${IN_FA} -bed ${BED_FIN_OUT} -fo ${FASTA_FIN_OUT}/B1_FASTA
 # Convert FASTA heading in Cell Ranger ARC compatible format: Chr-RegionStart-RegionEnd
 sed '/^>/s/:/-/g' ${FASTA_FIN_OUT}/B1_FASTA_split.fasta >${FASTA_FIN_OUT}/B1_FASTA_split_final.fasta
 ```
-
 
 <details>
 
@@ -286,13 +304,8 @@ TCCCACTAAACATGT...
 
 ### Step-5
 
-
-
-
-
-##### Step-5
-
-The genome sequence (FASTA) and gene annotation (GTF) files are now split and formatted for Cell Ranger ARC. The file paths are specified in the `.config` file and Cell Ranger ARC can now be run.
+The genome sequence (FASTA) and gene annotation (GTF) files are now split and formatted for Cell Ranger ARC.
+The file paths are specified in the `.config` file and Cell Ranger ARC can now be run.
 
 #### Prepare config file
 
@@ -375,13 +388,13 @@ citation("scShardSplitRef")
 #> Warning in citation("scShardSplitRef"): could not determine year for 'scShardSplitRef'
 #> from package DESCRIPTION file
 #> To cite package 'scShardSplitRef' in publications use:
-#>
+#> 
 #>   Kuznetsova I, Pembleton L, Curci L, Sparks A (????). _scShardSplitRef: Build
 #>   Custom Reference Genome for Single-Cell Multiome ATAC and Gene Expression Data
 #>   of Large-genome Species._. R package version 0.0.0.9000.
-#>
+#> 
 #> A BibTeX entry for LaTeX users is
-#>
+#> 
 #>   @Manual{,
 #>     title = {scShardSplitRef: Build Custom Reference Genome for Single-Cell Multiome ATAC and
 #> Gene Expression Data of Large-genome Species.},
