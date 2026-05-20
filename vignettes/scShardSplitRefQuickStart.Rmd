@@ -214,16 +214,14 @@ gtf_path <- system.file(
   package = "scShardSplitRef"
 )
 
-# Process GTF file
-GTF_processed <- process_gtf(
+# Process GTF file and write file to tempdir()
+process_gtf(
   split_regions_bed = output_file_name_dir,
   gtf = gtf_path,
   genome_name = "barley",
   genome_version = "3",
-  out_path = "."
+  out_path = tempdir()
 )
-
-GTF_processed
 ```
 
 > The output file is in the GTF format.
