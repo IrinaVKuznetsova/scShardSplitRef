@@ -117,7 +117,7 @@ All files need to be decompressed for use in CellRanger.
 
 #### The help page for the validate_inputs() 
 
-```{r}
+```{r, eval=FALSE}
 ?validate_inputs
 ```
 
@@ -201,13 +201,7 @@ Note that the output file name is hardcoded and starts with "B1_FINAL_MODIFIED_G
 
 ##### The help page for the `process_gtf()` function
 
-##### Step-3
-
-Generate a gene annotation (GTF) file in compatible to Cell Ranger ARC format. The first column of the GTF file should be in the following form `Chr-RegionStart-RegionEnd`. Note that the output file name is hardcoded and starts with "B1_FINAL_MODIFIED_GTF\_[*genome_name*]\_[*genome_version*].gtf".
-
-##### The help page for the process_gtf() function
-
-```{r}
+```{r, eval=FALSE}
 ?process_gtf
 ```
 
