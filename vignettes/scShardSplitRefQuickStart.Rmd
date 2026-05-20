@@ -33,6 +33,7 @@ Example data files are distributed with the package for example purposes.
 
 ```{r setup}
 library("scShardSplitRef")
+library("knitr") # used for a kable table later in the document
 ```
 
 ### Prerequisites
