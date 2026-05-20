@@ -2,7 +2,7 @@
 #'
 #' Reads a BED-like "split regions" file and a GTF, assigns each GTF feature to
 #' exactly one split-region interval, and replaces the GTF `Chr` field with a
-#' split-region name of the form `Chr-RegionStart-RegionEnd`. 
+#' split-region name of the form `Chr-RegionStart-RegionEnd`.
 #'
 #' A feature is considered inside a region when:
 #' - `start >= RegionStart`
@@ -12,6 +12,12 @@
 #' The function aborts if:
 #' - any GTF feature matches more than one region (overlapping regions), or
 #' - any GTF feature matches no region (regions don't fully cover the GTF).
+#'
+#' @section Output file:
+#' The function will automatically name the file based on the input file and
+#' prepends the following string onto the filename:
+#' "B1_FINAL_MODIFIED_GTF_*genome_name*_*genome_version*.gtf", placing
+#' the file in the directory specified in the `out_path`.
 #'
 #' @param split_regions_bed Character: File path to a BED-like file
 #'   containing split intervals as produced by [determine_split_regions()].
@@ -26,28 +32,29 @@
 #' @param out_path Directory where the output GTF will be written. Defaults to
 #'   the current working directory (`"."`).
 #'
-#' @return The function writes the filtered GTF file to disk
-#'   at `out_path`. Hardcoded file name [IK --edit]
+#' @returns The function writes the filtered GTF file to disk.
 #'
 #' @examples
-#' # Minimal working example using temporary files
+#' reg_file <- system.file(
+#'   "extdata",
+#'   "IN0_toy_centromeres_for_gtf.bed",
+#'   package = "scShardSplitRef",
+#'   mustWork = TRUE
+#' )
+#' gtf_file <- system.file(
+#'   "extdata",
+#'   "A3_toy_all_scenarios_2chr.gtf",
+#'   package = "scShardSplitRef",
+#'   mustWork = TRUE
+#' )
 #'
-#'   reg_file <- system.file("extdata",
-#'                    "IN0_toy_centromeres_for_gtf.bed",
-#'                    package = "scShardSplitRef",
-#'                    mustWork = TRUE)
-#'   gtf_file <- system.file("extdata",
-#'              "A3_toy_all_scenarios_2chr.gtf",
-#'              package = "scShardSplitRef",
-#'              mustWork = TRUE)
-#'
-#'   process_gtf(
-#'     split_regions_bed = reg_file,
-#'     gtf = gtf_file,
-#'     genome_name = "Example",
-#'     genome_version = "v1.0",
-#'     out_path = "."
-#'   )
+#' process_gtf(
+#'   split_regions_bed = reg_file,
+#'   gtf = gtf_file,
+#'   genome_name = "Example",
+#'   genome_version = "v1.0",
+#'   out_path = tempdir()
+#' )
 #'
 #' @autoglobal
 #' @export
