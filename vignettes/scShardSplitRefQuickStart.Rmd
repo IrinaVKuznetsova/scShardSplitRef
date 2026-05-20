@@ -41,7 +41,6 @@ library("knitr") # used for a kable table later in the document
 
 | Software        | Version | Purpose                         |
 |-----------------|---------|---------------------------------|
-| R               | ≥ 4.0   | Core package                    |
 | bedtools        | ≥ 2.30  | BED file operations             |
 | Cell Ranger ARC | ≥ 2.0   | Single-cell multiome processing |
 
