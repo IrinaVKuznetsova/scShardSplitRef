@@ -118,7 +118,13 @@ CAJHDD010000005.1       0       517010
 
 
 ## Usage Guide
-A step-by-step guide can be found in the [vignette](vignettes/scShardSplitRefQuickStart.Rmd) **<-- TODO: **Provide the coreect link at once its ready!!!!! ---!>**
+A step-by-step guide can be found in the vignettes:
+**<-- TODO: Provide the coreect link at once its ready!!!!! ---!>**
+- **Toy example:** a quick introduction to understand what the package does: [vignette toy](vignettes/scShardSplitRefToyAlgorithm.Rmd) 
+- **Real-world example: barley** *(diploid, chromosome length exceeds allowed size)* [vignette barley](vignettes/scShardSplitRefQuickStart.Rmd) 
+- **Real-world example: XXX** *(hexaploid, chromosome length exceeds allowed size)* [vignette XX](vignettes/)   **<-- TODO: pace holder for Luca's testing species --!>**
+
+**<-- TODO: come up with a descriptive name in brackets for each tutorial.--!>**
 
 
 
