@@ -332,7 +332,7 @@ The file paths are specified in the `.config` file and Cell Ranger ARC can now b
 #### Prepare config file
 
 ```{bash, eval=FALSE}
-cat S0_cellranger_arc_barley.config
+cat 03_cellranger_arc_barley.config
 ```
 
 ``` json
@@ -348,7 +348,7 @@ cat S0_cellranger_arc_barley.config
 #### Run Cell Ranger ARC
 
 ```{bash, eval=FALSE}
-CONFIG_IN="S0_cellranger_arc_barley.config"
+CONFIG_IN="03_cellranger_arc_barley.config"
 
 cellranger-arc mkref \
   --config=${CONFIG_IN} \
