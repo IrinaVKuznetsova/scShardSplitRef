@@ -41,12 +41,11 @@ Performs four checks in sequence:
 }
 }
 \examples{
-  regions <- system.file("extdata",
-                   "IN0_toy_centromeres_for_gtf.bed",
+  regions <- system.file("extdata/A3_toy_centromeres.bed",
                    package = "scShardSplitRef",
                    mustWork = TRUE)
-  genes <- system.file("extdata",
-             "A3_toy_all_scenarios_2chr.gtf",
+
+  genes <- system.file("extdata/A3_toy_all_scenarios_2chr.gtf",
              package = "scShardSplitRef",
              mustWork = TRUE)
 

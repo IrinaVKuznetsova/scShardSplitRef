@@ -38,19 +38,18 @@
 #'   # load example files from this package and write the output bed file to
 #'   # R's tempdir()
 #'
-#'   chromosomes <- system.file("extdata",
-#'                    "IN0_toy_centromeres_for_gtf.bed",
+#'   chromosomes <- system.file("extdata/A3_toy_centromeres.bed",
 #'                    package = "scShardSplitRef",
 #'                    mustWork = TRUE)
-#'   genes <- system.file("extdata",
-#'              "A3_toy_all_scenarios_2chr.gtf",
+#'
+#'   genes <- system.file("extdata/A3_toy_all_scenarios_2chr.gtf",
 #'              package = "scShardSplitRef",
 #'              mustWork = TRUE)
 #'
 #'   determine_split_regions(
 #'     bed = chromosomes,
 #'     gtf = genes,
-#'     output_bed = file.path(tempdir(), "split_regions.bed"),
+#'     output_bed = file.path(tempdir(), "A3_toy_split_regions.bed"),
 #'     limit = 2L^29L,
 #'     shift_by = 1L
 #'   )
