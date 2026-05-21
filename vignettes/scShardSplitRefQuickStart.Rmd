@@ -138,7 +138,8 @@ gtf_path <- system.file(
 )
 # Validate input (FASTA and BED) files
 input_verif <- validate_inputs(bed = bed_path, gtf = gtf_path)
-input_verif
+kable(input_verif$bed[1:5,])
+kable(input_verif$gtf[1:5,])
 ```
 
 > If GTF and BED formats are correct, a confirmation message will be printed to the console:\ *"All files loaded and validated successfully"*
