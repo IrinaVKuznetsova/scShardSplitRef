@@ -10,10 +10,10 @@
 1H	source	transcript	80	100	.	+	.	gene_id "gene3"; transcript_id "gene3.t1";
 1H	source	exon	80	90	.	+	.	gene_id "gene3"; transcript_id "gene3.t1"; exon_number "1";
 1H	source	exon	91	100	.	+	.	gene_id "gene3"; transcript_id "gene3.t1"; exon_number "2";
-1H	source	gene	90	110	.	+	.	gene_id "gene8"; gene_name "gene8"; note "overlaps_gene3_gene4_gene7";
-1H	source	transcript	90	110	.	+	.	gene_id "gene8"; transcript_id "gene8.t1";
+1H	source	gene	90	112	.	+	.	gene_id "gene8"; gene_name "gene8"; note "overlaps_gene3_gene4_gene7";
+1H	source	transcript	90	112	.	+	.	gene_id "gene8"; transcript_id "gene8.t1";
 1H	source	exon	90	100	.	+	.	gene_id "gene8"; transcript_id "gene8.t1"; exon_number "1";
-1H	source	exon	101	110	.	+	.	gene_id "gene8"; transcript_id "gene8.t1"; exon_number "2";
+1H	source	exon	101	112	.	+	.	gene_id "gene8"; transcript_id "gene8.t1"; exon_number "2";
 1H	source	gene	100	120	.	+	.	gene_id "gene4"; gene_name "gene4"; note "starts_at_centromere";
 1H	source	transcript	100	120	.	+	.	gene_id "gene4"; transcript_id "gene4.t1";
 1H	source	exon	100	110	.	+	.	gene_id "gene4"; transcript_id "gene4.t1"; exon_number "1";
@@ -26,10 +26,10 @@
 1H	source	transcript	180	200	.	+	.	gene_id "gene6"; transcript_id "gene6.t1";
 1H	source	exon	180	190	.	+	.	gene_id "gene6"; transcript_id "gene6.t1"; exon_number "1";
 1H	source	exon	191	200	.	+	.	gene_id "gene6"; transcript_id "gene6.t1"; exon_number "2";
-1H	source	gene	90	110	.	+	.	gene_id "gene7"; gene_name "gene7"; note "overlaps_gene3_and_gene4";
-1H	source	transcript	90	110	.	+	.	gene_id "gene7"; transcript_id "gene7.t1";
-1H	source	exon	90	98	.	+	.	gene_id "gene7"; transcript_id "gene7.t1"; exon_number "1";
-1H	source	exon	99	110	.	+	.	gene_id "gene7"; transcript_id "gene7.t1"; exon_number "2";
+1H	source	gene	92	110	.	+	.	gene_id "gene7"; gene_name "gene7"; note "overlaps_gene3_and_gene4";
+1H	source	transcript	92	110	.	+	.	gene_id "gene7"; transcript_id "gene7.t1";
+1H	source	exon	92	100	.	+	.	gene_id "gene7"; transcript_id "gene7.t1"; exon_number "1";
+1H	source	exon	101	110	.	+	.	gene_id "gene7"; transcript_id "gene7.t1"; exon_number "2";
 2H	source	gene	140	160	.	+	.	gene_id "gene2H_1"; gene_name "gene2H_1"; note "overlaps_centromere";
 2H	source	transcript	140	160	.	+	.	gene_id "gene2H_1"; transcript_id "gene2H_1.t1";
 2H	source	exon	140	150	.	+	.	gene_id "gene2H_1"; transcript_id "gene2H_1.t1"; exon_number "1";

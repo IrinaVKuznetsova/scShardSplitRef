@@ -47,11 +47,10 @@ library("knitr") # used for a kable table later in the document
 
 
 <details>
-<summary><b>What does a GTF file for MOREX V3 look like?</b></summary>
+<summary><b>What does a GTF file look like?</b></summary>
 
 ```{r}
-# Gene annotations (GTF) file. The format of the GTF file is a tab-delimited 9-column file.
-# data.dir = "/inst/extdata/01_Hordeum_vulgare.Mt_Pt_v49_Barley_v62_COMBINED.gtf"
+# Gene annotations (GTF) file, a tab-delimited 9-columns file.
 
 gtf_file <- system.file(
   "extdata/A3_toy_all_scenarios_2chr.gtf",
@@ -61,8 +60,7 @@ gtf_df <- read.table(file = gtf_file,
                      header = FALSE, 
                      sep = "\t"
                      )
-dim(gtf_df)
-gtf_df[1:10, ]
+kable(gtf_df[1:10, ])
 ```
 
 </details>
@@ -71,7 +69,7 @@ gtf_df[1:10, ]
 
 <details>
 
-<summary><b>What does a BED-like centromere file for MOREX V3 look like?</b></summary>
+<summary><b>What does a BED-like centromere file look like?</b></summary>
 
 ```{r}
 # The format of the centromere coordinates file is a tab-delimited 3-column file, where the 1st column contains chromosome/contig names, the 2nd column contains the centromere coordinate, and the 3rd column contains chromosome/contig region end coordinates.
@@ -86,8 +84,7 @@ centr_bed_df <- read.table(file = bed_file,
                            header = FALSE, 
                            sep = "\t"
                            )
-dim(centr_bed_df) ## 292 x 3
-centr_bed_df[1:10, ]
+kable(centr_bed_df[1:10, ])
 ```
 
 </details>
@@ -103,7 +100,7 @@ Finally, the FASTA file is split and formatted for compatibility with Cell Range
 
 The first function called `validate_inputs()`, checks the correct format of (FASTA and BED-like) input files.
 The centromere coordinate file is manually created in BED-like format and should be tab-delimited.
-All files need to be decompressed for use in Cell Ranger.
+All files need to be decompressed for use in Cell Ranger ARC.
 
 #### The help page for the validate_inputs() 
 
@@ -133,6 +130,7 @@ kable(input_verif$gtf[1:5,])
 
 > If GTF and BED formats are correct, a confirmation message will be printed to the console:\ *"All files loaded and validated successfully"*
 
+
 ### Step-2
 The next step is to prepare split coordinates in appropriate BED-like format.
 This function ensures that chromosomes are not split in the middle of a gene region.
@@ -144,11 +142,62 @@ To achieve this, we first check whether the centromere coordinates overlap with 
 ?determine_split_regions
 ```
 
-#### Define output directory
+
+<details>
+
+<summary><b>Visual representation of gene‑feature locations in relation to the centromere on the chromosome</b></summary>
+
+Visual representation of gene‑feature locations in relation to the centromere on the chromosome.
+This visualisation shows various possibilities of genes being located on a chromosome. To make it clear, we split the chromosome region into before the centromere location and after the centromere location. A gene can be located at the beginning of the chromosome, between the beginning and the centromere position, and ending at the centromere coordinate. The same locations apply after the centromere coordinates. There are rare cases where a gene's coordinates overlap with the centromere coordinate. If that is the case our tool re-calculates such positions by shifting them by a specified number of base pairs (bp).
+
+In green: we see possible locations of genes from the beginning of the chromosome to the centromere location. In this case the algotuhm renames the 1st column to ChrX-0-Centromere and keeps all gene feature coordinates unchanged
+![Visual-1](../man/figures/green1.png)
+
+
+In pink: we see possible locations of genes from the centromere location to the chromosome end. In this case the algorithm renames the 1st column to ChrX-Centromere-ChrEndCoord and recalculates all gene feature coordinates
+![Visual-2](../man/figures/pink1.png)
+
+In yellow: if the centromere overlaps with the gene, get its end coordinate (for e.g. gene7: 110) then look for the next to it gene and get the start coordinate of that gene (for e.g g5:120) and find middle point that will be a neww split coordinate (115).
+Genes can also overlap (orange), in this case the end coordinate is the end coordinate of the overlapping gene and the start coordinate of the next gene (for e.g. gene6:180)
+![Visual-2](../man/figures/yellow1.png)
+
+
+
+
+
+
+![Visual representation of gene‑feature locations in relation to the centromere on the chromosome](../man/figures/algorithmexplained.png)
+
+
+
+
+Toy GTF file ("extdata/A3_toy_all_scenarios_2chr.gtf") content summary
+
+| Gene | Chr | Start | End | Note |
+|---|---|---|---|---|
+| gene1 | 1H | 0 | 20 | before centromere |
+| gene2 | 1H | 20 | 40 | before centromere |
+| gene3 | 1H | 80 | 100 | ends at centromere |
+| gene7 | 1H | 90 | 110 | overlaps centromere |
+| gene8 | 1H | 90 | 112 | overlaps centromere |
+| gene4 | 1H | 100 | 120 | starts at centromere |
+| gene5 | 1H | 120 | 140 | after centromere |
+| gene6 | 1H | 180 | 200 | ends at chromosome end |
+| gene2H_2 | 2H | 55 | 78 | before centromere |
+| gene2H_1 | 2H | 140 | 160 | overlaps centromere |
+| gene2H_3 | 2H | 260 | 275 | after centromere |
+| CONTIG1 | CAJHDD010000004.1 | 5 | 20 | contig |
+| CONTIG2 | CAJHDD010000001.1 | 10 | 30 | contig |
+| MT1 | Mt | 2 | 10 | organelle |
+| PT1 | Pt | 1 | 5 | organelle |
+
+
+</details>
+
+
+### Build BED-like split intervals from genomic regions (BED) and gene annotations (GTF)
 
 ```{r}
-# Build BED-like split intervals from genomic regions (BED) and gene annotations (GTF)
-
 # Define output directory
 output_file <- file.path(tempdir(), 
                          "outdata"
@@ -187,10 +236,19 @@ split_region_bed_df <- read.table(file = bed_f,
                                   sep = "\t"
                                   )
 dim(split_region_bed_df)
-split_region_bed_df[1:10, ]
+split_region_bed_df
 ```
 
 </details>
+
+
+
+
+
+
+
+
+
 
 ### Step-3
 
@@ -207,12 +265,6 @@ Note that the output file name is hardcoded and starts with "B1_FINAL_MODIFIED_G
 #### Generate gene annotation (GTF) file in compatible to Cell Ranger ARC format 
 
 ```{r}
-# Define output directory
-gtf_path <- system.file(
-  "extdata/A3_toy_all_scenarios_2chr.gtf",
-  package = "scShardSplitRef"
-)
-
 # Process GTF file and write file to tempdir()
 process_gtf(
   split_regions_bed = output_file_name_dir,
@@ -264,7 +316,7 @@ kable(rbind(
 Final steps is to split the FASTA file, where the header lines should have the same chrosomome annotations as the GTF file.
 
 ```{bash, eval=FALSE}
-# Please note that due to file size limitations, the barley genome FASTA file is not available on our GitHub repository at /inst/extdata/
+# Toy example
 IN_FA="/inst/extdata/A3_toy.fasta"
 BED_FIN_OUT="/inst/outdata/A3_toy_centromeres.bed"
 FASTA_FIN_OUT="/inst/outdata/"
