@@ -162,23 +162,23 @@ test_that(".subdivide_oversized returns deduplicated sorted results", {
 # .shift_single_boundary tests
 test_that(".shift_single_boundary handles boundaries outside genes", {
   gene_ranges <- .make_gene_ranges(c(100L, 200L), c(150L, 250L))
-  result <- .shift_single_boundary(50L, gene_ranges, 300L, 1L)
+  result <- .shift_single_boundary(50L, gene_ranges, 300L, 1L, 1L)
   expect_identical(result, 50L)
 })
 
 test_that(".shift_single_boundary shifts inside genes", {
   gene_ranges <- .make_gene_ranges(50L, 100L)
-  result <- .shift_single_boundary(75L, gene_ranges, 300L, 1L)
+  result <- .shift_single_boundary(75L, gene_ranges, 300L, 1L, 1L)
   expect_gt(result, 100L)
   expect_lte(result, 300L)
 
-  result <- .shift_single_boundary(75L, gene_ranges, 300L, 5L)
+  result <- .shift_single_boundary(75L, gene_ranges, 300L, 5L, 1L)
   expect_identical(result, 100L + 5L)
 })
 
 test_that(".shift_single_boundary respects bounds", {
   gene_ranges <- .make_gene_ranges(250L, 290L)
-  result <- .shift_single_boundary(275L, gene_ranges, 300L, 1L)
+  result <- .shift_single_boundary(275L, gene_ranges, 300L, 1L, 1L)
   expect_lt(result, 300L)
 })
 
@@ -217,7 +217,7 @@ test_that(".assert_feasible_limit accepts feasible configs", {
     start = integer(0),
     end = integer(0)
   )
-  expect_invisible(.assert_feasible_limit(genes, limit = 50000L, shift_by = 1L))
+  expect_invisible(.assert_feasible_limit(genes, limit = 50000L, clearance = 1L))
 
   genes <- data.frame(
     chr = c("chr1", "chr1"),
@@ -225,7 +225,7 @@ test_that(".assert_feasible_limit accepts feasible configs", {
     end = c(2000L, 6000L),
     stringsAsFactors = FALSE
   )
-  expect_invisible(.assert_feasible_limit(genes, limit = 2000L, shift_by = 1L))
+  expect_invisible(.assert_feasible_limit(genes, limit = 2000L, clearance = 1L))
 })
 
 test_that(".assert_feasible_limit rejects insufficient limits", {
@@ -236,21 +236,21 @@ test_that(".assert_feasible_limit rejects insufficient limits", {
     stringsAsFactors = FALSE
   )
   expect_error(
-    .assert_feasible_limit(genes, limit = 1000L, shift_by = 1L),
+    .assert_feasible_limit(genes, limit = 1000L, clearance = 1L),
     regexp = "smaller than largest"
   )
 })
 
-test_that(".assert_feasible_limit accounts for shift_by", {
+test_that(".assert_feasible_limit accounts for clearance", {
   genes <- data.frame(
     chr = "chr1",
     start = 1000L,
     end = 2000L,
     stringsAsFactors = FALSE
   )
-  # Gene width is 1000, with shift_by=1 becomes 1001
+  # Gene width is 1000, with two-sided clearance=1 becomes 1002
   expect_error(
-    .assert_feasible_limit(genes, limit = 1000L, shift_by = 1L),
+    .assert_feasible_limit(genes, limit = 1000L, clearance = 1L),
     regexp = "smaller than"
   )
 })

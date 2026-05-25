@@ -4,7 +4,7 @@
 \alias{.process_single_region}
 \title{Process a single genomic region}
 \usage{
-.process_single_region(region, genes, limit, shift_by)
+.process_single_region(region, genes, limit, shift_by, clearance = 1L)
 }
 \arguments{
 \item{region}{Data frame row with columns 'chr', 'start', 'end'.}
@@ -14,8 +14,11 @@
 
 \item{limit}{Integer: maximum allowed interval width in base pairs.}
 
-\item{shift_by}{Integer: base pairs to shift a boundary right when inside a
-gene.}
+\item{shift_by}{Integer: step size (bp) used to walk boundaries rightward
+when clearance is violated.}
+
+\item{clearance}{Integer: minimum required clearance (bp) from nearby genes
+on both sides.}
 }
 \value{
 Data frame with columns 'chr', 'start', 'end' representing the
@@ -38,7 +41,8 @@ adjusted to avoid genes in the region.
   genes_subset <- genes[genes$chr == "chr1", ]
   result <- .process_single_region(region, genes_subset,
                                    limit = 50000,
-                                   shift_by = 1)
+                                   shift_by = 1,
+                                   clearance = 1)
 }
 
 }
