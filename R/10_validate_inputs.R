@@ -36,7 +36,7 @@
 #'   gtf
 #'   bed
 #'
-#' @export
+#' @dev
 validate_inputs <- function(bed, gtf) {
   .check_files_exist(bed, gtf)
 
