@@ -58,3 +58,4 @@ Performs four checks in sequence:
   bed
 
 }
+\keyword{internal}

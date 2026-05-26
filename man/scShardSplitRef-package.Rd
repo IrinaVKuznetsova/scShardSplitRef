@@ -4,7 +4,7 @@
 \name{scShardSplitRef-package}
 \alias{scShardSplitRef}
 \alias{scShardSplitRef-package}
-\title{scShardSplitRef: Build Custom Reference Genome for Single-Cell Multiome ATAC and Gene Expression Data of Large-genome Species.}
+\title{scShardSplitRef: Build Custom Reference Genome for Single-Cell Multiome ATAC and Gene Expression Data of Large-genome Species}
 \description{
 Provides utilities that enable researchers to build custom references for the Multiome ATAC Gene Expression sequencing data for large-genome species without manual intervention.
 }
