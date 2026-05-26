@@ -6,12 +6,12 @@ library("knitr")
 install() # ensure we're using the latest version of scShardSplitRef
 
 # Precompile the vignette
-knit("vignettes/scShardSplitRefQuickStart.Rmd.orig", "vignettes/scShardSplitRefQuickStart.Rmd")
+knit("vignettes/scShardSplitRef_RealData.Rmd.orig", "vignettes/scShardSplitRef_RealData.Rmd")
 
 # remove file path such that vignettes will build with figures
-replace <- readLines("vignettes/scShardSplitRefQuickStart.Rmd")
+replace <- readLines("vignettes/scShardSplitRef_RealData.Rmd")
 replace <- gsub("<img src=\"vignettes/", "<img src=\"", replace)
-fileConn <- file("vignettes/scShardSplitRefQuickStart.Rmd")
+fileConn <- file("vignettes/scShardSplitRef_RealData.Rmd")
 writeLines(replace, fileConn)
 close(fileConn)
 
