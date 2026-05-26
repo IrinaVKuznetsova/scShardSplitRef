@@ -191,11 +191,11 @@ process_gtf <- function(
     cli::cli_abort(
       call = rlang::caller_env(),
       c(
-        "{n_dup} ambiguous split‑region match{?es} detected.",
+        "{n_dup} ambiguous split-region match{?es} detected.",
         x = "{n_dup} feature ID{?s} matched multiple intervals.",
         i = "Affected IDs:",
-        i = paste0("• {.val ", dup_ids, "}"),
-        i = "Ensure the split‑regions BED has no overlapping intervals per chromosome."
+        i = paste0("* {.val ", dup_ids, "}"),
+        i = "Ensure the split-regions BED has no overlapping intervals per chromosome."
       ),
       .envir = environment()
     )
@@ -239,12 +239,12 @@ process_gtf <- function(
   cli::cli_abort(
     call = rlang::caller_env(),
     c(
-      "{n_missing} GTF feature{?s} do not fall within any split‑region interval.",
+      "{n_missing} GTF feature{?s} do not fall within any split-region interval.",
       x = "{n_missing} unmatched feature{?s} found.",
       i = "Example:",
-      i = paste0("• ", preview_items),
+      i = paste0("* ", preview_items),
       i = "Ensure split regions fully cover the annotation coordinates.",
-      i = "Handle boundary‑crossing features before calling {.fn process_gtf}."
+      i = "Handle boundary-crossing features before calling {.fn process_gtf}."
     ),
     .envir = environment()
   )
