@@ -1,0 +1,318 @@
+---
+title: "scShardSplitRef"
+author: "Irina Kuznetsova"
+output: rmarkdown::html_vignette    ####html_vignette
+vignette: >
+  %\VignetteIndexEntry{scShardSplitRef}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+  )
+devtools::load_all() #### delete after publishing
+```
+
+## 1. Purpose
+
+This synthetic dataset provides a minimal example to demonstrate the logic of the algorithm that prepares reference files (GTF and FASTA) for `cellranger‑arc mkref`. It allows users to test the workflow without needing large genome files and helps confirm that the proposed workflow is functioning correctly. It also provides an example of how to use it.
+
+## 2. {scShardSplitRef} guided walk through using a synthetic example
+
+### Installation
+
+```{r setup}
+library("scShardSplitRef")
+library("knitr") # used for a kable table later in the document
+```
+
+### Prerequisites
+
+| Software | Version | Purpose             |
+|----------|---------|---------------------|
+| bedtools | ≥ 2.30  | BED file operations |
+
+### Input files
+
+| File | Format | Description | File Name |
+|------------------|------------------|------------------|------------------|
+| Gene annotations | GTF | Gene features and coordinates | extdata/AlgorithmSynthetic.gtf |
+| Centromere coordinates | BED-like | Centromere positions per chromosome (x) | extdata/AlgorithmSynthetic.bed |
+
+
+
+
+## 3. Algorithm explonatation
+
+The first function called `validate_inputs()`, checks the correct format of (GTF and BED-like) input files.
+
+-   **BED:** 3 columns, tab-delimited, no header, no comments format (this centromere coordinates file is created manually)
+-   **GTF**: 9 columns, tab-delimited, lines beginning with `#` at the top of the file are treated as comments and allowed
+-   All files need to be decompressed
+
+#### The help page for the validate_inputs()
+
+```{r, eval=FALSE}
+?validate_inputs
+```
+
+#### Validate (FASTA and BED) input files
+
+```{r}
+bed_path <- system.file(
+  "extdata/AlgorithmSynthetic.bed",
+  package = "scShardSplitRef" )
+
+gtf_path <- system.file(
+  "extdata/AlgorithmSynthetic.gtf",
+  package = "scShardSplitRef"  )
+
+# Validate input (FASTA and BED) files
+input_verif <- validate_inputs(bed = bed_path, 
+                               gtf = gtf_path )
+kable(input_verif$bed)
+kable(input_verif$gtf[1:5,])
+```
+
+> If the GTF and BED formats are correct, a confirmation message will be printed to the console: *"All files loaded and validated successfully"*
+
+
+
+The next function called ```determine_split_regions()``` prepares split coordinates in appropriate BED-like format. This function ensures that chromosomes are not split in the middle of a gene region.
+
+### The help page for the determine_split_regions() function
+
+```{r, eval=FALSE}
+?determine_split_regions
+```
+
+
+**Input data** 
+This function takes a BED file and a GTF file as input.
+
+
+**Parameters:**
+
+- `limit`: can be left as the default, which is the Cell Ranger ARC limit 
+of 2²⁹ (536,870,912 bp). For the purpose of this tutorial, to better 
+understand the algorithm, we set `limit=500`
+- `shift_by`: the step size used to move the split coordinate to the right 
+when searching for a safe location outside a genic region
+- `clearance`: a buffer that checks whether there is a clear region free of 
+genes on both sides of the proposed split coordinate
+
+In this example we use:
+```
+limit = 500 
+shift_by = 30 
+clearance = 40
+```
+
+**How it works:** 
+The function checks whether the centromere location from the BED file overlaps with a genic region.  
+**No overlap:** the chromosome is split at that coordinate, producing two regions:
+
+- Region 1: from the beginning of the chromosome to the split coordinate
+- Region 2: from the split coordinate to the end of the chromosome
+
+<details>
+<summary><b>Visual (chr1): the chromosome is split at centromere coordinate</b></summary>
+```
+chr1:	0	1000
+limit = 500 
+shift_by = 30 
+clearance = 40
+```
+
+      chr1: 0    100  200       500            1000
+            |-----|====|---------|--------------|
+                  [G1]           ^
+                                 |
+                              split (500)
+      
+            |<---- Region 1 ---->|<-- Region 2 ->|
+            
+            Final: split at 500 -> 2 shards   
+
+</details>
+
+
+**Overlap detected:** the coordinate needs to be moved to a safe location that does not overlap any genes. The algorithm proceeds as follows:
+
+The split position is calculated from the limit parameter. It looks to see if there is sufficient clearance between the split point and any neighbouring genes left or right. If the clearance test does not pass the function uses ```shift_by```, which essentially defines the size of the steps to iteratively take as it tries to walk away from any genes that are too close.  
+
+> Note: ```clearance``` and ```shift_by``` operate independently. ```clearance``` determines whether a position is acceptable; ```shift_by``` determines how far to move when it is not.
+
+<details>
+
+<summary><b>Visual (chr2): the initial split coordinate is inside of a gene</b></summary>
+
+```
+chr2:	0	1000
+limit = 500 
+shift_by = 30 
+clearance = 40
+```
+
+      chr2: 0              450      550            1000
+            |----------------|=======|--------------|
+                             [G2] ^
+                                  |
+                               split (500)
+                               
+            Initial split coordinate 500 -> falls inside G2 [450–550]
+            Shift right by 30 bp -> 530 -> still inside G2 [450–550]
+            Shift right by 30 bp -> 560 -> outside G2 [450–550], NOT passing clearance = 40
+            Shift right by 30 bp -> 590 -> outside G2 [450–550], PASSING clearance = 40, BUT exceeds limit = 500
+              Subdivide: new split coordinate = 590 / 2 = 295
+              Check clearance = 40 around proposed coordinate 295 → PASSING
+              Split coordinate = 295
+      
+
+          chr2: 0           450      550            1000
+            |----------------|=======|--------------|
+                    ^         [G2]      
+                    |                    
+                split (295)                
+                
+            
+            As the distance between 295 and 1000 exceeds the limit of 500, find the next split coordinate:
+            Next split coordinate 295 + 295 = 590 — outside G2 [450–550], PASSING clearance = 40
+            Split coordinate = 590
+                                               
+
+      chr2: 0              450      550            1000
+            |----------------|=======|--------------|
+                    ^         [G2]       ^
+                    |                    |
+                split (295)                split (590)
+                
+            Final: split at 295 and 590 -> 3 shards    
+                
+
+</details>
+
+
+
+
+
+<details>
+
+<summary><b>Visual (chr3): two overlapping genes</b></summary>
+```
+chr3:	0	1000
+limit = 500 
+shift_by = 30 
+clearance = 40
+```
+
+      chr3: 0              460  490     510   560             1000
+            |----------------|===|overlap|======|--------------|
+                             [G3L]   ^    [G3R]
+                                     |
+                               split (500)
+                               
+            Initial split coordinate 500 is inside of the G3L[460-510] and G3R[490-560]
+            Shift to the right by 30bp -> 530 - inside of the G3R[490-560]
+            Shift to the right by 30bp -> 550 - still inside of the G3R[490-560]
+            Shift to the right by 30bp -> 590 - outside of the G3R[490-560], not passing clearance
+            Shift to the right by 30bp -> 620 - outside of the G3R[490-560] -> PASSING clearance
+            Split coordinate = 620
+           
+            
+      chr3: 0              460  490     510   560             1000
+            |----------------|===|overlap|======|--------------|
+                             [G3L]        [G3R]       ^ 
+                                                      |
+                                                split (620)
+            
+            As the distance between 0 and 620 exceeds the limit of 500, find the next split coordinate: 
+            Next split coordinate 620/2 = 310 —> outside G3L[460-510] and G3R[490-560], PASSING clearance = 40
+            Split coordinate = 310
+            
+            
+        chr3: 0              460  490     510   560             1000
+            |----------------|===|overlap|======|--------------|
+                             [G3L]        [G3R]       ^ 
+                                                      |
+                                                split (620)    
+            
+            Final: split at 620 and 310 -> 3 shards
+
+</details>
+
+
+
+
+
+<details>
+
+<summary><b> Visual (chr4): one gene in each arm (no collision)</b></summary>
+
+```
+chr4:	300	1500
+limit = 500 
+shift_by = 30 
+clearance = 40
+```
+
+      chr4: 0     50  100                        800   900     1500
+            |-----|===|--------------------------|======|------|
+                  [G4L]         ^                 [G4R]
+                                |     
+                               split (300)
+                               
+            Initial split coordinate 300 -> fulfils limit setting 
+            As the distance between 300 and 1500 exceeds the limit of 500, find how many shards: 
+            1200/500 ~ (3 shards) -> 1200/4=400
+              Next split coordinate 300+400=700, outside of G4R[800-900],  PASSING clearance = 40
+              Next split coordinate 700+400=1100, outside of G4R[800-900],  PASSING clearance = 40
+
+      chr4: 0     50  100                        800   900     1500
+            |-----|===|--------------------------|======|------|
+                  [G4L]         ^             ^   [G4R]     ^
+                                |             |             |
+                            split (300)    split (700)    split (1100)
+           
+
+
+</details>
+
+
+<details>
+
+<summary><b> NOT DONE yet Visual (chr5): gene on both sides of a boundary</b></summary>
+```
+chr5:	600	1500
+limit = 500 
+shift_by = 30 
+clearance = 40
+```
+
+</details>
+
+
+
+<details>
+
+<summary><b> NOT DONE yet Visual (chr6): one real gene + several non-gene rows that MUST be ignored </b></summary>
+```
+chr6:	0	1000
+limit = 500 
+shift_by = 30 
+clearance = 40
+```
+</details>
+
+## 3. Session Info
+
+```{r session-info}
+sessionInfo()
+```
+
+## 4. Acknowledgements
+
+This work was supported by resources provided by the Pawsey Supercomputing Research Centres Nimbus Research Cloud (<https://doi.org/10.48569/v0j3-qd51>), with funding from the Australian Government and the Government of Western Australia.
