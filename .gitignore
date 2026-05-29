@@ -22,8 +22,26 @@ inst/doc
 /vignettes/B1_FINAL_MODIFIED_GTF_barley_3.gtf
 /inst/outdata/B1_FINAL_MODIFIED_GTF_barley_3.gtf
 /inst/extdata/01_Hordeum_vulgare.Mt_Pt_v49_Barley_v62_COMBINED.gtf
+/inst/documentation
 
 # scripts
 /inst/scripts/01_precompiler_AS.r
+
+
+# files
+inst/extdata/AlgorithmSynthetic.bed
+inst/extdata/AlgorithmSynthetic.gtf
+inst/extdata/z0_simplified_BED.bed
+inst/extdata/z1_simplified_GTF.gtf
+inst/extdata/z1_test.gtf
+inst/outdata/Algorithm_detected_shards.bed
+inst/outdata/t1_split_regions.bed
+inst/outdata/t2_split_regions.bed
+inst/outdata/t3_split_regions.bed
+inst/outdata/t4_split_regions.bed
+inst/outdata/t5_split_regions.bed
+inst/outdata/t6_split_regions.bed
+vignettes/scShardSplitRefQuickStart.Rmd
+
 
 
