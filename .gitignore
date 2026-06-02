@@ -42,6 +42,7 @@ inst/outdata/t4_split_regions.bed
 inst/outdata/t5_split_regions.bed
 inst/outdata/t6_split_regions.bed
 vignettes/scShardSplitRefQuickStart.Rmd
+inst/outdata/DetermineSplitReg_AlgorithmSynthetic.gtf
 
 
 
