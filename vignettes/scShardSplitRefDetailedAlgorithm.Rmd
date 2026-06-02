@@ -45,7 +45,9 @@ library("knitr") # used for a kable table later in the document
 
 
 
-## 3. Algorithm explonatation
+### 3. Workflow
+
+#### 3.1. Validate Input Files  
 
 The first function called `validate_inputs()`, checks the correct format of (GTF and BED-like) input files.
 
@@ -53,13 +55,13 @@ The first function called `validate_inputs()`, checks the correct format of (GTF
 -   **GTF**: 9 columns, tab-delimited, lines beginning with `#` at the top of the file are treated as comments and allowed
 -   All files need to be decompressed
 
-#### The help page for the validate_inputs()
+##### The help page for the validate_inputs()
 
 ```{r, eval=FALSE}
 ?validate_inputs
 ```
 
-#### Validate (FASTA and BED) input files
+##### Usage example validate_inputs() 
 
 ```{r}
 bed_path <- system.file(
@@ -81,9 +83,11 @@ kable(input_verif$gtf[1:5,])
 
 
 
+#### 3.2. Determine Split Regions
+
 The next function called ```determine_split_regions()``` prepares split coordinates in appropriate BED-like format. This function ensures that chromosomes are not split in the middle of a gene region.
 
-### The help page for the determine_split_regions() function
+##### The help page for the determine_split_regions() function
 
 ```{r, eval=FALSE}
 ?determine_split_regions
@@ -104,11 +108,14 @@ when searching for a safe location outside a genic region
 - `clearance`: a buffer that checks whether there is a clear region free of 
 genes on both sides of the proposed split coordinate
 
+
+##### Usage example determine_split_regions()
+
 In this example we use:
 ```
-limit = 500 
-shift_by = 30 
-clearance = 40
+limit = 540L 
+shift_by = 30L 
+clearance = 40L
 ```
 
 ```{r}
@@ -133,50 +140,88 @@ get_split_reg <- determine_split_regions(
   bed = bed_path,
   gtf = gtf_path,
   output_bed = output_file_name_dir,
-  limit = 500,
+  limit = 540L,
   shift_by = 30L,
-  clearance = 40
+  clearance = 40L
   )
 
 get_split_reg
 
 ```
 
+<br>
 
-**How it works:** 
-The function checks whether the centromere location from the BED file overlaps with a genic region.  
-**No overlap:** the chromosome is split at that coordinate, producing two regions:
+## 4. Algorithm explonatation (determine_split_regions() how it works) 
+  
+### No Overlap with Gene Coordinates  
+The chromosome is split at that coordinate, producing two regions:
 
 - Region 1: from the beginning of the chromosome to the split coordinate
 - Region 2: from the split coordinate to the end of the chromosome
 
-If centromere locations are not provided (i.e., BED start position is `0` for a chromosome), the algorithm first creates provisional *even shards* based on `limit`. It then applies the same gene-clearance logic to each proposed split boundary, shifting boundaries as needed to avoid splitting through genic regions.
+> Note: If centromere locations are not provided (i.e., BED start position is `0` for a chromosome), the algorithm first creates provisional *even shards* based on `limit`. It then applies the same gene-clearance logic to each proposed split boundary, shifting boundaries as needed to avoid splitting through genic regions. 
+
 
 <details>
-<summary><b>Visual (chr1): the chromosome is split at centromere coordinate</b></summary>
+<summary><b>Algorithm Visual (Chr2): Centromere in BED File Defined -> Split at the Centromere Corridnate</b></summary>
 ```
-chr1:	0-1000
-limit = 500 
+chr0:	450-800
+Note, that each chromosome is defined by a coordinate range starting at 0. If a feature's start position is not 0, it indicates a split coordinate (centromere). In this example, 450 is the split coordinate (centromere), dividing the chromosome into two segments: 0–450 and 450–800.
+limit = 540 
+shift_by = 30 
+clearance = 40
+
+gene[G0]:	100-200
+```
+
+      chr0: 0    100  200                       800
+            |-----|====|---------|--------------|
+                  [G0]           ^
+                                 |
+                              split (450)
+      
+            |<---- Region 1 ---->|<-- Region 2 ->|
+            
+            The centromere coordinate is define in the BED file (chr0:450-800), which is below the limit and does not overlap with any gene coordinates. 
+            Note: splitting first tries to use the centromere cooridnate, not the limit!!!
+            Final: split at centromere cooridnate 450 -> 1 split cooridnate (2 shards)   
+
+</details>
+
+
+
+<details>
+<summary><b>Algorithm Visual (Chr1): Centromere in BED File Undefined -> Fallback to Size Limit</b></summary>
+```
+chr1:	0-820
+limit = 540 
 shift_by = 30 
 clearance = 40
 
 gene[G1]:	100-200
 ```
 
-      chr1: 0    100  200       500            1000
+      chr1: 0    100  200       410             820
             |-----|====|---------|--------------|
                   [G1]           ^
                                  |
-                              split (500)
+                              split (410)
       
             |<---- Region 1 ---->|<-- Region 2 ->|
             
-            Final: split at 500 -> 1 split cooridnate (2 shards)   
+            The centromere coordinate is not defined in BED file (chr1:0-820). The `limit` set to 540. The algorithm first creates provisional even shards based on `limit` ceiling(820 /540) = 2 -> 820/2 = 410. It does not overlap with any gene coordinates.
+            Note: If centromere locations are not provided (i.e., BED start position is `0` for a chromosome), the algorithm first creates provisional even shards based on `limit`. It then applies the same gene-clearance logic to each proposed split boundary, shifting boundaries as needed to avoid splitting through genic regions.
+            Final: split at 410 -> 1 split cooridnate (2 shards)   
 
 </details>
 
 
-**Overlap detected:** the coordinate needs to be moved to a safe location that does not overlap any genes. The algorithm proceeds as follows:
+
+
+<br>
+
+### Overlap with Gene Coordinates  
+In case of overlapping split coordinate with genic region, the split coordinate needs to be moved to a safe location that does not overlap any genes. The algorithm proceeds as follows:
 
 The split position is calculated from the limit parameter. It looks to see if there is sufficient clearance between the split point and any neighbouring genes left or right. If the clearance test does not pass the function uses ```shift_by```, which essentially defines the size of the steps to iteratively take as it tries to walk away from any genes that are too close.  
 
@@ -184,49 +229,54 @@ The split position is calculated from the limit parameter. It looks to see if th
 
 <details>
 
-<summary><b>Visual (chr2): the initial split coordinate is inside of a gene</b></summary>
+<summary><b>Algorithm Visual (Chr2): the initial split coordinate is inside of a genic region</b></summary>
 
 ```
 chr2:	0-1000
-limit = 500 
+Note, that If centromere locations are not provided (i.e., BED start position is `0` for a chromosome), the algorithm first creates provisional *even shards* based on `limit`. It then applies the same gene-clearance logic to each proposed split boundary, shifting boundaries as needed to avoid splitting through genic regions
+
+limit = 540 
 shift_by = 30 
 clearance = 40
 
 gene[G2]: 450-550
 ```
 
-      chr2: 0              450      550            1000
+      chr2: 0              450       550            1000
+            |----------------|=======|--------------|
+                               [G2]     
+                                        
+            The centromere coordinate is not defined in BED file (chr1:0-820). The `limit` set to 540. The algorithm first creates provisional even shards based on `limit` ceiling(1000/540) = 2 -> 1000/2 = 500. 
+      
+                
+      chr2: 0              450       550            1000
             |----------------|=======|--------------|
                              [G2] ^
                                   |
-                               split (500)
-                               
-            Initial split coordinate 500 -> falls inside G2 [450–550]
-            Shift right by 30 bp -> 530 -> still inside G2 [450–550]
-            Shift right by 30 bp -> 560 -> outside G2 [450–550], NOT passing clearance = 40
-            Shift right by 30 bp -> 590 -> outside G2 [450–550], PASSING clearance = 40, BUT exceeds limit = 500
-              Subdivide: new split coordinate = 590 / 2 = 295
-              Check clearance = 40 around proposed coordinate 295 → PASSING
-              Split coordinate = 295
+                               split (500)          
+
+            Split coordinate 500 → falls inside of G2 [450-550]
+                Shift right by 30 bp -> 530 -> inside G2 [450–550]
+                Shift right by 30 bp -> 560 -> outside G2 [450–550], not passing clearance = 40
+                Shift right by 30 bp -> 590 -> outside G2 [450–550], PASSING clearance = 40, 
+                    Split coordinate = 590
+    
+      chr2: 0              450      550            1000
+            |----------------|=======|--------------|
+                                [G2]     ^
+                                         |
+                                    split (590)
       
+            The distance between 0 and 590 exceeds the set `limit` of 540, find the next split coordinate:
+                Next split coordinate ceiling(590/540) = 2 —> 590/2 = 295
+                    Split coordinate = 295
+
 
       chr2: 0               450      550            1000
             |----------------|=======|--------------|
-                    ^           [G2]      
-                    |                    
-                split (295)                
-                
-            
-            As the distance between 295 and 1000 exceeds the limit of 500, find the next split coordinate:
-            Next split coordinate 295 + 295 = 590 — outside G2 [450–550], PASSING clearance = 40
-            Split coordinate = 590
-                                               
-
-      chr2: 0              450      550            1000
-            |----------------|=======|--------------|
-                    ^           [G2]     ^
-                    |                    |
-                split (295)             split (590)
+                    ^           [G2]      ^
+                    |                     |
+                split (295)            split (590)    
                 
             Final: split at 295 and 590 -> 2 split cooridnates (3 shards)    
                 
@@ -239,30 +289,36 @@ gene[G2]: 450-550
 
 <details>
 
-<summary><b>Visual (chr3): two overlapping genes</b></summary>
+<summary><b>Algorithm Visual (Chr3): the initial split coordinate is inside of two overlapping genes</b></summary>
 ```
 chr3:	0-1000
-limit = 500 
+Note, that If centromere locations are not provided (i.e., BED start position is `0` for a chromosome), the algorithm first creates provisional *even shards* based on `limit`. It then applies the same gene-clearance logic to each proposed split boundary, shifting boundaries as needed to avoid splitting through genic regions
+limit = 540 
 shift_by = 30 
 clearance = 40
 
-gene[G3L]:	460-510
+gene[G3L]:	460-545
 gene[G3R]:	490-560
 ```
 
-      chr3: 0              460  490     510   560             1000
+      chr3: 0              460  490     545   560              1000
+            |----------------|===|overlap|======|--------------|
+                             [G3L]        [G3R]
+                                      
+            The centromere coordinate is not defined in BED file (chr3:0-1000). The `limit` set to 540. The algorithm first creates provisional even shards based on `limit` ceiling(1000/540) = 2 -> 1000/2 = 500.                   
+            
+      chr3: 0              460  490     545   560              1000
             |----------------|===|overlap|======|--------------|
                              [G3L]   ^    [G3R]
                                      |
                                split (500)
-                               
-            Initial split coordinate 500 is inside of the G3L[460-510] and G3R[490-560]
-            Shift to the right by 30bp -> 530 - inside of the G3R[490-560]
-            Shift to the right by 30bp -> 550 - still inside of the G3R[490-560]
-            Shift to the right by 30bp -> 590 - outside of the G3R[490-560], not passing clearance
-            Shift to the right by 30bp -> 620 - outside of the G3R[490-560] -> PASSING clearance
-            Split coordinate = 620
-           
+            
+            Split coordinate 500 → falls inside of G3L[460-510] and G3R[490-560]
+                Shift to the right by 30bp -> 530 - inside of the G3R[490-560]
+                Shift to the right by 30bp -> 560 - still inside of the G3R[490-560]
+                Shift to the right by 30bp -> 590 - outside of the G3R[490-560], not passing clearance
+                Shift to the right by 30bp -> 620 - outside of the G3R[490-560] -> PASSING clearance
+                  Split coordinate = 620
             
       chr3: 0              460  490     510   560             1000
             |----------------|===|overlap|======|--------------|
@@ -270,10 +326,9 @@ gene[G3R]:	490-560
                                                       |
                                                 split (620)
             
-            As the distance between 0 and 620 exceeds the limit of 500, find the next split coordinate: 
-            Next split coordinate 620/2 = 310 —> outside G3L[460-510] and G3R[490-560], PASSING clearance = 40
-            Split coordinate = 310
-            
+            The distance between 0 and 620 exceeds the limit of 540, find the next split coordinate: 
+                Next split coordinate ceiling(620/540) = 2 —> 620/2 = 310 —> outside G3L[460-510] and G3R[490-560], PASSING clearance = 40
+                  Split coordinate = 310
             
       chr3: 0              460  490     510   560             1000
             |----------------|===|overlap|======|--------------|
@@ -291,17 +346,17 @@ gene[G3R]:	490-560
 
 <details>
 
-<summary><b> Visual (chr4): one gene in each arm (no collision)</b></summary>
+<summary><b> Algorithm Visual (Chr4): one gene in each arm (no collision)</b></summary>
 
 ```
 chr4:	300-1500 
-Note, that each chromosome is defined by a coordinate range starting at 0. If a feature's start position is not 0, it indicates a split coordinate. In this example, 300 is the split coordinate, dividing the chromosome into two segments: 0–300 and 300–500.
-limit = 500 
+Note, that each chromosome is defined by a coordinate range starting at 0. If a feature's start position is not 0, it indicates a split coordinate (centromere). In this example, 300 is the split coordinate (centromere), dividing the chromosome into two segments: 0–300 and 300–500.
+limit = 540 
 shift_by = 30 
 clearance = 40
 
-gene[G4L]:	50	100
-gene[G4R]:	800	900
+gene[G4L]: 50-100
+gene[G4R]: 800-900
 ```
 
       chr4: 0     50  100                        800   900     1500
@@ -310,11 +365,13 @@ gene[G4R]:	800	900
                                 |     
                                split (300)
                                
-            Initial split coordinate 300 -> fulfils limit setting 
-            As the distance between 300 and 1500 exceeds the limit of 500, find how many shards: 
-            1200/500 ~ (3 shards) -> 1200/4=400
-              Next split coordinate 300+400=700, outside of G4R[800-900], PASSING clearance = 40
-              Next split coordinate 700+400=1100, outside of G4R[800-900], PASSING clearance = 40
+            The centromere coordinate is define in the BED file (chr4:300-1500), which is below the limit and does not overlap with any gene coordinates. 
+            Note: splitting first tries to use the centromere cooridnate, not the limit!!!
+            
+            The distance between 300 and 1500 exceeds the limit of 540, find how many shards: 
+            ceiling( (1500-300)/500)=3 -> (1500-300)/3=400
+                Next split coordinate 300+400=700, outside of G4R[800-900], PASSING clearance = 40
+                Next split coordinate 700+400=1100, outside of G4R[800-900], PASSING clearance = 40
 
       chr4: 0     50  100                        800   900     1500
             |-----|===|--------------------------|======|------|
@@ -327,14 +384,17 @@ gene[G4R]:	800	900
 </details>
 
 
+
+
+
 <details>
 
-<summary><b> Visual (chr5): a split coordinate cuts through a gene</b></summary>
+<summary><b> Algorithm Visual (Chr5): a split coordinate cuts through a gene</b></summary>
 ```
 chr5:	600-1500
 # Note, that each chromosome is defined by a coordinate range starting at 0. If a feature's start position is not 0, it indicates a split coordinate. In this example, 600 is the split coordinate, dividing the chromosome into two segments: 0–600 and 600–1500.
 
-limit = 500 
+limit = 540 
 shift_by = 30 
 clearance = 40
 
@@ -346,34 +406,34 @@ gene[G5BS]:	550-650
                                  ^ [G5BS]                
                                  |     
                                split (600)
-                               
-            
-            As the distance between 0 and 600 exceeds the limit of 500, find how many shards: 600/500 = 2
-            600/2 = 300 
-            As the distance between 600 and 1500 exceeds the limit of 500, find next split cooridnate
-            (1500-600)/2 = 600 + 450 = 1050 
-            
-            
+             
+            The distance between 0 and 600 exceeds the limit of 540, find how many shards: ceiling((600-0)/540) = 2 -> 600/2=300
+                Split coordinate = 300
+            The distance between 600 and 1500 exceeds the limit of 540, find next split cooridnate ceiling( (1500-600)/2) = 450 -> 600 + 450 = 1050
+                Split coordinate = 1050
+             
       chr5: 0                550    650                               1500
             |-----------------|======|---------------------------------|
                      ^           ^  [G5BS]        ^     
                      |           |       |        |
                  split (300)   split (600)    split (1050)
+             
+            The centromere coordinate is define in the BED file (chr5:600-1500) 
+            Note: splitting first tries to use the centromere cooridnate (600) -> exceeds `limit = 540`, so working with split coordinate = 540
+                Split coordinate 540 → falls outside of the G5BS[550-650], not passing clearance
+                Shift to the right by 30bp -> 570 - inside of the G5BS[550-650] 
+                Shift to the right by 30bp -> 600 - inside of the G5BS[550-650]
+                Shift to the right by 30bp -> 630 - inside of the G5BS[550-650]
+                Shift to the right by 30bp -> 660 - outside of the G5BS[550-650], not passing clearance
+                Shift to the right by 30bp -> 690 - outside of the G5BS[550-650] -> PASSING clearance
+                    Split coordinate = 690
             
-            
-            Initial split coordinate 600 -> is inside of the G5BSL[550-650] and exceeds allowed limit 500
-            Shift to the right by 30bp -> 630 - inside of the G5BSL[550-650]
-            Shift to the right by 30bp -> 660 - outside of the G5BSL[550-650], not passing clearance
-            Shift to the right by 30bp -> 690 - outside of the G3R[490-560] -> PASSING clearance
-            Split coordinate = 690
-            
-            
-     chr5: 0                550    650                               1500
+      chr5: 0                550    650                               1500
             |-----------------|======|---------------------------------|
-                     ^         [G5BS]     ^        ^
-                     |                    |        |
-                 split (300)          plit (690)  split (1050)
-            
+                     ^         [G5BS]   ^        ^     
+                     |                  |        |
+                 split (300)        split (690)  split (1050)
+           
             Final: split at 300, 690 and 1050 -> 3 split cooridnates (4 shards)
 </details>
 
@@ -381,10 +441,10 @@ gene[G5BS]:	550-650
 
 <details>
 
-<summary><b> Visual (chr6): gene structure with exons, CDS, and transcript: gene overlaps with cutting coordinate</b></summary>
+<summary><b>Algorithm Visual (Chr6): gene structure with exons, CDS, and transcript: gene overlaps with cutting coordinate</b></summary>
 ```
 chr6:	0-1000
-limit = 500 
+limit = 540 
 shift_by = 30 
 clearance = 40
 
@@ -398,9 +458,11 @@ five_prime_utr[G6R]:  400-409
 
       chr6: 0                                400                    500                      1000
             |--------------------------------|======================|------------------------|
-                                                    [G5R]           ^
-                                                                    |
-                                                                split (500)       
+                                                    [G5R]               ^
+                                                                        |
+                                                                   split (540)       
+         
+         ### TODO 3/06/26
             
             The chromosome 6 has no proposed centromer coordinate (reasone: for e.g. not accessible from databases yet) 
               The allowed limit is 500bp
