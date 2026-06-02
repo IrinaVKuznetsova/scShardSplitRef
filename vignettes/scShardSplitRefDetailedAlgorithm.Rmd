@@ -121,10 +121,12 @@ The function checks whether the centromere location from the BED file overlaps w
 <details>
 <summary><b>Visual (chr1): the chromosome is split at centromere coordinate</b></summary>
 ```
-chr1:	0	1000
+chr1:	0-1000
 limit = 500 
 shift_by = 30 
 clearance = 40
+
+gene[G1]:	100-200
 ```
 
       chr1: 0    100  200       500            1000
@@ -151,10 +153,12 @@ The split position is calculated from the limit parameter. It looks to see if th
 <summary><b>Visual (chr2): the initial split coordinate is inside of a gene</b></summary>
 
 ```
-chr2:	0	1000
+chr2:	0-1000
 limit = 500 
 shift_by = 30 
 clearance = 40
+
+gene[G2]: 450-550
 ```
 
       chr2: 0              450      550            1000
@@ -172,7 +176,7 @@ clearance = 40
               Split coordinate = 295
       
 
-          chr2: 0           450      550            1000
+      chr2: 0               450      550            1000
             |----------------|=======|--------------|
                     ^         [G2]      
                     |                    
@@ -203,10 +207,13 @@ clearance = 40
 
 <summary><b>Visual (chr3): two overlapping genes</b></summary>
 ```
-chr3:	0	1000
+chr3:	0-1000
 limit = 500 
 shift_by = 30 
 clearance = 40
+
+gene[G3L]:	460-510
+gene[G3R]:	490-560
 ```
 
       chr3: 0              460  490     510   560             1000
@@ -234,7 +241,7 @@ clearance = 40
             Split coordinate = 310
             
             
-        chr3: 0              460  490     510   560             1000
+      chr3: 0              460  490     510   560             1000
             |----------------|===|overlap|======|--------------|
                              [G3L]        [G3R]       ^ 
                                                       |
@@ -253,10 +260,13 @@ clearance = 40
 <summary><b> Visual (chr4): one gene in each arm (no collision)</b></summary>
 
 ```
-chr4:	300	1500
+chr4:	0-300-1500
 limit = 500 
 shift_by = 30 
 clearance = 40
+
+gene[G4L]:	50	100
+gene[G4R]:	800	900
 ```
 
       chr4: 0     50  100                        800   900     1500
@@ -268,8 +278,8 @@ clearance = 40
             Initial split coordinate 300 -> fulfils limit setting 
             As the distance between 300 and 1500 exceeds the limit of 500, find how many shards: 
             1200/500 ~ (3 shards) -> 1200/4=400
-              Next split coordinate 300+400=700, outside of G4R[800-900],  PASSING clearance = 40
-              Next split coordinate 700+400=1100, outside of G4R[800-900],  PASSING clearance = 40
+              Next split coordinate 300+400=700, outside of G4R[800-900], PASSING clearance = 40
+              Next split coordinate 700+400=1100, outside of G4R[800-900], PASSING clearance = 40
 
       chr4: 0     50  100                        800   900     1500
             |-----|===|--------------------------|======|------|
@@ -284,14 +294,50 @@ clearance = 40
 
 <details>
 
-<summary><b> NOT DONE yet Visual (chr5): gene on both sides of a boundary</b></summary>
+<summary><b> Visual (chr5): a split coordinate cuts through a gene boundary</b></summary>
 ```
-chr5:	600	1500
+chr5:	0-600-1500
 limit = 500 
 shift_by = 30 
 clearance = 40
+
+gene[G5BS]:	550-650
 ```
 
+      chr5: 0                550    650                               1500
+            |-----------------|======|---------------------------------|
+                                 ^ [G5BS]                
+                                 |     
+                               split (600)
+                               
+            
+            As the distance between 0 and 600 exceeds the limit of 500, find how many shards: 600/500 = 2
+            600/2 = 300 
+            As the distance between 600 and 1500 exceeds the limit of 500, find next split cooridnate
+            (1500-600)/2 = 600 + 450 = 1050 
+            
+            
+      chr5: 0                550    650                               1500
+            |-----------------|======|---------------------------------|
+                     ^           ^  [G5BS]        ^     
+                     |           |       |        |
+                 split (300)   split (600)    split (1050)
+            
+            
+            Initial split coordinate 600 -> is inside of the G5BSL[550-650] and exceeds allowed limit 500
+            Shift to the right by 30bp -> 630 - inside of the G5BSL[550-650]
+            Shift to the right by 30bp -> 660 - outside of the G5BSL[550-650], not passing clearance
+            Shift to the right by 30bp -> 690 - outside of the G3R[490-560] -> PASSING clearance
+            Split coordinate = 690
+            
+            
+     chr5: 0                550    650                               1500
+            |-----------------|======|---------------------------------|
+                     ^         [G5BS]     ^        ^
+                     |                    |        |
+                 split (300)          plit (690)  split (1050)
+            
+            Final: split at 300, 690 and 1050 -> 3 shards
 </details>
 
 
@@ -300,12 +346,19 @@ clearance = 40
 
 <summary><b> NOT DONE yet Visual (chr6): one real gene + several non-gene rows that MUST be ignored </b></summary>
 ```
-chr6:	0	1000
+chr6:	0-1000
 limit = 500 
 shift_by = 30 
 clearance = 40
+
+gene[G6R]:	100-550
 ```
 </details>
+
+
+
+
+
 
 ## 3. Session Info
 
