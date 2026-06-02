@@ -150,6 +150,8 @@ The function checks whether the centromere location from the BED file overlaps w
 - Region 1: from the beginning of the chromosome to the split coordinate
 - Region 2: from the split coordinate to the end of the chromosome
 
+If centromere locations are not provided (i.e., BED start position is `0` for a chromosome), the algorithm first creates provisional *even shards* based on `limit`. It then applies the same gene-clearance logic to each proposed split boundary, shifting boundaries as needed to avoid splitting through genic regions.
+
 <details>
 <summary><b>Visual (chr1): the chromosome is split at centromere coordinate</b></summary>
 ```
