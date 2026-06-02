@@ -111,6 +111,38 @@ shift_by = 30
 clearance = 40
 ```
 
+```{r}
+# Define input files directory
+bed_path <- system.file("extdata/AlgorithmSynthetic.bed",
+  package = "scShardSplitRef" )
+
+gtf_path <- system.file("extdata/AlgorithmSynthetic.gtf",
+  package = "scShardSplitRef"  )
+
+# Define output directory
+output_file <- file.path(tempdir(), 
+                         "outdata")
+dir.create(output_file, 
+           recursive = TRUE, 
+           showWarnings = FALSE           )
+output_file_name_dir <- file.path(output_file, 
+                                  "DetermineSplitReg_AlgorithmSynthetic.gtf")
+
+# Determine split regions
+get_split_reg <- determine_split_regions(
+  bed = bed_path,
+  gtf = gtf_path,
+  output_bed = output_file_name_dir,
+  limit = 500,
+  shift_by = 30L,
+  clearance = 40
+  )
+
+get_split_reg
+
+```
+
+
 **How it works:** 
 The function checks whether the centromere location from the BED file overlaps with a genic region.  
 **No overlap:** the chromosome is split at that coordinate, producing two regions:
@@ -137,7 +169,7 @@ gene[G1]:	100-200
       
             |<---- Region 1 ---->|<-- Region 2 ->|
             
-            Final: split at 500 -> 2 shards   
+            Final: split at 500 -> 1 split cooridnate (2 shards)   
 
 </details>
 
@@ -178,7 +210,7 @@ gene[G2]: 450-550
 
       chr2: 0               450      550            1000
             |----------------|=======|--------------|
-                    ^         [G2]      
+                    ^           [G2]      
                     |                    
                 split (295)                
                 
@@ -190,11 +222,11 @@ gene[G2]: 450-550
 
       chr2: 0              450      550            1000
             |----------------|=======|--------------|
-                    ^         [G2]       ^
+                    ^           [G2]     ^
                     |                    |
-                split (295)                split (590)
+                split (295)             split (590)
                 
-            Final: split at 295 and 590 -> 3 shards    
+            Final: split at 295 and 590 -> 2 split cooridnates (3 shards)    
                 
 
 </details>
@@ -243,11 +275,11 @@ gene[G3R]:	490-560
             
       chr3: 0              460  490     510   560             1000
             |----------------|===|overlap|======|--------------|
-                             [G3L]        [G3R]       ^ 
-                                                      |
-                                                split (620)    
+                      ^      [G3L]        [G3R]       ^ 
+                      |                               |
+                 split (310)                       split (620)    
             
-            Final: split at 620 and 310 -> 3 shards
+            Final: split at 620 and 310 -> 2 split cooridnates (3 shards)
 
 </details>
 
@@ -260,7 +292,8 @@ gene[G3R]:	490-560
 <summary><b> Visual (chr4): one gene in each arm (no collision)</b></summary>
 
 ```
-chr4:	0-300-1500
+chr4:	300-1500 
+Note, that each chromosome is defined by a coordinate range starting at 0. If a feature's start position is not 0, it indicates a split coordinate. In this example, 300 is the split coordinate, dividing the chromosome into two segments: 0–300 and 300–500.
 limit = 500 
 shift_by = 30 
 clearance = 40
@@ -287,16 +320,18 @@ gene[G4R]:	800	900
                                 |             |             |
                             split (300)    split (700)    split (1100)
            
-
+      Final: split at 300, 700 and 1100 -> 3 split cooridnates (4 shards)
 
 </details>
 
 
 <details>
 
-<summary><b> Visual (chr5): a split coordinate cuts through a gene boundary</b></summary>
+<summary><b> Visual (chr5): a split coordinate cuts through a gene</b></summary>
 ```
-chr5:	0-600-1500
+chr5:	600-1500
+# Note, that each chromosome is defined by a coordinate range starting at 0. If a feature's start position is not 0, it indicates a split coordinate. In this example, 600 is the split coordinate, dividing the chromosome into two segments: 0–600 and 600–1500.
+
 limit = 500 
 shift_by = 30 
 clearance = 40
@@ -337,21 +372,70 @@ gene[G5BS]:	550-650
                      |                    |        |
                  split (300)          plit (690)  split (1050)
             
-            Final: split at 300, 690 and 1050 -> 3 shards
+            Final: split at 300, 690 and 1050 -> 3 split cooridnates (4 shards)
 </details>
 
 
 
 <details>
 
-<summary><b> NOT DONE yet Visual (chr6): one real gene + several non-gene rows that MUST be ignored </b></summary>
+<summary><b> Visual (chr6): gene structure with exons, CDS, and transcript: gene overlaps with cutting coordinate</b></summary>
 ```
 chr6:	0-1000
 limit = 500 
 shift_by = 30 
 clearance = 40
 
-gene[G6R]:	100-550
+gene[G6R]:        400-500
+transcript[G6R]:  400-500
+exon[G6R]:        400-450
+exon[G6R]:	      460-480
+exon[G6R]:        490–500
+CDS[G6R]:	        410-495
+five_prime_utr[G6R]:  400-409
+
+      chr6: 0                                400                    500                      1000
+            |--------------------------------|======================|------------------------|
+                                                    [G5R]           ^
+                                                                    |
+                                                                split (500)       
+            
+            The chromosome 6 has no proposed centromer coordinate (reasone: for e.g. not accessible from databases yet) 
+              The allowed limit is 500bp
+              
+            
+      chr6: 0                                400                    500                      1000
+            |--------------------------------|======================|------------------------|
+                                                    [G5R]           ^
+                                                                    |
+                                                                split (500)    
+                                                                
+            
+            Split coordinate 500 -> is on end cooridnate of the G5R[100-550]:
+              Shift to the right by 30bp -> 530 - outside of the G5R[100-550], not passing clearance
+              Shift to the right by 30bp -> 560 - outside of the G5R[100-550] -> PASSING clearance
+            
+      chr6: 0                                400                    500                      1000
+            |--------------------------------|======================|------------------------|
+                                                    [G5R]               ^
+                                                                        |
+                                                                     split (560)    
+                                                                     
+            
+            As the distance between 0 and 560 exceeds the limit of 500, find how many shards: 560/500 ~ 2
+            560/2 = 280
+            
+            
+      chr6: 0                                400                    500                      1000
+            |--------------------------------|======================|------------------------|
+                              ^                     [G5R]               ^
+                              |                                         |
+                           split (280)                              split (560) 
+                                                                    
+            Final: split at 280, 560 -> 2 split cooridnates (3 shards)   
+                                                                    
+                                                       
+
 ```
 </details>
 
