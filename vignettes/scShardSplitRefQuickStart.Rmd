@@ -162,7 +162,7 @@ The next step is to prepare split coordinates in appropriate BED-like format.
 This function ensures that chromosomes are not split in the middle of a gene region.
 To achieve this, we first check whether the centromere coordinates overlap with any gene features, and if they do, we shift the split position by a specified length in base pairs (bp).
 
-### The help page for the determine_split_regions() function 
+### The Help Page for *determine_split_regions()* 
 
 ```{r, eval=FALSE}
 ?determine_split_regions
@@ -222,7 +222,7 @@ Generate a gene annotation (GTF) file in compatible to Cell Ranger ARC format.
 The first column of the GTF file should be in the following form `Chr-RegionStart-RegionEnd`.
 Note that the output file name is hardcoded and starts with "B1_FINAL_MODIFIED_GTF\_[*genome_name*]\_[*genome_version*].gtf".
 
-#### The help page for the `process_gtf()` function
+#### The Help Page for *process_gtf()*
 
 ```{r, eval=FALSE}
 ?process_gtf

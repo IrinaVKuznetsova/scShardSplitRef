@@ -109,7 +109,7 @@ when searching for a safe location outside a genic region
 genes on both sides of the proposed split coordinate
 
 
-##### Usage Example: *determine_split_regions()*
+##### Usage Example: *6 ()*
 
 In this example we use:
 ```
