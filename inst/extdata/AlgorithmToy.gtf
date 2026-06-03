@@ -1,0 +1,42 @@
+# Parameters for testing algorithm: limit = 500, clearance = 40, shift_by = 30
+#
+# chr0  no genes near cuts          Centromere in BED File Defined	-> the chromosome is split at the centromere coordinate ->  1 split cooridnate (2 shards)   
+# chr1  no genes near cuts          Centromere in BED File Undefined -> the chromosome is split at limit ->  1 split cooridnate (2 shards)   
+#
+# chr2  gene at 450-550             -> the initial split coordinate is inside of a gene -> 2 split cooridnates (3 shards)
+# chr3  overlapping genes 460-510 + 490-560  -> two overlapping genes -> 2 split cooridnates (3 shards)
+# chr4  centromere at 300, -> one gene in each arm (no collision) -> 3 split cooridnates (4 shards)
+# chr5  centromere at 600, gene 550-650 a split coordinate cuts through a gene -> 3 split cooridnates - (4 shards)
+# chr6  gene + exon + CDS + transcript + UTR rows  -> 2 split cooridnates - (3 shards)
+#
+# GTF Format: seqname  source  feature  start  end  score  strand  frame  attribute
+#
+# -- chr1 -- the chromosome is split at centromere coordinate --------------------------------
+chr0	demo	gene	100	200	.	+	.	gene_id "G0"; gene_biotype "protein_coding";
+#
+# -- chr1 -- the chromosome is split at centromere coordinate --------------------------------
+chr1	demo	gene	100	200	.	+	.	gene_id "G1"; gene_biotype "protein_coding";
+#
+# -- chr2 -- the initial split coordinate is inside of a gene -
+chr2	demo	gene	450	550	.	+	.	gene_id "G2"; gene_biotype "protein_coding";
+#
+# -- chr3 -- two overlapping genes
+chr3	demo	gene	460	545	.	+	.	gene_id "G3_LEFT"; gene_biotype "protein_coding";
+chr3	demo	gene	490	560	.	+	.	gene_id "G3_RIGHT"; gene_biotype "protein_coding";
+#
+# -- chr4 -- centromere at 300, one gene in each arm (no collision) ------
+chr4	demo	gene	50	100	.	+	.	gene_id "G4_L"; gene_biotype "protein_coding";
+chr4	demo	gene	800	900	.	+	.	gene_id "G4_R"; gene_biotype "protein_coding";
+#
+# -- chr5 -- centromere at 600, a split coordinate cuts through a gene  ------------------------
+chr5	demo	gene	550	650	.	+	.	gene_id "G5_BS"; gene_biotype "protein_coding";
+#
+# -- chr6 -- one real gene --
+chr6	demo	gene	400	500	.	+	.	gene_id "G6_REAL"; gene_biotype "protein_coding";
+chr6	demo	transcript	400	500	.	+	.	gene_id "G6_REAL"; transcript_id "G6_REAL.1";
+chr6	demo	exon	400	450	.	+	.	gene_id "G6_REAL"; transcript_id "G6_REAL.1"; exon_number "1";
+chr6	demo	exon	460	480	.	+	.	gene_id "G6_REAL"; transcript_id "G6_REAL.1"; exon_number "2";
+chr6	demo	exon	490	500	.	+	.	gene_id "G6_REAL"; transcript_id "G6_REAL.1"; exon_number "3";
+chr6	demo	CDS	410	495	.	+	0	gene_id "G6_REAL"; transcript_id "G6_REAL.1";
+chr6	demo	five_prime_utr	400	409	.	+	.	gene_id "G6_REAL"; transcript_id "G6_REAL.1";
+
