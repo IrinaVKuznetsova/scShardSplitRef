@@ -120,7 +120,7 @@ A step-by-step guide can be found in the vignettes:
 - **Real-world example: barley** *(diploid, chromosome length exceeds allowed size)* [vignette barley](vignettes/scShardSplitRefQuickStart.Rmd) 
 - **Real-world example: XXX** *(hexaploid, chromosome length exceeds allowed size)* [vignette XX](vignettes/)   **<-- TODO: place holder for Luca's testing species --!>**
 
-> Note on parameter selection in *determine_split_regions()*. In real world scenarios though users should consider picking something like clearance = 900 (2 x 150 bp reads with up to a 600 bp insert size), and shift_by in the region of 1000 to 4000 to ensure the algorithm can easily walk through a whole gene if needed.
+> Note on parameter selection in *determine_split_regions()*. In real world scenarios users should consider picking  `clearance = 900 (2 x 150 bp reads with up to a 600 bp insert size)`, and `shift_by in the region of 1000 to 4000` to ensure the algorithm can easily walk through a whole gene if needed.
 
 
 ## Citation
