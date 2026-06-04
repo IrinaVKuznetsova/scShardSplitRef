@@ -8,20 +8,21 @@ output: github_document
 
 
 ## **scShardSplitRef**  
-*scShardSplitRef* designed for researchers working with multiome single-cell data from species that require building a custom reference genome, particularly when one or more chromosomes/contigs in the reference FASTA exceed the Cell Ranger ARC limit of 536.8Mb (2\^29 bases). *scShardSplitRef* enables splitting of long chromosomes/contigs generating shorter fragments that are compitable with Cell Ranger ARC requirements. The software outputs FASTA and GTF files containing the split chromosomes/contigs, which can be directly processed by `cellranger-arc mkref`.
+*scShardSplitRef* designed for researchers working with multiome single-cell data from species that require building a custom reference genome, particularly when one or more chromosomes/contigs in the reference FASTA exceed the Cell Ranger ARC limit of 536.8Mb (2\^29 bases). *scShardSplitRef* enables splitting of long chromosomes/contigs generating shorter fragments that are compitable with Cell Ranger ARC requirements. The *scShardSplitRef* package outputs GTF file containing the split chromosomes/contigs, which can be directly processed by `cellranger-arc mkref`. We also provide guidance on how to split a FASTA file used by `cellranger-arc mkref` using bedtools.
 
-To familiarise yourself with the package and workflow of preparing reference genome sequence (FASTA) and gene annotations (GTF) files for Cell Ranger ARC we suggest starting with a guided walk through. 
+To familiarise yourself with the package and the workflow for preparing reference genome sequence (FASTA) and gene annotation (GTF) files for Cell Ranger ARC, we suggest starting with the algorithm [description]() and [a guided walk through]().   **<-- TODO: add correct link after merging branches-->**
 
 
 ## **Problem Overview**  
-*Cell Ranger* provides pre-built reference genomes for common species such as human and mouse. For less common species, users must build a custom reference. For example, for multiome ATAC + Gene Expression sequencing data the command is `cellranger-arc mkref`tha requires geneome sequence (FASTA) and gene annotations (GTF) files. When working with species that have very large chromosomes or scaffolds, users may encounter the following error:  
->*Due to limitations of the BAM index format, a contig in the reference FASTA file cannot exceed *536.8Mb (2^29 bases)*. If a contig exceeds that size you will have to split it into smaller contigs and make corresponding modifications to the GTF file.* 
-[Source: 10x Genomics Documentation](https://www.10xgenomics.com/support/software/cell-ranger-arc/latest/analysis/inputs/mkref)  
-
->![screenshot of the error](man/figures/scr_10x_CR_arc_error.png)  
+*Cell Ranger* provides pre-built reference genomes for common species such as human and mouse. For less common species, users must build a custom reference. For example, for multiome ATAC + Gene Expression sequencing data, the command is `cellranger-arc mkref` that requires a genome sequence (FASTA) and gene annotation (GTF) files. When working with species that have very large chromosomes or scaffolds, users may encounter the following error:  
+>*Due to limitations of the BAM index format, a contig in the reference FASTA file cannot exceed *536.8 Mb (2^29 bases)*. If a contig exceeds that size you will have to split it into smaller contigs and make corresponding modifications to the GTF file.* 
+[Source: 10x Genomics Documentation](https://www.10xgenomics.com/support/software/cell-ranger-arc/latest/analysis/inputs/mkref)   
 
 
-For example, barley genome has several chromosomes (*2H=665.59Mb, 3H=621.52Mb, 4H=610.33Mb, 5H=588.22Mb, 6H=561.79Mb, 7H=632.54Mb*) that exceed this size limit. As a result, `cellranger-arc mkref` cannot build a reference unless "oversized" chromosomes are divided into smaller fragments.  
+>![screenshot of the error](man/figures/scr_10x_CR_arc_error.png)     **<-- TODO: add correct link after merging branches-->**
+
+
+For example, the barley genome has several chromosomes (*2H = 665.59 Mb, 3H = 621.52 Mb, 4H = 610.33 Mb, 5H = 588.22 Mb, 6H = 561.79 Mb, 7H = 632.54 Mb*) that exceed this size limit. As a result, `cellranger-arc mkref` cannot build a reference unless the oversized chromosomes are divided into smaller fragments.  
 
 
 
@@ -46,8 +47,8 @@ library("knitr") # used for a kable table later in the document
 | Gene annotations | GTF | Gene features and coordinates |
 | Centromere coordinates | BED-like | Centromere positions per chromosome (x) |
 
-> (x) **Note:** If centromere coordinates are not available for your species, you can manually create a BED-like file with the midpoint position of each chromosome.
-> {scShardSplitRef} will then check for any overlaps with genic regions and generate the correct BED files for splitting.
+> (x) **Note:** If centromere coordinates are not available for your species, the second column of the BED-like file should be set to `0`. If centromere coordinates are available, the second column should be set to the centromere coordinate. 
+> {scShardSplitRef} will then check for any overlaps with genic regions and generate the correct GTF file that is compitable with `cellranger-arc mkref`.
 <br>
 
 <details>
@@ -55,8 +56,6 @@ library("knitr") # used for a kable table later in the document
 
 ```{r, eval = FALSE}
 # Gene annotations (GTF) file: 
-# data.dir = "/inst/extdata/01_Hordeum_vulgare.Mt_Pt_v49_Barley_v62_COMBINED.gtf"
-
 gtf_df <- read.table(file = "01_Hordeum_vulgare.Mt_Pt_v49_Barley_v62_COMBINED.gtf",
   header = FALSE,
   sep = "\t")
@@ -84,25 +83,23 @@ The format of the GTF file *(01_Hordeum_vulgare.Mt_Pt_v49_Barley_v62_COMBINED.gt
 <summary><b>What does a BED-like centromere file for MOREX V3 look like?</b></summary>
 
 ```{r}
-# Manually formatted centromere file (please check what it should look like below and check **Step-0** description): 
-# data.dir = "/inst/extdata/02_MorexV3_centromere_coordinates.bed"
-
+# Manually formatted BED-like file: 
 centr_bed_df <- read.table(file = "02_MorexV3_centromere_coordinates.bed",
   header = FALSE,
   sep = "\t")
 dim(centr_bed_df)  ## 292 x 3
 centr_bed_df[1:10, ]
 ```
-The format of the centromere coordinates file is a tab-delimited 3-column file, where the 1st column contains chromosome/contig names, the 2nd column contains the centromere coordinate, and the 3rd column contains chromosome/contig region end coordinates.
+The format of the centromere coordinates file is a tab-delimited 3-column file, where the 1st column contains chromosome/contig names, the 2nd column contains the centromere coordinate or if not available '0', and the 3rd column contains chromosome/contig region end coordinates.
 ```         
-1H      206486643       516505932
+1H      206486643       516505932      # <- The second column is `206486643` - the centromere coordinate obtained from the database
 2H      301293086       665585731
 3H      267852507       621516506
 4H      276149121       610333535
 5H      204878572       588218686
 6H      256319444       561794515
 7H      328847192       632540561
-CAJHDD010000004.1       0       972986
+CAJHDD010000004.1       0       972986    # <- The second column is `0` - the centromere coordinate is not available 
 CAJHDD010000001.1       0       680018
 CAJHDD010000005.1       0       517010
 ```
@@ -119,10 +116,10 @@ CAJHDD010000005.1       0       517010
 
 ## Usage Guide
 A step-by-step guide can be found in the vignettes:
-**<-- TODO: Provide the coreect link at once its ready!!!!! ---!>**
+**<-- TODO: Provide the coreect link once its ready!!!!! ---!>**
 - **Toy example:** a quick introduction to understand what the package does: [vignette toy](vignettes/scShardSplitRefDetailedToy.Rmd) 
 - **Real-world example: barley** *(diploid, chromosome length exceeds allowed size)* [vignette barley](vignettes/scShardSplitRefQuickStart.Rmd) 
-- **Real-world example: XXX** *(hexaploid, chromosome length exceeds allowed size)* [vignette XX](vignettes/)   **<-- TODO: pace holder for Luca's testing species --!>**
+- **Real-world example: XXX** *(hexaploid, chromosome length exceeds allowed size)* [vignette XX](vignettes/)   **<-- TODO: place holder for Luca's testing species --!>**
 
 **<-- TODO: come up with a descriptive name in brackets for each tutorial.--!>**
 
@@ -171,4 +168,3 @@ Remember that improving tools is important, but keeping them neat and not over-c
 This work was supported by resources provided by the [Pawsey Supercomputing Research Centres](https://pawsey.org.au/) Nimbus Research Cloud (https://doi.org/10.48569/v0j3-qd51), with funding from the Australian Government and the Government of Western Australia.
 
 GRDC (?)
-
