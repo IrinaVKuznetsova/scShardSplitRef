@@ -71,8 +71,6 @@ For this tutorial, we will be using a genome sequence (FASTA) and gene annotatio
 
 ```{r}
 # Gene annotations (GTF) file. The format of the GTF file is a tab-delimited 9-column file.
-# data.dir = "/inst/extdata/01_Hordeum_vulgare.Mt_Pt_v49_Barley_v62_COMBINED.gtf"
-
 gtf_file <- system.file(
   "extdata/01_Hordeum_vulgare.Mt_Pt_v49_Barley_v62_COMBINED.gtf",
   package = "scShardSplitRef"
@@ -94,9 +92,10 @@ gtf_df[1:10, ]
 <summary><b>What does a BED-like centromere file for MOREX V3 look like?</b></summary>
 
 ```{r}
-# The format of the centromere coordinates file is a tab-delimited 3-column file, where the 1st column contains chromosome/contig names, the 2nd column contains the centromere coordinate, and the 3rd column contains chromosome/contig region end coordinates.
-# Manually formatted centromere file (please check what it should look like below):
-# data.dir = "/inst/extdata/02_MorexV3_centromere_coordinates.bed"
+# The format of the centromere coordinates file is a tab-delimited 3-column file, where
+#     the 1st column contains chromosome/contig names, 
+#     the 2nd column contains the centromere/0 coordinate, 
+#     the 3rd column contains chromosome/contig region end coordinates.
 
 bed_file <- system.file(
   "extdata/02_MorexV3_centromere_coordinates.bed",
@@ -106,7 +105,7 @@ centr_bed_df <- read.table(file = bed_file,
                            header = FALSE, 
                            sep = "\t"
                            )
-dim(centr_bed_df) ## 292 x 3
+# dim(centr_bed_df) ## 292 x 3
 centr_bed_df[1:10, ]
 ```
 
@@ -122,7 +121,7 @@ All files need to be decompressed for use in Cell Ranger.
 ### Step-1
 
 The first function called `validate_inputs()`, checks the correct format of (FASTA and BED-like) input files.
-The centromere coordinate file is manually created in BED-like format and should be tab-delimited.
+The centromere/or `0` coordinate file is manually created in BED-like format and should be tab-delimited.
 All files need to be decompressed for use in Cell Ranger.
 
 #### The help page for the validate_inputs() 
@@ -136,8 +135,7 @@ All files need to be decompressed for use in Cell Ranger.
 
 ```{r}
 # Load MOREX V3 files
-# Note1: all files need to be decompressed for use in Cell Ranger
-# Note2: use correctly formatted BED file with centromere coordinates
+# Note1: all files need to be decompressed
 bed_path <- system.file(
   "extdata/02_MorexV3_centromere_coordinates.bed",
   package = "scShardSplitRef"
@@ -158,9 +156,8 @@ kable(input_verif$gtf[1:5,])
 
 ### Step-2
 
-The next step is to prepare split coordinates in appropriate BED-like format.
+The next step is to prepare split coordinates in appropriate for Cell Ranger ARC BED-like format.
 This function ensures that chromosomes are not split in the middle of a gene region.
-To achieve this, we first check whether the centromere coordinates overlap with any gene features, and if they do, we shift the split position by a specified length in base pairs (bp).
 
 ### The Help Page for *determine_split_regions()* 
 
@@ -170,8 +167,8 @@ To achieve this, we first check whether the centromere coordinates overlap with 
 
 #### Define output directory
 
-```{r}
-# Build BED-like split intervals from genomic regions (BED) and gene annotations (GTF)
+```{r, eval=FALSE}
+# Build BED-like split intervals from genomic regions (BED) and gene annotation (GTF) files
 
 # Define output directory
 output_file <- file.path(tempdir(), 
@@ -182,16 +179,17 @@ dir.create(output_file,
            showWarnings = FALSE
            )
 output_file_name_dir <- file.path(output_file, 
-                                  "B1_Split_regions.bed"
-                                  )
+                                  "B1_Split_regions.bed"  )
 
 # Determine split regions
+# Note on parameter selection in determine_split_regions(). In real world scenarios users should consider picking something like clearance = 900 (2 x 150 bp reads with up to a 600 bp insert size), and `shift_by` in the region of 1000 to 4000 to ensure the algorithm can easily walk through a whole gene if needed.
 get_split_reg <- determine_split_regions(
   bed = bed_path,
   gtf = gtf_path,
   output_bed = output_file_name_dir,
   limit = 2L^29L,
-  shift_by = 20L
+  shift_by = 2000L,
+  clearance = 900L
   )
 
 get_split_reg
@@ -210,7 +208,7 @@ split_region_bed_df <- read.table(file = bed_f,
                                   header = FALSE, 
                                   sep = "\t"
                                   )
-dim(split_region_bed_df)
+#dim(split_region_bed_df)   # 299   3
 split_region_bed_df[1:10, ]
 ```
 
@@ -230,8 +228,11 @@ Note that the output file name is hardcoded and starts with "B1_FINAL_MODIFIED_G
 
 #### Generate gene annotation (GTF) file in compatible to Cell Ranger ARC format 
 
-```{r}
-# Define output directory
+```{r, eval=FALSE}
+splt_reg_path <- system.file(
+  "outdata/B1_Split_regions.bed",
+  package = "scShardSplitRef"
+)
 gtf_path <- system.file(
   "extdata/01_Hordeum_vulgare.Mt_Pt_v49_Barley_v62_COMBINED.gtf",
   package = "scShardSplitRef"
@@ -239,7 +240,7 @@ gtf_path <- system.file(
 
 # Process GTF file and write file to tempdir()
 process_gtf(
-  split_regions_bed = output_file_name_dir,
+  split_regions_bed = splt_reg_path,
   gtf = gtf_path,
   genome_name = "barley",
   genome_version = "3",
@@ -275,8 +276,7 @@ colnames(sep) <- colnames(processed_gtf)[1:5]
 kable(rbind(
   processed_gtf[200:203, 1:5],
   sep,
-  processed_gtf[(nrow(processed_gtf) - 2):nrow(processed_gtf), 1:5]
-  )
+  processed_gtf[(nrow(processed_gtf) - 2):nrow(processed_gtf), 1:5] )
   )
 ```
 
