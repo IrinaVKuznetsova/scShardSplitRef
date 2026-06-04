@@ -109,7 +109,7 @@ when searching for a safe location outside a genic region
 genes on both sides of the proposed split coordinate
 
 
-##### Usage Example: *6 ()*
+##### Usage Example: *determine_split_regions()*
 
 In this example we use:
 ```
@@ -523,7 +523,7 @@ five_prime_utr[G6R]:  400-409
 
 
 
-
+> Note: in real world scenarios users should consider picking ```clearance = 900 (2 x 150 bp reads with up to a 600 bp insert size)```, and ```shift_by in the region of 1000 to 4000``` to ensure the algorithm can easily walk through a whole gene if needed.
 
 
 ## 3. Session Info
