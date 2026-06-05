@@ -45,9 +45,9 @@ library("knitr") # used for a kable table later in the document
 
 
 
-### 3. Workflow
+### Workflow
 
-#### 3.1. Validate Input Files  
+#### 1. Validate Input Files  
 
 The first function called `validate_inputs()`, checks the correct format of (GTF and BED-like) input files.
 
@@ -83,7 +83,7 @@ kable(input_verif$gtf[1:5,])
 
 
 
-#### 3.2. Determine Split Regions
+#### 2. Determine Split Regions
 
 The next function called ```determine_split_regions()``` prepares split coordinates in appropriate BED-like format. This function ensures that chromosomes are not split in the middle of a gene region.
 
@@ -524,6 +524,38 @@ five_prime_utr[G6R]:  400-409
 
 
 > Note: in real world scenarios users should consider picking ```clearance = 900 (2 x 150 bp reads with up to a 600 bp insert size)```, and ```shift_by in the region of 1000 to 4000``` to ensure the algorithm can easily walk through a whole gene if needed.
+
+
+
+
+
+#### 3. Process a GTF file by assigning split-region sequence names
+
+Reads a BED-like "split regions" file and a GTF, assigns each GTF feature to exactly one split-region interval, and replaces the GTF Chr field with a split-region name of the form Chr-RegionStart-RegionEnd
+
+##### The Help Page for *process_gtf()*
+
+```{r, eval=FALSE}
+?process_gtf
+```
+
+
+**Input Data** 
+This function takes a BED-like file containing split intervals as produced by *process_gtf()*  and a GTF file as the input.
+
+##### Usage Example: *process_gtf()*
+```{r, eval=FALSE}
+gtf_processed = process_gtf(
+  split_regions_bed = "DetermineSplitReg_AlgorithmToy.bed",
+  gtf = "AlgorithmToy.gtf",
+  genome_name = "ToyExample",
+  genome_version = "v1",
+  keep_attributes = NULL,
+  out_path = "."
+)
+
+```
+
 
 
 ## 3. Session Info
