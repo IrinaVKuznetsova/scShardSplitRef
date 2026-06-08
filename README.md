@@ -36,7 +36,7 @@ For example, the barley genome has several chromosomes (*2H = 665.59 Mb, 3H = 62
 | Cell Ranger ARC | ≥ 2.0 | Single-cell multiome processing |
 
 ### Installation  
-```{r setup}
+```r
 library("scShardSplitRef")
 library("knitr") # used for a kable table later in the document
 ```
@@ -54,7 +54,7 @@ library("knitr") # used for a kable table later in the document
 <details>
 <summary><b>What does a GTF file for MOREX V3 look like?</b></summary>
 
-```{r, eval = FALSE}
+```r
 # Gene annotations (GTF) file: 
 gtf_df <- read.table(file = "01_Hordeum_vulgare.Mt_Pt_v49_Barley_v62_COMBINED.gtf",
   header = FALSE,
@@ -82,7 +82,7 @@ The format of the GTF file *(01_Hordeum_vulgare.Mt_Pt_v49_Barley_v62_COMBINED.gt
 
 <summary><b>What does a BED-like centromere file for MOREX V3 look like?</b></summary>
 
-```{r}
+```r
 # Manually formatted BED-like file: 
 centr_bed_df <- read.table(file = "02_MorexV3_centromere_coordinates.bed",
   header = FALSE,
@@ -129,7 +129,7 @@ A step-by-step guide can be found in the vignettes:
 
 ## Citation
 Please cite this tool if you use it
-``` {r}
+``` r
 library("scShardSplitRef")
 citation("scShardSplitRef")
 
