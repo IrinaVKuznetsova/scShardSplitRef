@@ -4,12 +4,12 @@ author: "Irina Kuznetsova"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{scShardSplitRef}
-  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  markdown: 
+    wrap: sentence
 ---
-
-
-
 
 ## Package overview
 
@@ -25,7 +25,6 @@ Example data files are distributed with the package for example purposes.
 
 ### Installation
 
-
 ``` r
 library("scShardSplitRef")
 library("knitr") # used for a kable table later in the document
@@ -33,15 +32,12 @@ library("knitr") # used for a kable table later in the document
 
 ### Prerequisites
 
-
 | Software        | Version | Purpose                         |
 |-----------------|---------|---------------------------------|
 | bedtools        | ≥ 2.30  | BED file operations             |
 | Cell Ranger ARC | ≥ 2.0   | Single-cell multiome processing |
 
-
 ### Input files
-
 
 | File                   | Format   | Description                             |
 |------------------|---------------------|---------------------------------|
@@ -49,9 +45,7 @@ library("knitr") # used for a kable table later in the document
 | Gene annotations       | GTF      | Gene features and coordinates           |
 | Centromere coordinates | BED-like | Centromere positions per chromosome (x) |
 
-
-> (x) **Note:** The second column in the BED-like file is assigned to the centromere coordinate, or '0' if this information is not accessible for your species.
-> {scShardSplitRef} will then check for any overlaps with genic regions and generate the correct BED files for splitting.
+> (x) **Note:** The second column in the BED-like file is assigned to the centromere coordinate, or '0' if this information is not accessible for your species. {scShardSplitRef} will then check for any overlaps with genic regions and generate the correct BED files for splitting.
 
 <br>
 
@@ -59,11 +53,12 @@ For this tutorial, we will be using a genome sequence (FASTA) and gene annotatio
 
 <br>
 
-
-
 <details>
-<summary><b>What does a GTF file for MOREX V3 look like?</b></summary>
 
+<summary>
+
+<b>What does a GTF file for MOREX V3 look like?`<`{=html}
+`/b></summary>`{=html}
 
 ``` r
 # Gene annotations (GTF) file. The format of the GTF file is a tab-delimited 9-column file.
@@ -106,12 +101,12 @@ gtf_df[1:10, ]
 
 </details>
 
-
-
 <details>
 
-<summary><b>What does a BED-like centromere file for MOREX V3 look like?</b></summary>
+<summary>
 
+<b>What does a BED-like centromere file for MOREX V3 look like?`<`{=html}
+`/b></summary>`{=html}
 
 ``` r
 # The format of the centromere coordinates file is a tab-delimited 3-column file, where the 1st column contains chromosome/contig names, the 2nd column contains the centromere coordinate, and the 3rd column contains chromosome/contig region end coordinates.
@@ -148,8 +143,7 @@ centr_bed_df[1:10, ]
 
 We begin by assessing the formatting of the input GTF and BED files provided by the user, followed by checking and, if necessary, modifying the split coordinates in the BED file.
 The GTF file is then updated according to the split position.
-Finally, the FASTA file is split and formatted for compatibility with Cell Ranger ARC.
-All files need to be decompressed for use in Cell Ranger.
+Finally, the FASTA file is split and formatted for compatibility with Cell Ranger ARC. All files need to be decompressed for use in Cell Ranger.
 
 ### Step-1
 
@@ -157,16 +151,13 @@ The first function called `validate_inputs()`, checks the correct format of (FAS
 The centromere coordinate file is manually created in BED-like format and should be tab-delimited.
 All files need to be decompressed for use in Cell Ranger.
 
-#### The help page for the validate_inputs() 
-
+#### The help page for the validate_inputs()
 
 ``` r
 ?validate_inputs
 ```
 
-
-####  Validate (FASTA and BED) input files
-
+#### Validate (FASTA and BED) input files
 
 ``` r
 # Load MOREX V3 files
@@ -188,35 +179,28 @@ input_verif <- validate_inputs(bed = bed_path,
 kable(input_verif$bed[1:5,])
 ```
 
-
-
-|Chr | RegionStart| RegionEnd|
-|:---|-----------:|---------:|
-|1H  |   206486643| 516505932|
-|2H  |   301293086| 665585731|
-|3H  |   267852507| 621516506|
-|4H  |   276149121| 610333535|
-|5H  |   204878572| 588218686|
-
-
+| Chr | RegionStart | RegionEnd |
+|:----|------------:|----------:|
+| 1H  |   206486643 | 516505932 |
+| 2H  |   301293086 | 665585731 |
+| 3H  |   267852507 | 621516506 |
+| 4H  |   276149121 | 610333535 |
+| 5H  |   204878572 | 588218686 |
 
 ``` r
 kable(input_verif$gtf[1:5,])
 ```
 
+| Chr | source | feature | start | end | score | strand | frame | attribute |
+|:-----|:-----|:-----|-----:|-----:|:-----|:-----|:-----|:------------------------|
+| 2H | IPK | gene | 601169528 | 601171444 | . | \- | . | gene_id "HORVU.MOREX.r3.2HG0191020"; gene_source "IPK"; gene_biotype "protein_coding"; |
+| 2H | IPK | transcript | 601169528 | 601171444 | . | \- | . | gene_id "HORVU.MOREX.r3.2HG0191020"; transcript_id "HORVU.MOREX.r3.2HG0191020.1"; gene_source "IPK"; gene_biotype "protein_coding"; transcript_source "IPK"; transcript_biotype "protein_coding"; tag "Ensembl_canonical"; |
+| 2H | IPK | exon | 601169754 | 601171444 | . | \- | . | gene_id "HORVU.MOREX.r3.2HG0191020"; transcript_id "HORVU.MOREX.r3.2HG0191020.1"; exon_number "1"; gene_source "IPK"; gene_biotype "protein_coding"; transcript_source "IPK"; transcript_biotype "protein_coding"; exon_id "HORVU.MOREX.r3.2HG0191020.1-E1"; tag "Ensembl_canonical"; |
+| 2H | IPK | CDS | 601169754 | 601171444 | . | \- | 0 | gene_id "HORVU.MOREX.r3.2HG0191020"; transcript_id "HORVU.MOREX.r3.2HG0191020.1"; exon_number "1"; gene_source "IPK"; gene_biotype "protein_coding"; transcript_source "IPK"; transcript_biotype "protein_coding"; protein_id "HORVU.MOREX.r3.2HG0191020.1"; tag "Ensembl_canonical"; |
+| 2H | IPK | start_codon | 601171442 | 601171444 | . | \- | 0 | gene_id "HORVU.MOREX.r3.2HG0191020"; transcript_id "HORVU.MOREX.r3.2HG0191020.1"; exon_number "1"; gene_source "IPK"; gene_biotype "protein_coding"; transcript_source "IPK"; transcript_biotype "protein_coding"; tag "Ensembl_canonical"; |
 
-
-|Chr |source |feature     |     start|       end|score |strand |frame |attribute                                                                                                                                                                                                                                                                             |
-|:---|:------|:-----------|---------:|---------:|:-----|:------|:-----|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-|2H  |IPK    |gene        | 601169528| 601171444|.     |-      |.     |gene_id "HORVU.MOREX.r3.2HG0191020"; gene_source "IPK"; gene_biotype "protein_coding";                                                                                                                                                                                                |
-|2H  |IPK    |transcript  | 601169528| 601171444|.     |-      |.     |gene_id "HORVU.MOREX.r3.2HG0191020"; transcript_id "HORVU.MOREX.r3.2HG0191020.1"; gene_source "IPK"; gene_biotype "protein_coding"; transcript_source "IPK"; transcript_biotype "protein_coding"; tag "Ensembl_canonical";                                                            |
-|2H  |IPK    |exon        | 601169754| 601171444|.     |-      |.     |gene_id "HORVU.MOREX.r3.2HG0191020"; transcript_id "HORVU.MOREX.r3.2HG0191020.1"; exon_number "1"; gene_source "IPK"; gene_biotype "protein_coding"; transcript_source "IPK"; transcript_biotype "protein_coding"; exon_id "HORVU.MOREX.r3.2HG0191020.1-E1"; tag "Ensembl_canonical"; |
-|2H  |IPK    |CDS         | 601169754| 601171444|.     |-      |0     |gene_id "HORVU.MOREX.r3.2HG0191020"; transcript_id "HORVU.MOREX.r3.2HG0191020.1"; exon_number "1"; gene_source "IPK"; gene_biotype "protein_coding"; transcript_source "IPK"; transcript_biotype "protein_coding"; protein_id "HORVU.MOREX.r3.2HG0191020.1"; tag "Ensembl_canonical"; |
-|2H  |IPK    |start_codon | 601171442| 601171444|.     |-      |0     |gene_id "HORVU.MOREX.r3.2HG0191020"; transcript_id "HORVU.MOREX.r3.2HG0191020.1"; exon_number "1"; gene_source "IPK"; gene_biotype "protein_coding"; transcript_source "IPK"; transcript_biotype "protein_coding"; tag "Ensembl_canonical";                                           |
-
-
-
-> If GTF and BED formats are correct, a confirmation message will be printed to the console:\ *"All files loaded and validated successfully"*
+> If GTF and BED formats are correct, a confirmation message will be printed to the console:\
+> *"All files loaded and validated successfully"*
 
 ### Step-2
 
@@ -224,15 +208,13 @@ The next step is to prepare split coordinates in appropriate BED-like format.
 This function ensures that chromosomes are not split in the middle of a gene region.
 To achieve this, we first check whether the centromere coordinates overlap with any gene features, and if they do, we shift the split position by a specified length in base pairs (bp).
 
-### The help page for the determine_split_regions() function 
-
+### The help page for the determine_split_regions() function
 
 ``` r
 ?determine_split_regions
 ```
 
 #### Define output directory
-
 
 ``` r
 # Build BED-like split intervals from genomic regions (BED) and gene annotations (GTF)
@@ -266,8 +248,10 @@ get_split_reg
 
 <details>
 
-<summary><b>What does the generated BED file look like?</b></summary>
+<summary>
 
+<b>What does the generated BED file look like?`<`{=html}
+`/b></summary>`{=html}
 
 ``` r
 bed_f <- system.file(
@@ -304,13 +288,11 @@ Note that the output file name is hardcoded and starts with "B1_FINAL_MODIFIED_G
 
 #### The help page for the `process_gtf()` function
 
-
 ``` r
 ?process_gtf
 ```
 
-#### Generate gene annotation (GTF) file in compatible to Cell Ranger ARC format 
-
+#### Generate gene annotation (GTF) file in compatible to Cell Ranger ARC format
 
 ``` r
 # Define output directory
@@ -332,14 +314,18 @@ process_gtf(
 #> ℹ Finished writing processed GTF: /tmp/Rtmpp4whTR/B1_FINAL_MODIFIED_GTF_barley_3.gtf
 ```
 
-> The output file is in the GTF format.
-> Note that the first column has been reformatted — the regions are now split.
-> The chromosome name is formatted as `1H-0-206486643`, which is the region from the beginning of the chromosome to the split position; \`1H-206486643-516505932` is the region from the split position to the end of the chromosome.
+> The output file is in the GTF format.\
+> Note that the first column has been reformatted — the regions are now split.\
+> The chromosome name is formatted as\
+> `1H-0-206486643`, which is the region from the beginning of the chromosome to the split position;\
+> `1H-206486643-516505932`, which is the region from the split position to the end of the chromosome.
 
 <details>
 
-<summary><b>What does the generated GTF file look like?</b></summary>
+<summary>
 
+<b>What does the generated GTF file look like?`<`{=html}
+`/b></summary>`{=html}
 
 ``` r
 gtf_f <- system.file(
@@ -367,27 +353,22 @@ kable(rbind(
   )
 ```
 
-
-
-|       |V1                     |V2  |V3         |V4        |V5        |
-|:------|:----------------------|:---|:----------|:---------|:---------|
-|200    |2H-0-301293086         |IPK |CDS        |146924435 |146924961 |
-|201    |2H-0-301293086         |IPK |stop_codon |146924962 |146924964 |
-|202    |2H-301293086-665585731 |IPK |gene       |130299937 |130300482 |
-|203    |2H-301293086-665585731 |IPK |transcript |130299937 |130300482 |
-|1      |...                    |... |...        |...       |...       |
-|524560 |Pt-0-115974            |ena |gene       |115423    |115519    |
-|524561 |Pt-0-115974            |ena |transcript |115423    |115519    |
-|524562 |Pt-0-115974            |ena |exon       |115423    |115519    |
-
-
+|        | V1                     | V2  | V3         | V4        | V5        |
+|:-------|:-----------------------|:----|:-----------|:----------|:----------|
+| 200    | 2H-0-301293086         | IPK | CDS        | 146924435 | 146924961 |
+| 201    | 2H-0-301293086         | IPK | stop_codon | 146924962 | 146924964 |
+| 202    | 2H-301293086-665585731 | IPK | gene       | 130299937 | 130300482 |
+| 203    | 2H-301293086-665585731 | IPK | transcript | 130299937 | 130300482 |
+| 1      | ...                    | ... | ...        | ...       | ...       |
+| 524560 | Pt-0-115974            | ena | gene       | 115423    | 115519    |
+| 524561 | Pt-0-115974            | ena | transcript | 115423    | 115519    |
+| 524562 | Pt-0-115974            | ena | exon       | 115423    | 115519    |
 
 </details>
 
 ### Step-4
 
 Final steps is to split the FASTA file, where the header lines should have the same chrosomome annotations as the GTF file.
-
 
 ``` bash
 # Please note that due to file size limitations, the barley genome FASTA file is not available on our GitHub repository at /inst/extdata/
@@ -404,9 +385,12 @@ sed '/^>/s/:/-/g' ${FASTA_FIN_OUT}/B1_FASTA_split.fasta >${FASTA_FIN_OUT}/B1_FAS
 
 <details>
 
-<summary><b>What does the generated FASTA file look like?</b></summary>
+<summary>
 
-```
+<b>What does the generated FASTA file look like?`<`{=html}
+`/b></summary>`{=html}
+
+```         
 # B1_FASTA_split_final.fasta
 
 >1H:0-206486643
@@ -422,18 +406,15 @@ TATTTGCCACTTCAATCTGAT..
 TGAGAGAAAAAATAAGACTCTTTTAAGATTGCAAAACGTTTTGCAATGAA..
 >Pt:0-115974
 TCCCACTAAACATGT...
-
 ```
 
 </details>
 
 ### Step-5
 
-The genome sequence (FASTA) and gene annotation (GTF) files are now split and formatted for Cell Ranger ARC.
-The file paths are specified in the `.config` file and Cell Ranger ARC can now be run.
+The genome sequence (FASTA) and gene annotation (GTF) files are now split and formatted for Cell Ranger ARC. The file paths are specified in the `.config` file and Cell Ranger ARC can now be run.
 
 #### Prepare config file
-
 
 ``` bash
 cat 03_cellranger_arc_barley.config
@@ -451,7 +432,6 @@ cat 03_cellranger_arc_barley.config
 
 #### Run Cell Ranger ARC
 
-
 ``` bash
 CONFIG_IN="03_cellranger_arc_barley.config"
 
@@ -466,7 +446,6 @@ cellranger-arc mkref \
 <details>
 
 <summary><b>sessionInfo()</b></summary>
-
 
 ``` r
 sessionInfo()
@@ -509,7 +488,6 @@ sessionInfo()
 
 Please cite this tool if you use it
 
-
 ``` r
 citation("scShardSplitRef")
 #> Warning in citation("scShardSplitRef"): could not determine year for 'scShardSplitRef' from package DESCRIPTION file
@@ -534,13 +512,14 @@ This project is licensed under the [GPL-3.0 license](LICENSE.md).
 
 ## Contributing
 
-Please refer to the [CONTRIBUTING.md]() <-- TODO: Provide link once this is public ---!>
+Please refer to the [CONTRIBUTING.md]() \<-- TODO: Provide link once this is public ---!\>
 If you'd like to help improve this tool, please send your suggestions via email.
-Please clearly outline the feature(s) you think should be added. As the tool develops, new features can be added as separate package functions and contributed back to the project.\
+Please clearly outline the feature(s) you think should be added.
+As the tool develops, new features can be added as separate package functions and contributed back to the project.\
 Remember that improving tools is important, but keeping them neat and not over-complicated is just as essential.
 
 ## Acknowledgements
 
 This work was supported by resources provided by the [Pawsey Supercomputing Research Centres](https://pawsey.org.au/) Nimbus Research Cloud (<https://doi.org/10.48569/v0j3-qd51>), with funding from the Australian Government and the Government of Western Australia.
 
-GRDC (?)
+GRDC funded this project through the Analytics for the Australian Grains Industry (AAGI) investment, CUR2210-005OPX (AAGI-CU).
