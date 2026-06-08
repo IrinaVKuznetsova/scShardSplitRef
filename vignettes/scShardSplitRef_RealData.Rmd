@@ -50,7 +50,7 @@ library("knitr") # used for a kable table later in the document
 | Centromere coordinates | BED-like | Centromere positions per chromosome (x) |
 
 
-> (x) **Note:** If centromere coordinates are not available for your species, you can manually create a BED-like file with the midpoint position of each chromosome.
+> (x) **Note:** The second column in the BED-like file is assigned to the centromere coordinate, or '0' if this information is not accessible for your species.
 > {scShardSplitRef} will then check for any overlaps with genic regions and generate the correct BED files for splitting.
 
 <br>
@@ -334,7 +334,7 @@ process_gtf(
 
 > The output file is in the GTF format.
 > Note that the first column has been reformatted — the regions are now split.
-> The chromosome name is formatted as `1H-0-206486643`, which is the region from the beginning of the chromosome to the split position; \``1H-206486643-516505932` is the region from the split position to the end of the chromosome.
+> The chromosome name is formatted as `1H-0-206486643`, which is the region from the beginning of the chromosome to the split position; \`1H-206486643-516505932` is the region from the split position to the end of the chromosome.
 
 <details>
 
