@@ -4,7 +4,7 @@
 \alias{.assert_feasible_limit}
 \title{Assert that the size limit is feasible}
 \usage{
-.assert_feasible_limit(genes, limit, shift_by)
+.assert_feasible_limit(genes, limit, clearance)
 }
 \arguments{
 \item{genes}{Data frame with gene annotations (columns 'chr', 'start',
@@ -12,7 +12,8 @@
 
 \item{limit}{Integer: requested maximum interval width.}
 
-\item{shift_by}{Integer: base pairs to shift right when inside a gene.}
+\item{clearance}{Integer: minimum required clearance (bp) from nearby genes
+on both sides.}
 }
 \value{
 Invisible TRUE if feasible. Raises error with remediation advice
@@ -20,16 +21,18 @@ if not.
 }
 \description{
 Checks that the requested size \code{limit} is larger than any single gene
-(plus the shift distance). Raises an informative error if not feasible.
+with two-sided boundary clearance. Raises an informative error if not
+feasible.
 }
 \details{
 First merges overlapping genes per chromosome, then checks if any merged
-range (plus shift_by) exceeds the limit. Reports the worst (largest) blocking
-interval and suggests an appropriate minimum limit value.
+range plus two-sided clearance (2 * \code{clearance}) exceeds the limit. Reports
+the worst (largest) blocking interval and suggests an appropriate minimum
+limit value.
 }
 \examples{
 \dontrun{
-  .assert_feasible_limit(genes, limit = 50000, shift_by = 1)
+  .assert_feasible_limit(genes, limit = 50000, clearance = 1)
 }
 
 }

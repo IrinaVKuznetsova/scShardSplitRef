@@ -10,6 +10,7 @@
   chr_end,
   limit,
   shift_by,
+  clearance = 1L,
   max_iter = 100L
 )
 }
@@ -23,7 +24,10 @@
 
 \item{limit}{Integer: maximum allowed interval width.}
 
-\item{shift_by}{Integer: base pairs to shift right when inside a gene.}
+\item{shift_by}{Integer: step size (bp) for rightward boundary updates.}
+
+\item{clearance}{Integer: minimum required clearance (bp) from nearby genes
+on both sides.}
 
 \item{max_iter}{Integer: maximum number of iterations. Defaults to 100L.}
 }
@@ -48,7 +52,7 @@ Each iteration:
 \examples{
 \dontrun{
   refined <- .refine_boundaries(
-    c(100L, 200L), gene_ranges, 300L, 50L, 1L
+    c(100L, 200L), gene_ranges, 300L, 50L, 1L, 1L
   )
 }
 

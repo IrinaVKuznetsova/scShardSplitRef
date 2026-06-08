@@ -4,7 +4,14 @@
 \alias{determine_split_regions}
 \title{Determine split regions for reference sharding}
 \usage{
-determine_split_regions(bed, gtf, output_bed, limit = 2L^29L, shift_by = 1L)
+determine_split_regions(
+  bed,
+  gtf,
+  output_bed,
+  limit = 2L^29L,
+  shift_by = 1L,
+  clearance = 1L
+)
 }
 \arguments{
 \item{bed}{Path to a 3-column BED-like file (chr, start, end).
@@ -21,8 +28,11 @@ ignored.}
 Defaults to 2^29 (536,870,912 bp). Must be larger than any single gene
 plus the shift distance.}
 
-\item{shift_by}{Number of base pairs to shift a boundary right when it falls
-inside a gene. Defaults to 1 bp.}
+\item{shift_by}{Step size (bp) used to iteratively walk boundaries to the
+right when they violate gene clearance rules. Defaults to 1 bp.}
+
+\item{clearance}{Minimum required clearance (bp) between split boundaries
+and gene intervals on both sides. Defaults to 1 bp.}
 }
 \value{
 Invisible character: path to the written BED file.
@@ -31,18 +41,20 @@ Invisible character: path to the written BED file.
 Builds BED-like split intervals from genomic regions and GTF gene
 annotations. If the start position in a genomic region is not 0, it is
 assumed to mark the start of a centromere and the region is split around
-that point. Proposed boundaries are shifted rightward when they fall inside
-gene intervals, and oversized chunks are repeatedly re-split until all
-segments satisfy the requested size limit.
+that point. Proposed boundaries are shifted rightward when they fall too
+close to gene intervals, and oversized chunks are repeatedly re-split until
+all segments satisfy the requested size limit.
 }
 \details{
 The function performs the following steps:
 \enumerate{
 \item Reads genomic regions and gene annotations from input files.
-\item Checks that the provided \code{limit} is feasible given gene positions.
+\item Checks that the provided \code{limit} is feasible given gene positions and
+requested two-sided boundary clearance.
 \item For each region, splits it at the centromere (if start > 0) and applies
 the size limit.
-\item Adjusts boundaries that fall within genes by shifting them right.
+\item Adjusts boundaries so each is at least \code{clearance} bp away from genes on
+both sides, moving by \code{shift_by} bp per iteration when needed.
 \item Iteratively subdivides intervals exceeding the limit until all intervals
 satisfy the constraint.
 \item Writes final split regions to BED file in the active \R session's
@@ -53,19 +65,21 @@ satisfy the constraint.
   # load example files from this package and write the output bed file to
   # R's tempdir()
 
-  chromosomes <- system.file("extdata/A3_toy_centromeres.bed",
+  chromosomes <- system.file("extdata",
+                   "IN0_toy_centromeres_for_gtf.bed",
                    package = "scShardSplitRef",
                    mustWork = TRUE)
-
-  genes <- system.file("extdata/A3_toy_all_scenarios_2chr.gtf",
+  genes <- system.file("extdata",
+             "A3_toy_all_scenarios_2chr.gtf",
              package = "scShardSplitRef",
              mustWork = TRUE)
 
   determine_split_regions(
     bed = chromosomes,
     gtf = genes,
-    output_bed = file.path(tempdir(), "A3_toy_split_regions.bed"),
+    output_bed = file.path(tempdir(), "split_regions.bed"),
     limit = 2L^29L,
-    shift_by = 1L
+    shift_by = 1L,
+    clearance = 1L
   )
 }

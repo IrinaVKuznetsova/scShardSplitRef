@@ -4,7 +4,7 @@
 \alias{.shift_single_boundary}
 \title{Shift a single boundary past genes}
 \usage{
-.shift_single_boundary(boundary, gene_ranges, chr_end, shift_by)
+.shift_single_boundary(boundary, gene_ranges, chr_end, shift_by, clearance)
 }
 \arguments{
 \item{boundary}{Integer: initial boundary position.}
@@ -13,7 +13,10 @@
 
 \item{chr_end}{Integer: chromosome end coordinate (upper bound).}
 
-\item{shift_by}{Integer: base pairs to shift right per iteration.}
+\item{shift_by}{Integer: step size (bp) for rightward boundary updates.}
+
+\item{clearance}{Integer: minimum required clearance (bp) from nearby genes
+on both sides.}
 }
 \value{
 Integer: adjusted boundary position. May be the original position
@@ -21,12 +24,13 @@ if it did not overlap any gene, or identical to its start position if
 the shift would exceed chr_end.
 }
 \description{
-Adjusts one boundary position that falls inside gene intervals by
-iteratively shifting it rightward until it no longer overlaps any gene.
+Adjusts one boundary position that falls inside or too close to gene
+intervals by iteratively shifting it rightward until it satisfies the
+requested clearance around genes.
 }
 \examples{
 \dontrun{
-  adjusted <- .shift_single_boundary(60L, gene_ranges, 300L, 1L)
+  adjusted <- .shift_single_boundary(60L, gene_ranges, 300L, 1L, 1L)
 }
 
 }

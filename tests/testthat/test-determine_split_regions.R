@@ -101,7 +101,7 @@ test_that(".subdivide_oversized identifies needed splits", {
 
 test_that(".shift_single_boundary handles boundaries outside genes", {
   gene_ranges <- data.frame(start = c(100L, 200L), end = c(150L, 250L))
-  result <- .shift_single_boundary(50L, gene_ranges, 300L, 1L)
+  result <- .shift_single_boundary(50L, gene_ranges, 300L, 1L, 1L)
   expect_identical(result, 50L)
 })
 
@@ -118,7 +118,7 @@ test_that(".assert_feasible_limit accepts feasible configs", {
     end = integer(0),
     stringsAsFactors = FALSE
   )
-  expect_invisible(.assert_feasible_limit(genes, limit = 50000L, shift_by = 1L))
+  expect_invisible(.assert_feasible_limit(genes, limit = 50000L, clearance = 1L))
 })
 
 test_that(".process_single_region handles basic regions", {

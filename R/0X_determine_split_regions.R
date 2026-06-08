@@ -3,9 +3,9 @@
 #' Builds BED-like split intervals from genomic regions and GTF gene
 #' annotations. If the start position in a genomic region is not 0, it is
 #' assumed to mark the start of a centromere and the region is split around
-#' that point. Proposed boundaries are shifted rightward when they fall inside
-#' gene intervals, and oversized chunks are repeatedly re-split until all
-#' segments satisfy the requested size limit.
+#' that point. Proposed boundaries are shifted rightward when they fall too
+#' close to gene intervals, and oversized chunks are repeatedly re-split until
+#' all segments satisfy the requested size limit.
 #'
 #' @param bed Path to a 3-column BED-like file (chr, start, end).
 #'   Columns should be TAB-delimited with chromosome name, region start
@@ -17,18 +17,22 @@
 #' @param limit Maximum allowed width (bp) for output intervals.
 #'   Defaults to 2^29 (536,870,912 bp). Must be larger than any single gene
 #'   plus the shift distance.
-#' @param shift_by Number of base pairs to shift a boundary right when it falls
-#'   inside a gene. Defaults to 1 bp.
+#' @param shift_by Step size (bp) used to iteratively walk boundaries to the
+#'   right when they violate gene clearance rules. Defaults to 1 bp.
+#' @param clearance Minimum required clearance (bp) between split boundaries
+#'   and gene intervals on both sides. Defaults to 1 bp.
 #'
 #' @return Invisible character: path to the written BED file.
 #'
 #' @details
 #' The function performs the following steps:
 #' 1. Reads genomic regions and gene annotations from input files.
-#' 2. Checks that the provided `limit` is feasible given gene positions.
+#' 2. Checks that the provided `limit` is feasible given gene positions and
+#'    requested two-sided boundary clearance.
 #' 3. For each region, splits it at the centromere (if start > 0) and applies
 #'    the size limit.
-#' 4. Adjusts boundaries that fall within genes by shifting them right.
+#' 4. Adjusts boundaries so each is at least `clearance` bp away from genes on
+#'    both sides, moving by `shift_by` bp per iteration when needed.
 #' 5. Iteratively subdivides intervals exceeding the limit until all intervals
 #'    satisfy the constraint.
 #' 6. Writes final split regions to BED file in the active \R session's
@@ -38,20 +42,22 @@
 #'   # load example files from this package and write the output bed file to
 #'   # R's tempdir()
 #'
-#'   chromosomes <- system.file("extdata/A3_toy_centromeres.bed",
+#'   chromosomes <- system.file("extdata",
+#'                    "IN0_toy_centromeres_for_gtf.bed",
 #'                    package = "scShardSplitRef",
 #'                    mustWork = TRUE)
-#'
-#'   genes <- system.file("extdata/A3_toy_all_scenarios_2chr.gtf",
+#'   genes <- system.file("extdata",
+#'              "A3_toy_all_scenarios_2chr.gtf",
 #'              package = "scShardSplitRef",
 #'              mustWork = TRUE)
 #'
 #'   determine_split_regions(
 #'     bed = chromosomes,
 #'     gtf = genes,
-#'     output_bed = file.path(tempdir(), "A3_toy_split_regions.bed"),
+#'     output_bed = file.path(tempdir(), "split_regions.bed"),
 #'     limit = 2L^29L,
-#'     shift_by = 1L
+#'     shift_by = 1L,
+#'     clearance = 1L
 #'   )
 #' @autoglobal
 #' @export
@@ -60,12 +66,33 @@ determine_split_regions <- function(
   gtf,
   output_bed,
   limit = 2L^29L,
-  shift_by = 1L
+  shift_by = 1L,
+  clearance = 1L
 ) {
+  if (!is.numeric(shift_by) || length(shift_by) != 1L || is.na(shift_by) ||
+    shift_by < 1L) {
+    cli::cli_abort(
+      call = rlang::caller_env(),
+      "{.arg shift_by} must be a single numeric value >= 1."
+    )
+  }
+
+  if (!is.numeric(clearance) || length(clearance) != 1L ||
+    is.na(clearance) || clearance < 0L) {
+    cli::cli_abort(
+      call = rlang::caller_env(),
+      "{.arg clearance} must be a single numeric value >= 0."
+    )
+  }
+
+  shift_by <- as.integer(shift_by)
+  clearance <- as.integer(clearance)
+
   cli::cli_inform(
     "Preparing split regions from {.file bed} and \\
      {.file gtf} into {.file output_bed} \\
-     ({.var limit} = {limit}, {.var shift_by} = {shift_by}). 
+     ({.var limit} = {limit}, {.var shift_by} = {shift_by}, \
+     {.var clearance} = {clearance}). 
     \n
     \n"
   )
@@ -74,12 +101,12 @@ determine_split_regions <- function(
   genes <- .read_gtf_file(gtf)
   genes <- genes[genes$feature == "gene", , drop = FALSE]
 
-  .assert_feasible_limit(genes, limit, shift_by)
+  .assert_feasible_limit(genes, limit, clearance)
 
   split_regions <- lapply(
     seq_len(nrow(regions)),
     function(i) {
-      .process_single_region(regions[i, ], genes, limit, shift_by)
+      .process_single_region(regions[i, ], genes, limit, shift_by, clearance)
     }
   )
 
@@ -246,8 +273,10 @@ determine_split_regions <- function(
 #' @param genes Data frame with gene annotations including 'chr', 'start',
 #'  'end'.
 #' @param limit Integer: maximum allowed interval width in base pairs.
-#' @param shift_by Integer: base pairs to shift a boundary right when inside a
-#'  gene.
+#' @param shift_by Integer: step size (bp) used to walk boundaries rightward
+#'  when clearance is violated.
+#' @param clearance Integer: minimum required clearance (bp) from nearby genes
+#'  on both sides.
 #'
 #' @return Data frame with columns 'chr', 'start', 'end' representing the
 #'   processed split intervals for this region.
@@ -264,11 +293,18 @@ determine_split_regions <- function(
 #'   genes_subset <- genes[genes$chr == "chr1", ]
 #'   result <- .process_single_region(region, genes_subset,
 #'                                    limit = 50000,
-#'                                    shift_by = 1)
+#'                                    shift_by = 1,
+#'                                    clearance = 1)
 #' }
 #'
 #' @dev
-.process_single_region <- function(region, genes, limit, shift_by) {
+.process_single_region <- function(
+  region,
+  genes,
+  limit,
+  shift_by,
+  clearance = 1L
+) {
   chr <- region$chr
   region_start <- as.integer(region$start)
   region_end <- as.integer(region$end)
@@ -286,7 +322,7 @@ determine_split_regions <- function(
 
   # Fix boundaries that fall inside genes
   chr_genes <- genes[genes$chr == chr, , drop = FALSE]
-  .fix_split_boundaries(split_df, chr_genes, limit, shift_by)
+  .fix_split_boundaries(split_df, chr_genes, limit, shift_by, clearance)
 }
 
 #' Validate BED coordinate format
@@ -465,15 +501,18 @@ determine_split_regions <- function(
 #' @param chr_genes Data frame with gene annotations for the same chromosome,
 #'   including columns 'start', 'end'.
 #' @param limit Integer: maximum allowed interval width in base pairs.
-#' @param shift_by Integer: base pairs to shift a boundary right when inside
-#'   a gene. Defaults to 1L.
+#' @param shift_by Integer: step size (bp) used to walk boundaries rightward
+#'   when clearance is violated. Defaults to 1L.
+#' @param clearance Integer: minimum required clearance (bp) from nearby genes
+#'   on both sides. Defaults to 1L.
 #'
 #' @return Data frame with same structure as `split_df` but with adjusted
 #'   boundaries that satisfy the size and gene-avoidance constraints.
 #'
 #' @details
 #' The algorithm iteratively:
-#' 1. Shifts boundaries that fall inside genes rightward by shift_by bp
+#' 1. Shifts boundaries rightward in `shift_by` bp increments until they
+#'    satisfy the `clearance` gene distance on both sides
 #' 2. Subdivides intervals exceeding the limit
 #' 3. Shifts again after subdivision
 #' 4. Repeats until convergence
@@ -483,12 +522,18 @@ determine_split_regions <- function(
 #' @examples
 #' \dontrun{
 #'   fixed_df <- fix_split_boundaries(
-#'     split_df, chr_genes, limit = 50000, shift_by = 1
+#'     split_df, chr_genes, limit = 50000, shift_by = 1, clearance = 1
 #'   )
 #' }
 #'
 #' @dev
-.fix_split_boundaries <- function(split_df, chr_genes, limit, shift_by = 1L) {
+.fix_split_boundaries <- function(
+  split_df,
+  chr_genes,
+  limit,
+  shift_by = 1L,
+  clearance = 1L
+) {
   if (nrow(split_df) <= 1L || nrow(chr_genes) == 0L) {
     return(split_df)
   }
@@ -503,7 +548,8 @@ determine_split_regions <- function(
     gene_ranges,
     chr_end,
     limit,
-    shift_by
+    shift_by,
+    clearance
   )
 
   .validate_final_intervals(boundaries, chr_end, limit, chr)
@@ -520,7 +566,9 @@ determine_split_regions <- function(
 #'  'end').
 #' @param chr_end Integer: chromosome end coordinate.
 #' @param limit Integer: maximum allowed interval width.
-#' @param shift_by Integer: base pairs to shift right when inside a gene.
+#' @param shift_by Integer: step size (bp) for rightward boundary updates.
+#' @param clearance Integer: minimum required clearance (bp) from nearby genes
+#'   on both sides.
 #' @param max_iter Integer: maximum number of iterations. Defaults to 100L.
 #'
 #' @return Integer vector: refined boundary positions after convergence or
@@ -537,7 +585,7 @@ determine_split_regions <- function(
 #' @examples
 #' \dontrun{
 #'   refined <- .refine_boundaries(
-#'     c(100L, 200L), gene_ranges, 300L, 50L, 1L
+#'     c(100L, 200L), gene_ranges, 300L, 50L, 1L, 1L
 #'   )
 #' }
 #'
@@ -548,6 +596,7 @@ determine_split_regions <- function(
   chr_end,
   limit,
   shift_by,
+  clearance = 1L,
   max_iter = 100L
 ) {
   for (iter in seq_len(max_iter)) {
@@ -558,7 +607,8 @@ determine_split_regions <- function(
       boundaries,
       gene_ranges,
       chr_end,
-      shift_by
+      shift_by,
+      clearance
     )
 
     # Subdivide oversized intervals
@@ -572,7 +622,8 @@ determine_split_regions <- function(
       boundaries,
       gene_ranges,
       chr_end,
-      shift_by
+      shift_by,
+      clearance
     )
 
     # Check convergence
@@ -672,14 +723,17 @@ determine_split_regions <- function(
 
 #' Shift boundaries past genes
 #'
-#' Adjusts a vector of boundaries that fall inside gene intervals by shifting
-#' them rightward. Each boundary is independently shifted until it no longer
-#' overlaps any gene. Results are deduplicated and filtered.
+#' Adjusts a vector of boundaries that fall too close to gene intervals by
+#' shifting them rightward. Each boundary is independently shifted until it
+#' satisfies the requested clearance around genes. Results are deduplicated and
+#' filtered.
 #'
 #' @param boundaries Integer vector: boundary positions to adjust.
 #' @param gene_ranges Data frame with gene ranges (columns 'start', 'end').
 #' @param chr_end Integer: chromosome end coordinate (upper bound).
-#' @param shift_by Integer: base pairs to shift right per iteration.
+#' @param shift_by Integer: step size (bp) for rightward boundary updates.
+#' @param clearance Integer: minimum required clearance (bp) from nearby genes
+#'   on both sides.
 #'   Defaults to 1L.
 #'
 #' @return Integer vector: adjusted, deduplicated, and filtered boundaries.
@@ -688,7 +742,7 @@ determine_split_regions <- function(
 #' @examples
 #' \dontrun{
 #'   shifted <- .shift_boundaries_past_genes(
-#'     c(60L, 150L), gene_ranges, 300L, shift_by = 1L
+#'     c(60L, 150L), gene_ranges, 300L, shift_by = 1L, clearance = 1L
 #'   )
 #' }
 #'
@@ -697,7 +751,8 @@ determine_split_regions <- function(
   boundaries,
   gene_ranges,
   chr_end,
-  shift_by = 1L
+  shift_by = 1L,
+  clearance = 1L
 ) {
   if (length(boundaries) == 0L || nrow(gene_ranges) == 0L) {
     return(boundaries)
@@ -709,7 +764,8 @@ determine_split_regions <- function(
     FUN.VALUE = integer(1L),
     gene_ranges = gene_ranges,
     chr_end = chr_end,
-    shift_by = shift_by
+    shift_by = shift_by,
+    clearance = clearance
   )
 
   shifted <- sort(unique(shifted))
@@ -718,13 +774,16 @@ determine_split_regions <- function(
 
 #' Shift a single boundary past genes
 #'
-#' Adjusts one boundary position that falls inside gene intervals by
-#' iteratively shifting it rightward until it no longer overlaps any gene.
+#' Adjusts one boundary position that falls inside or too close to gene
+#' intervals by iteratively shifting it rightward until it satisfies the
+#' requested clearance around genes.
 #'
 #' @param boundary Integer: initial boundary position.
 #' @param gene_ranges Data frame with gene ranges (columns 'start', 'end').
 #' @param chr_end Integer: chromosome end coordinate (upper bound).
-#' @param shift_by Integer: base pairs to shift right per iteration.
+#' @param shift_by Integer: step size (bp) for rightward boundary updates.
+#' @param clearance Integer: minimum required clearance (bp) from nearby genes
+#'   on both sides.
 #'
 #' @return Integer: adjusted boundary position. May be the original position
 #'   if it did not overlap any gene, or identical to its start position if
@@ -732,19 +791,37 @@ determine_split_regions <- function(
 #'
 #' @examples
 #' \dontrun{
-#'   adjusted <- .shift_single_boundary(60L, gene_ranges, 300L, 1L)
+#'   adjusted <- .shift_single_boundary(60L, gene_ranges, 300L, 1L, 1L)
 #' }
 #'
 #' @dev
-.shift_single_boundary <- function(boundary, gene_ranges, chr_end, shift_by) {
-  repeat {
-    inside <- gene_ranges$start < boundary & gene_ranges$end >= boundary
+.shift_single_boundary <- function(
+  boundary,
+  gene_ranges,
+  chr_end,
+  shift_by,
+  clearance
+) {
+  if (shift_by < 1L) {
+    cli::cli_abort(
+      call = rlang::caller_env(),
+      "{.arg shift_by} must be >= 1 for iterative boundary updates."
+    )
+  }
 
-    if (!any(inside)) {
+  step <- as.integer(shift_by)
+  clearance <- as.integer(clearance)
+
+  repeat {
+    inside_clearance <-
+      boundary > (gene_ranges$start - clearance) &
+      boundary < (gene_ranges$end + clearance)
+
+    if (!any(inside_clearance)) {
       break
     }
 
-    updated <- as.integer(max(gene_ranges$end[inside])) + as.integer(shift_by)
+    updated <- boundary + step
 
     if (updated >= chr_end || updated <= boundary) {
       break
@@ -763,28 +840,31 @@ determine_split_regions <- function(
 #' Assert that the size limit is feasible
 #'
 #' Checks that the requested size `limit` is larger than any single gene
-#' (plus the shift distance). Raises an informative error if not feasible.
+#' with two-sided boundary clearance. Raises an informative error if not
+#' feasible.
 #'
 #' @param genes Data frame with gene annotations (columns 'chr', 'start',
 #'  'end').
 #' @param limit Integer: requested maximum interval width.
-#' @param shift_by Integer: base pairs to shift right when inside a gene.
+#' @param clearance Integer: minimum required clearance (bp) from nearby genes
+#'   on both sides.
 #'
 #' @return Invisible TRUE if feasible. Raises error with remediation advice
 #'   if not.
 #'
 #' @details
 #' First merges overlapping genes per chromosome, then checks if any merged
-#' range (plus shift_by) exceeds the limit. Reports the worst (largest) blocking
-#' interval and suggests an appropriate minimum limit value.
+#' range plus two-sided clearance (2 * `clearance`) exceeds the limit. Reports
+#' the worst (largest) blocking interval and suggests an appropriate minimum
+#' limit value.
 #'
 #' @examples
 #' \dontrun{
-#'   .assert_feasible_limit(genes, limit = 50000, shift_by = 1)
+#'   .assert_feasible_limit(genes, limit = 50000, clearance = 1)
 #' }
 #'
 #' @dev
-.assert_feasible_limit <- function(genes, limit, shift_by) {
+.assert_feasible_limit <- function(genes, limit, clearance) {
   if (nrow(genes) == 0L) {
     return(invisible(TRUE))
   }
@@ -798,7 +878,7 @@ determine_split_regions <- function(
     })
   )
 
-  blocked_width <- merged$end - merged$start + as.integer(shift_by)
+  blocked_width <- merged$end - merged$start + (2L * as.integer(clearance))
   max_blocked <- max(blocked_width, na.rm = TRUE)
 
   if (limit < max_blocked) {
@@ -806,10 +886,10 @@ determine_split_regions <- function(
     cli::cli_abort(
       call = rlang::caller_env(),
       c(
-        x = "Limit {limit} is smaller than largest blocked gene \\
+        x = "Limit {limit} is smaller than largest blocked gene+clearance \\
                interval ({max_blocked} bp).",
         i = "Worst interval: {worst$chr}:{worst$start}-{worst$end}",
-        i = "Increase limit to at least {max_blocked}."
+        i = "Increase limit to at least {max_blocked} (gene width + 2*clearance)."
       )
     )
   }

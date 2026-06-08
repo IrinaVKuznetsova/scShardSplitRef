@@ -4,7 +4,13 @@
 \alias{.shift_boundaries_past_genes}
 \title{Shift boundaries past genes}
 \usage{
-.shift_boundaries_past_genes(boundaries, gene_ranges, chr_end, shift_by = 1L)
+.shift_boundaries_past_genes(
+  boundaries,
+  gene_ranges,
+  chr_end,
+  shift_by = 1L,
+  clearance = 1L
+)
 }
 \arguments{
 \item{boundaries}{Integer vector: boundary positions to adjust.}
@@ -13,7 +19,10 @@
 
 \item{chr_end}{Integer: chromosome end coordinate (upper bound).}
 
-\item{shift_by}{Integer: base pairs to shift right per iteration.
+\item{shift_by}{Integer: step size (bp) for rightward boundary updates.}
+
+\item{clearance}{Integer: minimum required clearance (bp) from nearby genes
+on both sides.
 Defaults to 1L.}
 }
 \value{
@@ -21,14 +30,15 @@ Integer vector: adjusted, deduplicated, and filtered boundaries.
 Values outside (0, chr_end) are removed.
 }
 \description{
-Adjusts a vector of boundaries that fall inside gene intervals by shifting
-them rightward. Each boundary is independently shifted until it no longer
-overlaps any gene. Results are deduplicated and filtered.
+Adjusts a vector of boundaries that fall too close to gene intervals by
+shifting them rightward. Each boundary is independently shifted until it
+satisfies the requested clearance around genes. Results are deduplicated and
+filtered.
 }
 \examples{
 \dontrun{
   shifted <- .shift_boundaries_past_genes(
-    c(60L, 150L), gene_ranges, 300L, shift_by = 1L
+    c(60L, 150L), gene_ranges, 300L, shift_by = 1L, clearance = 1L
   )
 }
 

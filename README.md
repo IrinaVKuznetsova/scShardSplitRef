@@ -116,15 +116,11 @@ CAJHDD010000005.1       0       517010
 
 ## Usage Guide
 A step-by-step guide can be found in the vignettes:
-**<-- TODO: Provide the coreect link once its ready!!!!! ---!>**
-- **Toy example:** a quick introduction to understand what the package does: [vignette toy](vignettes/scShardSplitRefDetailedToy.Rmd) 
-- **Real-world example: barley** *(diploid, chromosome length exceeds allowed size)* [vignette barley](vignettes/scShardSplitRef_RealData.Rmd) 
+- **Toy example:** a quick introduction to understand the split algorithm: [vignette toy](vignettes/scShardSplitRefDetailedAlgorithm.Rmd) 
+- **Real-world example: barley** *(diploid, chromosome length exceeds allowed size)* [vignette barley](vignettes/scShardSplitRefQuickStart.Rmd) 
 - **Real-world example: XXX** *(hexaploid, chromosome length exceeds allowed size)* [vignette XX](vignettes/)   **<-- TODO: place holder for Luca's testing species --!>**
 
-**<-- TODO: come up with a descriptive name in brackets for each tutorial.--!>**
-
-
-
+> Note on parameter selection in *determine_split_regions()*. In real world scenarios users should consider picking  `clearance = 900 (2 x 150 bp reads with up to a 600 bp insert size)`, and `shift_by in the region of 1000 to 4000` to ensure the algorithm can easily walk through a whole gene if needed.
 
 
 ## Citation
@@ -168,4 +164,3 @@ Remember that improving tools is important, but keeping them neat and not over-c
 This work was supported by resources provided by the [Pawsey Supercomputing Research Centres](https://pawsey.org.au/) Nimbus Research Cloud (https://doi.org/10.48569/v0j3-qd51), with funding from the Australian Government and the Government of Western Australia.
 
 GRDC (?)
-

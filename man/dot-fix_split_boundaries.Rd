@@ -4,7 +4,13 @@
 \alias{.fix_split_boundaries}
 \title{Fix split boundaries to avoid genes}
 \usage{
-.fix_split_boundaries(split_df, chr_genes, limit, shift_by = 1L)
+.fix_split_boundaries(
+  split_df,
+  chr_genes,
+  limit,
+  shift_by = 1L,
+  clearance = 1L
+)
 }
 \arguments{
 \item{split_df}{Data frame with columns 'chr', 'start', 'end' representing
@@ -15,8 +21,11 @@ including columns 'start', 'end'.}
 
 \item{limit}{Integer: maximum allowed interval width in base pairs.}
 
-\item{shift_by}{Integer: base pairs to shift a boundary right when inside
-a gene. Defaults to 1L.}
+\item{shift_by}{Integer: step size (bp) used to walk boundaries rightward
+when clearance is violated. Defaults to 1L.}
+
+\item{clearance}{Integer: minimum required clearance (bp) from nearby genes
+on both sides. Defaults to 1L.}
 }
 \value{
 Data frame with same structure as \code{split_df} but with adjusted
@@ -30,7 +39,8 @@ until all constraints are satisfied.
 \details{
 The algorithm iteratively:
 \enumerate{
-\item Shifts boundaries that fall inside genes rightward by shift_by bp
+\item Shifts boundaries rightward in \code{shift_by} bp increments until they
+satisfy the \code{clearance} gene distance on both sides
 \item Subdivides intervals exceeding the limit
 \item Shifts again after subdivision
 \item Repeats until convergence
@@ -41,7 +51,7 @@ Raises an error if constraints cannot be satisfied.
 \examples{
 \dontrun{
   fixed_df <- fix_split_boundaries(
-    split_df, chr_genes, limit = 50000, shift_by = 1
+    split_df, chr_genes, limit = 50000, shift_by = 1, clearance = 1
   )
 }
 
