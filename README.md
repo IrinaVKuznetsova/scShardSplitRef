@@ -10,7 +10,7 @@ output: github_document
 ## **scShardSplitRef**  
 *scShardSplitRef* designed for researchers working with multiome single-cell data from species that require building a custom reference genome, particularly when one or more chromosomes/contigs in the reference FASTA exceed the Cell Ranger ARC limit of 536.8Mb (2\^29 bases). *scShardSplitRef* enables splitting of long chromosomes/contigs generating shorter fragments that are compitable with Cell Ranger ARC requirements. The *scShardSplitRef* package outputs GTF file containing the split chromosomes/contigs, which can be directly processed by `cellranger-arc mkref`. We also provide guidance on how to split a FASTA file used by `cellranger-arc mkref` using bedtools.
 
-To familiarise yourself with the package and the workflow for preparing reference genome sequence (FASTA) and gene annotation (GTF) files for Cell Ranger ARC, we suggest starting with the algorithm [description](vignettes/scShardSplitRefDetailedToy.Rmd) and [a guided walk through](vignettes/scShardSplitRef_RealData.Rmd).   **<-- TODO: add correct link after merging branches-->**
+To familiarise yourself with the package and the workflow for preparing reference genome sequence (FASTA) and gene annotation (GTF) files for Cell Ranger ARC, we suggest starting with the algorithm [description](vignettes/scShardSplitRefDetailedAlgorithm.Rmd) and [a guided walk through](vignettes/scShardSplitRefQuickStart.Rmd).   **<-- TODO: add correct link after merging branches-->**
 
 
 ## **Problem Overview**  
@@ -55,11 +55,13 @@ library("knitr") # used for a kable table later in the document
 <summary><b>What does a GTF file for MOREX V3 look like?</b></summary>
 
 ```r
-# Gene annotations (GTF) file: 
-gtf_df <- read.table(file = "01_Hordeum_vulgare.Mt_Pt_v49_Barley_v62_COMBINED.gtf",
+# Gene annotations (GTF) file:
+gtf_df <- read.table(
+  file = "01_Hordeum_vulgare.Mt_Pt_v49_Barley_v62_COMBINED.gtf",
   header = FALSE,
-  sep = "\t")
-dim(gtf_df)     ### 524562 x 9
+  sep = "\t"
+)
+dim(gtf_df) ### 524562 x 9
 gtf_df[1:10, ]
 ```
 The format of the GTF file *(01_Hordeum_vulgare.Mt_Pt_v49_Barley_v62_COMBINED.gtf)* is a tab-delimited 9-column file. 
@@ -82,12 +84,14 @@ The format of the GTF file *(01_Hordeum_vulgare.Mt_Pt_v49_Barley_v62_COMBINED.gt
 
 <summary><b>What does a BED-like centromere file for MOREX V3 look like?</b></summary>
 
-```r
-# Manually formatted BED-like file: 
-centr_bed_df <- read.table(file = "02_MorexV3_centromere_coordinates.bed",
+```{r}
+# Manually formatted BED-like file:
+centr_bed_df <- read.table(
+  file = "02_MorexV3_centromere_coordinates.bed",
   header = FALSE,
-  sep = "\t")
-dim(centr_bed_df)  ## 292 x 3
+  sep = "\t"
+)
+dim(centr_bed_df) ## 292 x 3
 centr_bed_df[1:10, ]
 ```
 The format of the centromere coordinates file is a tab-delimited 3-column file, where the 1st column contains chromosome/contig names, the 2nd column contains the centromere coordinate or if not available '0', and the 3rd column contains chromosome/contig region end coordinates.
@@ -125,20 +129,20 @@ A step-by-step guide can be found in the vignettes:
 
 ## Citation
 Please cite this tool if you use it
-``` r
+```r
 library("scShardSplitRef")
 citation("scShardSplitRef")
 
 #> Warning in citation("scShardSplitRef"): could not determine year for 'scShardSplitRef'
 #> from package DESCRIPTION file
 #> To cite package 'scShardSplitRef' in publications use:
-#> 
+#>
 #>   Kuznetsova I, Pembleton L, Curci L, Sparks A (????). _scShardSplitRef: Build
 #>   Custom Reference Genome for Single-Cell Multiome ATAC and Gene Expression Data
 #>   of Large-genome Species._. R package version 0.0.0.9000.
-#> 
+#>
 #> A BibTeX entry for LaTeX users is
-#> 
+#>
 #>   @Manual{,
 #>     title = {scShardSplitRef: Build Custom Reference Genome for Single-Cell Multiome ATAC and
 #> Gene Expression Data of Large-genome Species.},
@@ -161,6 +165,7 @@ Remember that improving tools is important, but keeping them neat and not over-c
 
 
 ## Acknowledgements  
+
 This work was supported by resources provided by the [Pawsey Supercomputing Research Centres](https://pawsey.org.au/) Nimbus Research Cloud (https://doi.org/10.48569/v0j3-qd51), with funding from the Australian Government and the Government of Western Australia.
 
-GRDC (?)
+GRDC funded this project through the Analytics for the Australian Grains Industry (AAGI) investment, CUR2210-005OPX (AAGI-CU)
