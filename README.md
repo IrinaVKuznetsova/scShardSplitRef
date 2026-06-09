@@ -10,7 +10,7 @@ output: github_document
 ## **scShardSplitRef**  
 *scShardSplitRef* designed for researchers working with multiome single-cell data from species that require building a custom reference genome, particularly when one or more chromosomes/contigs in the reference FASTA exceed the Cell Ranger ARC limit of 536.8Mb (2\^29 bases). *scShardSplitRef* enables splitting of long chromosomes/contigs generating shorter fragments that are compitable with Cell Ranger ARC requirements. The *scShardSplitRef* package outputs GTF file containing the split chromosomes/contigs, which can be directly processed by `cellranger-arc mkref`. We also provide guidance on how to split a FASTA file used by `cellranger-arc mkref` using bedtools.
 
-To familiarise yourself with the package and the workflow for preparing reference genome sequence (FASTA) and gene annotation (GTF) files for Cell Ranger ARC, we suggest starting with the algorithm [description](vignettes/scShardSplitRefDetailedAlgorithm.Rmd) and [a guided walk through](vignettes/scShardSplitRef_RealData.Rmd).   **<-- TODO: add correct link after merging branches-->**
+To familiarise yourself with the package and the workflow for preparing reference genome sequence (FASTA) and gene annotation (GTF) files for Cell Ranger ARC, we suggest starting with the algorithm [description](vignettes/scShardSplitRefDetailedAlgorithm.Rmd) and [a guided walk through](vignettes/scShardSplitRef_RealData.Rmd).   
 
 
 ## **Problem Overview**  
@@ -19,7 +19,7 @@ To familiarise yourself with the package and the workflow for preparing referenc
 [Source: 10x Genomics Documentation](https://www.10xgenomics.com/support/software/cell-ranger-arc/latest/analysis/inputs/mkref)   
 
 
->![screenshot of the error](man/figures/scr_10x_CR_arc_error.png)     **<-- TODO: add correct link after merging branches-->**
+>![screenshot of the error](man/figures/scr_10x_CR_arc_error.png)    
 
 
 For example, the barley genome has several chromosomes (*2H = 665.59 Mb, 3H = 621.52 Mb, 4H = 610.33 Mb, 5H = 588.22 Mb, 6H = 561.79 Mb, 7H = 632.54 Mb*) that exceed this size limit. As a result, `cellranger-arc mkref` cannot build a reference unless the oversized chromosomes are divided into smaller fragments.  
@@ -120,7 +120,7 @@ CAJHDD010000005.1       0       517010
 
 ## Usage Guide
 A step-by-step guide can be found in the vignettes:
-- **Toy example:** a quick introduction to understand the split algorithm: [vignette toy](vignettes/scShardSplitRefDetailedAlgorithm.Rmd) 
+- **Toy example (algorithm):** a quick introduction to understand the **split algorithm**: [vignette toy](vignettes/scShardSplitRefDetailedAlgorithm.Rmd) 
 - **Real-world example: barley** *(diploid, chromosome length exceeds allowed size)* [vignette barley](vignettes/scShardSplitRef_RealData.Rmd) 
 - **Real-world example: XXX** *(hexaploid, chromosome length exceeds allowed size)* [vignette XX](vignettes/)   **<-- TODO: place holder for Luca's testing species --!>**
 

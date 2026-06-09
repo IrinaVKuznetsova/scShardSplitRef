@@ -8,13 +8,13 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-## Package overview
+## Package Overview
 
 {scShardSplitRef} designed for researchers working with multiome single-cell data from species that require building a custom reference genome, particularly when one or more chromosomes/contigs in the reference FASTA exceed the Cell Ranger ARC limit of `536.8Mb (2\^29 bases)`. {scShardSplitRef} enables splitting of long chromosomes/contigs generating shorter fragments that are compitable with Cell Ranger ARC requirements. The software outputs FASTA and GTF files containing the split chromosomes/contigs, which can be directly processed by `cellranger-arc mkref`.
 
-To familiarise yourself with the package and workflow of preparing reference genome sequence (FASTA file) and gene annotations (GTF file) for Cell Ranger ARC we suggest starting with a \@ref(guided-walk-through). In this tutorial we are using barley genome (MOREX V3). Example data files are distributed with the package for example purposes.
+To familiarise yourself with the package and workflow of preparing reference genome sequence (FASTA file) and gene annotations (GTF file) for Cell Ranger ARC we suggest starting with the [Guided Walk-Through](#guided-walk-through). In this tutorial we are using barley genome (MOREX V3). Example data files are distributed with the package for example purposes.
 
-## Guided walk through {#guided-walk-through}
+## Guided Walk-Through {#guided-walk-through}
 
 ### Installation
 
@@ -31,7 +31,7 @@ library("knitr") # used for a kable table later in the document
 | bedtools        | ≥ 2.30  | BED file operations             |
 | Cell Ranger ARC | ≥ 2.0   | Single-cell multiome processing |
 
-### Input files
+### Input Files
 
 | File                   | Format   | Description                             |
 |------------------|---------------------|---------------------------------|
@@ -132,7 +132,7 @@ centr_bed_df[1:10, ]
 
 </details>
 
-## Step-by-step Guide
+## Step-by-Step Guide
 
 We begin by assessing the formatting of the input GTF and BED files provided by the user, followed by checking and, if necessary, modifying the split coordinates in the BED file. The GTF file is then updated according to the split position. Finally, the FASTA file is split and formatted for compatibility with Cell Ranger ARC. All files need to be decompressed.
 
@@ -140,13 +140,13 @@ We begin by assessing the formatting of the input GTF and BED files provided by 
 
 The first function called `validate_inputs()`, checks FASTA and BED-like input files. The centromere coordinate file is manually created in BED-like format and should be tab-delimited. All files need to be decompressed.
 
-#### The help page for the validate_inputs()
+#### The Help Page for the `validate_inputs()`
 
 ``` r {r, eval=FALSE}
 ?validate_inputs
 ```
 
-#### Validate (FASTA and BED) input files
+#### Validate (FASTA and BED) Input Files
 
 
 ``` r
@@ -184,14 +184,14 @@ kable(input_verif$gtf[1:5,])
 
 The next step is to prepare split coordinates in appropriate BED-like format. This function ensures that chromosomes are not split in the middle of a gene region. 
 
-### The help page for the `determine_split_regions()` function
+### The Help Page for the `determine_split_regions()` Function
 
 
 ``` r
 ?determine_split_regions
 ```
 
-#### Define output directory
+#### Define Output Directory
 
 
 ``` r
@@ -259,14 +259,14 @@ split_region_bed_df[1:10, ]
 
 Generate a gene annotation (GTF) file in compatible to Cell Ranger ARC format. The first column of the GTF file should be in the following form `Chr-RegionStart-RegionEnd`. Note that the output file name is hardcoded and starts with "B1_FINAL_MODIFIED_GTF\_[*genome_name*]\_[*genome_version*].gtf".
 
-#### The help page for the `process_gtf()` function
+#### The Help Page for the `process_gtf()` Function
 
 
 ``` r
 ?process_gtf
 ```
 
-#### Generate gene annotation (GTF) file in compatible to Cell Ranger ARC format
+#### Generate Gene Annotation (GTF) File in Compatible to Cell Ranger ARC Format
 
 
 ``` r
@@ -385,7 +385,7 @@ TCCCACTAAACATGT...
 
 The genome sequence (FASTA) and gene annotation (GTF) files are now split and formatted for Cell Ranger ARC. The file paths are specified in the `.config` file and Cell Ranger ARC can now be run.
 
-#### Prepare config file
+#### Prepare `config` File
 
 ``` bash
 cat 03_cellranger_arc_barley.config
@@ -412,7 +412,7 @@ cellranger-arc mkref \
   >mkref.log 2>&1
 ```
 
-## R package session information
+## R package Session Information
 
 <details>
 
