@@ -1,565 +1,482 @@
 ---
 title: "scShardSplitRef"
 author: "Irina Kuznetsova"
-output: rmarkdown::html_vignette    ####html_vignette
+output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{scShardSplitRef}
-  %\VignetteEngine{knitr::rmarkdown_notangle}
+  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
-)
-devtools::load_all() #### delete after publishing
-```
+## Package overview
 
-## 1. Purpose
+{scShardSplitRef} designed for researchers working with multiome single-cell data from species that require building a custom reference genome, particularly when one or more chromosomes/contigs in the reference FASTA exceed the Cell Ranger ARC limit of `536.8Mb (2\^29 bases)`. {scShardSplitRef} enables splitting of long chromosomes/contigs generating shorter fragments that are compitable with Cell Ranger ARC requirements. The software outputs FASTA and GTF files containing the split chromosomes/contigs, which can be directly processed by `cellranger-arc mkref`.
 
-This toy dataset provides a minimal example to demonstrate the logic of the algorithm that prepares reference files (GTF and FASTA) for `cellranger‑arc mkref`. It allows users to test the workflow without needing large genome files and helps confirm that the proposed workflow is functioning correctly. It also provides an example of how to use it.
+To familiarise yourself with the package and workflow of preparing reference genome sequence (FASTA file) and gene annotations (GTF file) for Cell Ranger ARC we suggest starting with a \@ref(guided-walk-through). In this tutorial we are using barley genome (MOREX V3). Example data files are distributed with the package for example purposes.
 
-## 2. {scShardSplitRef} Guided Walkthrough Using a Toy Example
+## Guided walk through {#guided-walk-through}
 
 ### Installation
 
-```{r setup}
+``` {r, eval=FALSE}
 library("scShardSplitRef")
 library("knitr") # used for a kable table later in the document
 ```
 
 ### Prerequisites
 
-| Software | Version | Purpose             |
-|----------|---------|---------------------|
-| bedtools | ≥ 2.30  | BED file operations |
+| Software        | Version | Purpose                         |
+|-----------------|---------|---------------------------------|
+| bedtools        | ≥ 2.30  | BED file operations             |
+| Cell Ranger ARC | ≥ 2.0   | Single-cell multiome processing |
 
-### Input Files
+### Input files
 
-| File | Format | Description | File Name |
-|------------------|------------------|------------------|------------------|
-| Gene annotations | GTF | Gene features and coordinates | extdata/AlgorithmToy.gtf |
-| Centromere coordinates | BED-like | Centromere positions per chromosome (x) | extdata/AlgorithmToy.bed |
+| File                   | Format   | Description                             |
+|------------------|---------------------|---------------------------------|
+| Genome sequence        | FASTA    | Reference genome sequence               |
+| Gene annotations       | GTF      | Gene features and coordinates           |
+| Centromere coordinates | BED-like | Centromere positions per chromosome (x) |
 
+> **(x) Note:** The second column in the BED-like file is assigned to the centromere coordinate, or 0 if this information is not accessible for your species. {scShardSplitRef} will then check for any overlaps with genic regions and generate the correct BED files for splitting.
 
+<br>
 
+For this tutorial, we will be using a genome sequence (FASTA) and gene annotations (GTF) of the barley genome (*Hordeum Vulgare, Morex V3*) available from [Ensembl](https://ftp.ensemblgenomes..ebi.ac.uk) and centromere coordinates from [GrainGenes](https://graingenes.org/GG3/content/morex-v3-files-2021).
 
-### Workflow
+<br>
 
-#### 1. Validate Input Files  
+<details>
 
-The first function called `validate_inputs()`, checks the correct format of (GTF and BED-like) input files.
+<summary><b>What does a GTF file for MOREX V3 look like?</b></summary>
 
--   **BED:** 3 columns, tab-delimited, no header, no comments format (this centromere coordinates file is created manually)
--   **GTF**: 9 columns, tab-delimited, lines beginning with `#` at the top of the file are treated as comments and allowed
--   All files need to be decompressed
+```  {r, eval=FALSE}
+# Gene annotations (GTF) file. The format of the GTF file is a tab-delimited 9-column file.
+# data.dir = "/inst/extdata/01_Hordeum_vulgare.Mt_Pt_v49_Barley_v62_COMBINED.gtf"
 
-##### The Help Page for *validate_inputs()*
+gtf_file <- system.file(
+  "extdata/01_Hordeum_vulgare.Mt_Pt_v49_Barley_v62_COMBINED.gtf",
+  package = "scShardSplitRef"
+  )
+gtf_df <- read.table(file = gtf_file, 
+                     header = FALSE, 
+                     sep = "\t"
+                     )
+dim(gtf_df)
+#> [1] 524562      9
+gtf_df[1:10, ]
+#>    V1  V2          V3        V4        V5 V6 V7 V8
+#> 1  2H IPK        gene 601169528 601171444  .  -  .
+#> 2  2H IPK  transcript 601169528 601171444  .  -  .
+#> 3  2H IPK        exon 601169754 601171444  .  -  .
+#> 4  2H IPK         CDS 601169754 601171444  .  -  0
+#> 5  2H IPK start_codon 601171442 601171444  .  -  0
+#> 6  2H IPK        exon 601169528 601169669  .  -  .
+#> 7  2H IPK         CDS 601169531 601169669  .  -  1
+#> 8  2H IPK  stop_codon 601169528 601169530  .  -  0
+#> 9  2H IPK        gene 161203690 161204337  .  -  .
+#> 10 2H IPK  transcript 161203690 161204337  .  -  .
+#>                                                                                                                                                                                                                                                                     V9
+#> 1                                                                                                                                                                                     gene_id HORVU.MOREX.r3.2HG0191020; gene_source IPK; gene_biotype protein_coding;
+#> 2                                                         gene_id HORVU.MOREX.r3.2HG0191020; transcript_id HORVU.MOREX.r3.2HG0191020.1; gene_source IPK; gene_biotype protein_coding; transcript_source IPK; transcript_biotype protein_coding; tag Ensembl_canonical;
+#> 3  gene_id HORVU.MOREX.r3.2HG0191020; transcript_id HORVU.MOREX.r3.2HG0191020.1; exon_number 1; gene_source IPK; gene_biotype protein_coding; transcript_source IPK; transcript_biotype protein_coding; exon_id HORVU.MOREX.r3.2HG0191020.1-E1; tag Ensembl_canonical;
+#> 4  gene_id HORVU.MOREX.r3.2HG0191020; transcript_id HORVU.MOREX.r3.2HG0191020.1; exon_number 1; gene_source IPK; gene_biotype protein_coding; transcript_source IPK; transcript_biotype protein_coding; protein_id HORVU.MOREX.r3.2HG0191020.1; tag Ensembl_canonical;
+#> 5                                          gene_id HORVU.MOREX.r3.2HG0191020; transcript_id HORVU.MOREX.r3.2HG0191020.1; exon_number 1; gene_source IPK; gene_biotype protein_coding; transcript_source IPK; transcript_biotype protein_coding; tag Ensembl_canonical;
+#> 6  gene_id HORVU.MOREX.r3.2HG0191020; transcript_id HORVU.MOREX.r3.2HG0191020.1; exon_number 2; gene_source IPK; gene_biotype protein_coding; transcript_source IPK; transcript_biotype protein_coding; exon_id HORVU.MOREX.r3.2HG0191020.1-E2; tag Ensembl_canonical;
+#> 7  gene_id HORVU.MOREX.r3.2HG0191020; transcript_id HORVU.MOREX.r3.2HG0191020.1; exon_number 2; gene_source IPK; gene_biotype protein_coding; transcript_source IPK; transcript_biotype protein_coding; protein_id HORVU.MOREX.r3.2HG0191020.1; tag Ensembl_canonical;
+#> 8                                          gene_id HORVU.MOREX.r3.2HG0191020; transcript_id HORVU.MOREX.r3.2HG0191020.1; exon_number 2; gene_source IPK; gene_biotype protein_coding; transcript_source IPK; transcript_biotype protein_coding; tag Ensembl_canonical;
+#> 9                                                                                                                                                                                     gene_id HORVU.MOREX.r3.2HG0134140; gene_source IPK; gene_biotype protein_coding;
+#> 10                                                        gene_id HORVU.MOREX.r3.2HG0134140; transcript_id HORVU.MOREX.r3.2HG0134140.1; gene_source IPK; gene_biotype protein_coding; transcript_source IPK; transcript_biotype protein_coding; tag Ensembl_canonical;
+```
 
-```{r, eval=FALSE}
+</details>
+
+<details>
+
+<summary><b>What does a BED-like centromere file for MOREX V3 look like?</b></summary>
+
+```  {r, eval=FALSE}
+# The format of the centromere coordinates file is a tab-delimited 3-column file, where 
+#   the 1st column contains chromosome/contig names, 
+#   the 2nd column contains the centromere coordinate (or 0 if this information is not available for your species), 
+#   the 3rd column contains the chromosome/contig end coordinates.
+# Manually formatted centromere file (please check the expected format below):
+# data.dir = "/inst/extdata/02_MorexV3_centromere_coordinates.bed"
+
+bed_file <- system.file(
+  "extdata/02_MorexV3_centromere_coordinates.bed",
+  package = "scShardSplitRef"
+  )
+centr_bed_df <- read.table(file = bed_file, 
+                           header = FALSE, 
+                           sep = "\t"
+                           )
+dim(centr_bed_df) ## 292 x 3
+#> [1] 292   3
+centr_bed_df[1:10, ]
+#>                   V1        V2        V3
+#> 1                 1H 206486643 516505932
+#> 2                 2H 301293086 665585731
+#> 3                 3H 267852507 621516506
+#> 4                 4H 276149121 610333535
+#> 5                 5H 204878572 588218686
+#> 6                 6H 256319444 561794515
+#> 7                 7H 328847192 632540561
+#> 8  CAJHDD010000004.1         0    972986
+#> 9  CAJHDD010000001.1         0    680018
+#> 10 CAJHDD010000005.1         0    517010
+```
+
+</details>
+
+## Step-by-step Guide
+
+We begin by assessing the formatting of the input GTF and BED files provided by the user, followed by checking and, if necessary, modifying the split coordinates in the BED file. The GTF file is then updated according to the split position. Finally, the FASTA file is split and formatted for compatibility with Cell Ranger ARC. All files need to be decompressed.
+
+### Step-1
+
+The first function called `validate_inputs()`, checks FASTA and BED-like input files. The centromere coordinate file is manually created in BED-like format and should be tab-delimited. All files need to be decompressed.
+
+#### The help page for the validate_inputs()
+
+``` r {r, eval=FALSE}
 ?validate_inputs
 ```
 
-##### Usage Example: *validate_inputs()* 
+#### Validate (FASTA and BED) input files
 
-```{r}
+``` {r, eval=FALSE}
+# Load MOREX V3 files
+# Note1: all files need to be decompressed for use in Cell Ranger
+# Note2: use correctly formatted BED file with centromere coordinates
 bed_path <- system.file(
-  "extdata/AlgorithmToy.bed",
+  "extdata/02_MorexV3_centromere_coordinates.bed",
   package = "scShardSplitRef"
-)
-
+  )
 gtf_path <- system.file(
-  "extdata/AlgorithmToy.gtf",
+  "extdata/01_Hordeum_vulgare.Mt_Pt_v49_Barley_v62_COMBINED.gtf",
   package = "scShardSplitRef"
-)
-
+  )
 # Validate input (FASTA and BED) files
-input_verif <- validate_inputs(bed = bed_path, gtf = gtf_path)
-kable(input_verif$bed)
-kable(input_verif$gtf[1:5, ])
+input_verif <- validate_inputs(bed = bed_path, 
+                               gtf = gtf_path
+                               )
+#> All files loaded and validated successfully.
+kable(input_verif$bed[1:5,])
 ```
 
-> If the GTF and BED formats are correct, a confirmation message will be printed to the console: *"All files loaded and validated successfully"*
 
 
+``` {r, eval=FALSE}
+kable(input_verif$gtf[1:5,])
+```
 
-#### 2. Determine Split Regions
 
-The next function called ```determine_split_regions()``` prepares split coordinates in appropriate BED-like format. This function ensures that chromosomes are not split in the middle of a gene region.
+> If GTF and BED formats are correct, a confirmation message will be printed to the console:\
+>  *"All files loaded and validated successfully"*
 
-##### The Help Page for *determine_split_regions()*
+### Step-2
 
-```{r, eval=FALSE}
+The next step is to prepare split coordinates in appropriate BED-like format. This function ensures that chromosomes are not split in the middle of a gene region. 
+
+### The help page for the `determine_split_regions()` function
+
+``` {r, eval=FALSE}
 ?determine_split_regions
 ```
 
+#### Define output directory
 
-**Input Data** 
-This function takes a BED file and a GTF file as input.
-
-
-**Parameters:**
-
-- `limit`: can be left as the default, which is the Cell Ranger ARC limit 
-of 2²⁹ (536,870,912 bp). For the purpose of this tutorial, to better 
-understand the algorithm, we set `limit=540`
-- `shift_by`: the step size used to move the split coordinate to the right 
-when searching for a safe location outside a genic region
-- `clearance`: a buffer that checks whether there is a clear region free of 
-genes on both sides of the proposed split coordinate
-
-
-##### Usage Example: *determine_split_regions()*
-
-In this example we use:
-```
-limit = 540L 
-shift_by = 30L 
-clearance = 40L
-```
-
-```{r}
-# Define input files directory
-bed_path <- system.file("extdata/AlgorithmToy.bed", package = "scShardSplitRef")
-
-gtf_path <- system.file("extdata/AlgorithmToy.gtf", package = "scShardSplitRef")
+``` {r, eval=FALSE}
+# Build BED-like split intervals using genomic regions (BED) and gene annotations (GTF) input files
 
 # Define output directory
-output_file <- file.path(tempdir(), "outdata")
-dir.create(output_file, recursive = TRUE, showWarnings = FALSE)
-output_file_name_dir <- file.path(
-  output_file,
-  "DetermineSplitReg_AlgorithmToy.bed"
-)
+output_file <- file.path(tempdir(), 
+                         "outdata"
+                         )
+dir.create(output_file, 
+           recursive = TRUE, 
+           showWarnings = FALSE
+           )
+output_file_name_dir <- file.path(output_file, 
+                                  "B1_Split_regions.bed"
+                                  )
 
 # Determine split regions
 get_split_reg <- determine_split_regions(
   bed = bed_path,
   gtf = gtf_path,
   output_bed = output_file_name_dir,
-  limit = 540L,
-  shift_by = 30L,
-  clearance = 40L
-)
+  limit = 2L^29L,
+  shift_by = 20L
+  )
+#> Preparing split regions from 'bed' and 'gtf' into 'output_bed' (`limit` = 536870912, `shift_by` = 20).
+#> Built 299 split intervals across 292 chromosomes and wrote them to 'output_bed'.
 
 get_split_reg
 ```
 
-<br>
-
-##### Algorithm Explanation: How *determine_split_regions()* works 
-  
-#### No Overlap with Gene Coordinates  
-The chromosome is split at that coordinate, producing two regions:
-
-- Left arm: from the beginning of the chromosome to the split coordinate
-- Right arm: from the split coordinate to the end of the chromosome
-
-> Note: If centromere locations are not provided (i.e., BED start position is `0` for a chromosome), the algorithm first creates provisional *even shards* based on `limit`. It then applies the same gene-clearance logic to each proposed split boundary, shifting boundaries as needed to avoid splitting through genic regions. 
-
-
 <details>
-<summary><b>Algorithm Visual (Chr0): Centromere in BED File Defined</b></summary>
-```
-chr0:	450-800
-Note, that each chromosome is defined by a coordinate range starting at 0. If a feature's start position is not 0, it indicates a split coordinate (centromere). In this example, 450 is the split coordinate (centromere), dividing the chromosome into two segments: 0–450 and 450–800.
-limit = 540 
-shift_by = 30 
-clearance = 40
 
-gene[G0]:	100-200
-```
+<summary><b>What does the generated BED file look like?</b></summary>
 
-      chr0: 0    100  200                       800
-            |-----|====|---------|--------------|
-                  [G0]           ^
-                                 |
-                              split (450)
-      
-            |<---- Left arm ---->|<-- Right arm ->|
-            
-            The centromere coordinate is define in the BED file (chr0:450-800)
-            Split coordinate 450 is below the `limit` and does not overlap with any gene coordinates 
-            Note: splitting first tries to use the centromere cooridnate, not the `limit`!!!
-            Final: split at centromere cooridnate 450 -> 1 split cooridnate (2 shards)   
+``` {r, eval=FALSE}
+bed_f <- system.file(
+  "outdata/B1_Split_regions.bed",
+  package = "scShardSplitRef"
+)
+split_region_bed_df <- read.table(file = bed_f, 
+                                  header = FALSE, 
+                                  sep = "\t"
+                                  )
+dim(split_region_bed_df)
+#> [1] 299   3
+split_region_bed_df[1:10, ]
+#>    V1        V2        V3
+#> 1  1H         0 206486643
+#> 2  1H 206486643 516505932
+#> 3  2H         0 301293086
+#> 4  2H 301293086 665585731
+#> 5  3H         0 267852507
+#> 6  3H 267852507 621516506
+#> 7  4H         0 276149121
+#> 8  4H 276149121 610333535
+#> 9  5H         0 204878572
+#> 10 5H 204878572 588218686
+```
 
 </details>
 
+### Step-3
 
+Generate a gene annotation (GTF) file in compatible to Cell Ranger ARC format. The first column of the GTF file should be in the following form `Chr-RegionStart-RegionEnd`. Note that the output file name is hardcoded and starts with "B1_FINAL_MODIFIED_GTF\_[*genome_name*]\_[*genome_version*].gtf".
 
-<details>
-<summary><b>Algorithm Visual (Chr1): Centromere in BED File Undefined</b></summary>
-```
-chr1:	0-820
-Note: If centromere locations are NOT provided (i.e., BED start position is `0` for a chromosome), the algorithm first creates provisional even shards based on `limit`. It then applies the same gene-clearance logic to each proposed split boundary, shifting boundaries as needed to avoid splitting through genic regions.
-limit = 540 
-shift_by = 30 
-clearance = 40
+#### The help page for the `process_gtf()` function
 
-gene[G1]:	100-200
-```
-
-      chr1: 0    100  200       410             820
-            |-----|====|---------|--------------|
-                  [G1]           ^
-                                 |
-                              split (410)
-      
-            |<---- Left arm ---->|<-- Right arm ->|
-            
-            The centromere coordinate is not defined in BED file (chr1:0-820). 
-            The `limit` set to 540. 
-            The algorithm first creates provisional even shards based on `limit`: 
-                ceiling(820/540) = 2 (shards) -> 820/2 = 410 
-            Split coordinate 410 -> outside of G1[100-200], PASSING clearance = 40
-            Final: split at 410 -> 1 split cooridnate (2 shards)   
-
-</details>
-
-
-
-
-<br>
-
-### Overlap with Gene Coordinates  
-In case of overlapping split coordinate with genic region, the split coordinate needs to be moved to a safe location that does not overlap any genes. The algorithm proceeds as follows:
-
-The split position is calculated from the limit parameter. It looks to see if there is sufficient clearance between the split point and any neighbouring genes left or right. If the clearance test does not pass the function uses ```shift_by```, which essentially defines the size of the steps to iteratively take as it tries to walk away from any genes that are too close.  
-
-> Note: ```clearance``` and ```shift_by``` operate independently. ```clearance``` determines whether a position is acceptable; ```shift_by``` determines how far to move when it is not.
-
-<details>
-
-<summary><b>Algorithm Visual (Chr2): the initial split coordinate is inside of a genic region</b></summary>
-
-```
-chr2:	0-1000
-Note, that If centromere locations are not provided (i.e., BED start position is `0` for a chromosome), the algorithm first creates provisional *even shards* based on `limit`. It then applies the same gene-clearance logic to each proposed split boundary, shifting boundaries as needed to avoid splitting through genic regions
-
-limit = 540 
-shift_by = 30 
-clearance = 40
-
-gene[G2]: 450-550
-```
-
-      chr2: 0              450       550            1000
-            |----------------|=======|--------------|
-                               [G2]     
-                                        
-            The centromere coordinate is not defined in BED file (chr2:0-1000). 
-            The `limit` set to 540. 
-            The algorithm first creates provisional even shards based on `limit`:
-                ceiling(1000/540) = 2 -> 1000/2 = 500 
-      
-                
-      chr2: 0              450       550            1000
-            |----------------|=======|--------------|
-                             [G2] ^
-                                  |
-                               split (500)          
-
-            Split coordinate 500 -> falls inside of G2[450-550]
-                Shift right by 30 bp -> 530 -> inside G2[450–550]
-                Shift right by 30 bp -> 560 -> outside G2[450–550], not passing clearance = 40
-                Shift right by 30 bp -> 590 -> outside G2[450–550], PASSING clearance = 40
-            Split coordinate = 590
-    
-      chr2: 0              450      550            1000
-            |----------------|=======|--------------|
-                                [G2]     ^
-                                         |
-                                    split (590)
-      
-            The distance between 0 and 590 exceeds the set `limit` of 540, find the next split coordinate:
-                ceiling(590/540) = 2 —> 590/2 = 295
-            Split coordinate = 295
-
-
-      chr2: 0               450      550            1000
-            |----------------|=======|--------------|
-                    ^           [G2]      ^
-                    |                     |
-                split (295)            split (590)    
-                
-            Final: split at 295 and 590 -> 2 split cooridnates (3 shards)    
-                
-
-</details>
-
-
-
-
-
-<details>
-
-<summary><b>Algorithm Visual (Chr3): the initial split coordinate is inside of two overlapping genes</b></summary>
-```
-chr3:	0-1000
-Note, that If centromere locations are not provided (i.e., BED start position is `0` for a chromosome), the algorithm first creates provisional *even shards* based on `limit`. It then applies the same gene-clearance logic to each proposed split boundary, shifting boundaries as needed to avoid splitting through genic regions
-limit = 540 
-shift_by = 30 
-clearance = 40
-
-gene[G3L]:	460-545
-gene[G3R]:	490-560
-```
-
-      chr3: 0              460  490     545   560              1000
-            |----------------|===|overlap|======|--------------|
-                             [G3L]        [G3R]
-                                      
-            The centromere coordinate is not defined in BED file (chr3:0-1000) 
-            The `limit` set to 540 
-            The algorithm first creates provisional even shards based on `limit`:
-                ceiling(1000/540) = 2 -> 1000/2 = 500                   
-            
-      chr3: 0              460  490     545   560              1000
-            |----------------|===|overlap|======|--------------|
-                             [G3L]   ^    [G3R]
-                                     |
-                               split (500)
-            
-            Split coordinate 500 -> falls inside of G3L[460-510] and G3R[490-560]
-                Shift to the right by 30bp -> 530 - inside of the G3R[490-560]
-                Shift to the right by 30bp -> 560 - still inside of the G3R[490-560]
-                Shift to the right by 30bp -> 590 - outside of the G3R[490-560], not passing clearance
-                Shift to the right by 30bp -> 620 - outside of the G3R[490-560] -> PASSING clearance
-                  Split coordinate = 620
-            
-      chr3: 0              460  490     510   560             1000
-            |----------------|===|overlap|======|--------------|
-                             [G3L]        [G3R]       ^ 
-                                                      |
-                                                split (620)
-            
-            The distance between 0 and 620 exceeds the `limit` of 540, find the next split coordinate: 
-                ceiling(620/540) = 2 —> 620/2 = 310 —> outside G3L[460-510] and G3R[490-560], PASSING clearance = 40
-            Split coordinate = 310
-            
-      chr3: 0              460  490     510   560             1000
-            |----------------|===|overlap|======|--------------|
-                      ^      [G3L]        [G3R]       ^ 
-                      |                               |
-                 split (310)                       split (620)    
-            
-            Final: split at 620 and 310 -> 2 split cooridnates (3 shards)
-
-</details>
-
-
-
-
-
-<details>
-
-<summary><b> Algorithm Visual (Chr4): one gene in each arm (no collision)</b></summary>
-
-```
-chr4:	300-1500 
-Note, that each chromosome is defined by a coordinate range starting at 0. If a feature's start position is not 0, it indicates a split coordinate (centromere). In this example, 300 is the split coordinate (centromere), dividing the chromosome into two segments: 0–300 and 300–500.
-limit = 540 
-shift_by = 30 
-clearance = 40
-
-gene[G4L]: 50-100
-gene[G4R]: 800-900
-```
-
-      chr4: 0     50  100                        800   900     1500
-            |-----|===|--------------------------|======|------|
-                  [G4L]         ^                 [G4R]
-                                |     
-                               split (300)
-                               
-            The centromere coordinate is define in the BED file (chr4:300-1500) ->
-                below the `limit` and does not overlap with any gene coordinates 
-            Note: splitting first tries to use the centromere cooridnate, not the `limit`!!!
-            
-            The distance between 300 and 1500 exceeds the `limit` of 540, find how many shards: 
-                ceiling( (1500-300)/540)=3 -> (1500-300)/3=400
-                    Next split coordinate 300+400=700, outside of G4R[800-900], PASSING clearance = 40
-                    Next split coordinate 700+400=1100, outside of G4R[800-900], PASSING clearance = 40
-
-      chr4: 0     50  100                        800   900     1500
-            |-----|===|--------------------------|======|------|
-                  [G4L]         ^             ^   [G4R]     ^
-                                |             |             |
-                            split (300)    split (700)    split (1100)
-           
-      Final: split at 300, 700 and 1100 -> 3 split cooridnates (4 shards)
-
-</details>
-
-
-
-
-
-<details>
-
-<summary><b> Algorithm Visual (Chr5): a split coordinate cuts through a gene</b></summary>
-```
-chr5:	600-1500
-# Note, that each chromosome is defined by a coordinate range starting at 0. If a feature's start position is not 0, it indicates a split coordinate. In this example, 600 is the split coordinate, dividing the chromosome into two segments: 0–600 and 600–1500.
-
-limit = 540 
-shift_by = 30 
-clearance = 40
-
-gene[G5BS]:	550-650
-```
-            
-            The centromere coordinate is defined in the BED file (chr5:600-1500)
-                Left arm: `[0, 600)`
-                Right arm: `[600, 1500)`
-                
-      chr5: 0                550    650                               1500
-            |-----------------|======|---------------------------------|
-                                 ^ [G5BS]                
-                                 |     
-                               split (600)
-            
-            
-            I. Left arm region
-            Note: splitting first tries to use the centromere cooridnate, not the `limit`!!!
-            The distance between 0 and 600 exceeds the `limit` of 540, find how many shards: 
-                ceiling((600-0)/540) = 2 -> 600/2=300
-            Split coordinate = 300
-            
-      chr5: 0                550    650                               1500
-            |-----------------|======|---------------------------------|
-                    ^          [G5BS]                
-                    |     
-                  split (300)
-                  
-                  
-            II. Right arm region     
-            The right arm region (chr5:600-1500) 
-            The distance between 600 and 1500 exceeds the `limit` of 540, find how many shards: 
-                ceiling((1500-600)/540) = 2 -> (1500-600)/2=450
-            Split coordinates = 600 and 1050
-            
-      chr5: 0                550    650                               1500
-            |-----------------|======|---------------------------------|
-                    ^           ^  [G5BS]             ^   
-                    |           |                     |
-              split (300)     split (600)           split (1050)
-            
-            Split coordinate 600 -> inside of the G5BS[550-650]
-                Shift to the right by 30bp -> 630 - inside of the G5BS[550-650]
-                Shift to the right by 30bp -> 660 - outside of the G5BS[550-650], not passing clearance
-                Shift to the right by 30bp -> 690 - outside of the G5BS[550-650] -> PASSING clearance
-                    Split coordinate = 690
-            
-      chr5: 0                550    650                               1500
-            |-----------------|======|---------------------------------|
-                    ^          [G5BS]   ^            ^   
-                    |                   |            |
-              split (300)         split (690)     split (1050)
-            
-            Final: split at 300, 690 and 1050 -> 3 split cooridnates (4 shards)
-</details>
-
-
-
-<details>
-
-<summary><b>Algorithm Visual (Chr6): gene structure with exons, CDS, and transcript: gene overlaps with cutting coordinate</b></summary>
-```
-chr6:	0-1000
-limit = 540 
-shift_by = 30 
-clearance = 40
-
-gene[G6R]:        400-500
-transcript[G6R]:  400-500
-exon[G6R]:        400-450
-exon[G6R]:	      460-480
-exon[G6R]:        490–500
-CDS[G6R]:	        410-495
-five_prime_utr[G6R]:  400-409
-
-      chr6: 0                400     500                              1000
-            |-----------------|======|---------------------------------|
-                                [G5R]^
-                                     |
-                                   split (500)       
-            
-            The centromere coordinate is not defined in BED file (chr6:0-1000) 
-            The `limit` set to 540 
-            The algorithm first creates provisional even shards based on `limit`:
-                ceiling(1000/540) = 2 -> 1000/2 = 500 
-            
-            Split coordinate 500 -> falls on edge of G5R[400-500]
-                  Shift to the right by 30bp -> 530 - outside of the G5R[400-500], not passing clearance
-                  Shift to the right by 30bp -> 560 - outside of the G5R[400-500] -> PASSING clearance
-                  
-      chr6: 0                400     500                              1000
-            |-----------------|======|---------------------------------|
-                                [G5R]    ^
-                                         |
-                                      split (560)
-            
-            The distance between 0 and 560 exceeds the `limit` of 540, find the next split coordinate: 
-                ceiling(560/540) = 2 —> 560/2 = 280 —> outside G5R[400-500], PASSING clearance = 40
-            Split coordinate = 280
-            
-      chr6: 0                400     500                              1000
-            |-----------------|======|---------------------------------|
-                      ^        [G5R]    ^
-                      |                 |
-                   split (280)        split (560)
-            
-            Final: split at 280, 560 -> 2 split cooridnates (3 shards)   
-                                                                    
-                                                       
-
-```
-</details>
-
-
-
-> Note: in real world scenarios users should consider picking ```clearance = 900 (2 x 150 bp reads with up to a 600 bp insert size)```, and ```shift_by in the region of 1000 to 4000``` to ensure the algorithm can easily walk through a whole gene if needed.
-
-
-
-
-
-#### 3. Process a GTF file by assigning split-region sequence names
-
-Reads a BED-like "split regions" file and a GTF, assigns each GTF feature to exactly one split-region interval, and replaces the GTF Chr field with a split-region name of the form Chr-RegionStart-RegionEnd
-
-##### The Help Page for *process_gtf()*
-
-```{r, eval=FALSE}
+``` {r, eval=FALSE}
 ?process_gtf
 ```
 
+#### Generate gene annotation (GTF) file in compatible to Cell Ranger ARC format
 
-**Input Data** 
-This function takes a BED-like file containing split intervals as produced by *process_gtf()*  and a GTF file as the input.
-
-##### Usage Example: *process_gtf()*
-```{r, eval=FALSE}
-gtf_processed = process_gtf(
-  split_regions_bed = "DetermineSplitReg_AlgorithmToy.bed",
-  gtf = "AlgorithmToy.gtf",
-  genome_name = "ToyExample",
-  genome_version = "v1",
-  keep_attributes = NULL,
-  out_path = "."
+``` {r, eval=FALSE}
+# Define output directory
+gtf_path <- system.file(
+  "extdata/01_Hordeum_vulgare.Mt_Pt_v49_Barley_v62_COMBINED.gtf",
+  package = "scShardSplitRef"
 )
+
+# Process GTF file and write file to tempdir()
+process_gtf(
+  split_regions_bed = output_file_name_dir,
+  gtf = gtf_path,
+  genome_name = "barley",
+  genome_version = "3",
+  out_path = tempdir()
+  )
+#> ℹ Validating inputs and reading files...
+#> All files loaded and validated successfully.
+#> ℹ Finished writing processed GTF: /tmp/Rtmpp4whTR/B1_FINAL_MODIFIED_GTF_barley_3.gtf
 ```
 
+> The output file is in the GTF format. Note that the first column has been reformatted, the regions are now split.\
+> The chromosome name is formatted as `1H-0-206486643`, which is the region from the beginning of the chromosome to the split position; \
+> `1H-206486643-516505932` is the region from the split position to the end of the chromosome.
 
+<details>
 
-## 3. Session Info
+<summary><b>What does the generated GTF file look like?</b></summary>
 
-```{r session-info}
+``` {r, eval=FALSE}
+gtf_f <- system.file(
+  "outdata/B1_FINAL_MODIFIED_GTF_barley_3.gtf",
+  package = "scShardSplitRef"
+  )
+processed_gtf <- read.table(file = gtf_f, 
+                            header = FALSE, 
+                            sep = "\t"
+                            )
+print(gtf_f)
+dim(processed_gtf)
+#> [1] 524562      9
+
+sep <- as.data.frame(matrix("...", 
+                            nrow = 1, 
+                            ncol = 5)
+                     )
+colnames(sep) <- colnames(processed_gtf)[1:5]
+
+kable(rbind(
+  processed_gtf[200:203, 1:5],
+  sep,
+  processed_gtf[(nrow(processed_gtf) - 2):nrow(processed_gtf), 1:5]
+  )
+  )
+```
+
+```
+|       |V1                     |V2  |V3         |V4        |V5        |
+|:------|:----------------------|:---|:----------|:---------|:---------|
+|200    |2H-0-301293086         |IPK |CDS        |146924435 |146924961 |
+|201    |2H-0-301293086         |IPK |stop_codon |146924962 |146924964 |
+|202    |2H-301293086-665585731 |IPK |gene       |130299937 |130300482 |
+|203    |2H-301293086-665585731 |IPK |transcript |130299937 |130300482 |
+|1      |...                    |... |...        |...       |...       |
+|524560 |Pt-0-115974            |ena |gene       |115423    |115519    |
+|524561 |Pt-0-115974            |ena |transcript |115423    |115519    |
+|524562 |Pt-0-115974            |ena |exon       |115423    |115519    |
+```
+
+</details>
+
+### Step-4
+
+Final steps is to split the FASTA file, where the header lines should have the same chrosomome annotations as the GTF file.
+
+``` bash
+# Please note that due to file size limitations, the barley genome FASTA file is not available on our GitHub repository at /inst/extdata/
+IN_FA="/inst/extdata/01_Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly_COMBINED_Mt_Pt_v49_Barley_v62.fa"
+BED_FIN_OUT="/inst/outdata/B1_Split_regions.bed"
+FASTA_FIN_OUT="/inst/outdata/"
+
+# Split FASTA
+bedtools getfasta -fi ${IN_FA} -bed ${BED_FIN_OUT} -fo ${FASTA_FIN_OUT}/B1_FASTA_split.fasta
+
+# Note, FASTA heading should be in `Chr-RegionStart-RegionEnd` format to be compitable with Cell Ranger ARC
+sed '/^>/s/:/-/g' ${FASTA_FIN_OUT}/B1_FASTA_split.fasta >${FASTA_FIN_OUT}/B1_FASTA_split_FINAL.fasta
+```
+
+<details>
+
+<summary><b>What does the generated FASTA file look like?</b></summary>
+
+```         
+# B1_FASTA_split_FINAL.fasta
+
+>1H-0-206486643
+GCATTTGGTTGCTTTTATTCTAAACTA...
+>1H-206486643-516505932
+ATCAGTACATGAGCTAGTATTAGAGGCTAGACTAGGGATCAATTGGTGTTTGTA...
+>2H-0-301293086
+GCCCTGAC...
+...
+>CAJHDD010000283.1-0-50002
+TATTTGCCACTTCAATCTGAT..
+>Mt-0-525599
+TGAGAGAAAAAATAAGACTCTTTTAAGATTGCAAAACGTTTTGCAATGAA..
+>Pt-0-115974
+TCCCACTAAACATGT...
+```
+
+</details>
+
+### Step-5
+
+The genome sequence (FASTA) and gene annotation (GTF) files are now split and formatted for Cell Ranger ARC. The file paths are specified in the `.config` file and Cell Ranger ARC can now be run.
+
+#### Prepare config file
+
+``` bash
+cat 03_cellranger_arc_barley.config
+```
+
+``` json
+{
+    "organism": "barley",
+    "genome": ["MOREX3_v3"],
+    "input_fasta": ["/outdata/B1_FASTA_split_FINAL.fasta"],
+    "input_gtf": ["/outdata/B1_FINAL_MODIFIED_GTF_barley_3.gtf"],
+    "non_nuclear_contigs": ["Mt-0-525599", "Pt-0-115974"]
+}
+```
+
+#### Run Cell Ranger ARC
+
+``` bash
+CONFIG_IN="03_cellranger_arc_barley.config"
+
+cellranger-arc mkref \
+  --config=${CONFIG_IN} \
+  --nthreads=24 \
+  >mkref.log 2>&1
+```
+
+## R package session information
+
+<details>
+
+<summary><b>sessionInfo()</b></summary>
+
+``` r
 sessionInfo()
+#> R version 4.5.3 (2026-03-11)
+#> Platform: x86_64-pc-linux-gnu
+#> Running under: Ubuntu 22.04.5 LTS
+#> 
+#> Matrix products: default
+#> BLAS:   /usr/lib/x86_64-linux-gnu/blas/libblas.so.3.10.0 
+#> LAPACK: /usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.10.0  LAPACK version 3.10.0
+#> 
+#> locale:
+#>  [1] LC_CTYPE=en_AU.UTF-8       LC_NUMERIC=C               LC_TIME=en_AU.UTF-8        LC_COLLATE=en_AU.UTF-8     LC_MONETARY=en_AU.UTF-8   
+#>  [6] LC_MESSAGES=en_AU.UTF-8    LC_PAPER=en_AU.UTF-8       LC_NAME=C                  LC_ADDRESS=C               LC_TELEPHONE=C            
+#> [11] LC_MEASUREMENT=en_AU.UTF-8 LC_IDENTIFICATION=C       
+#> 
+#> time zone: Etc/UTC
+#> tzcode source: system (glibc)
+#> 
+#> attached base packages:
+#> [1] stats     graphics  grDevices utils     datasets  methods   base     
+#> 
+#> other attached packages:
+#> [1] scShardSplitRef_0.0.0.9000 testthat_3.3.2             knitr_1.51                 devtools_2.5.2             usethis_3.2.1             
+#> 
+#> loaded via a namespace (and not attached):
+#>  [1] xfun_0.57         remotes_2.5.0     processx_3.9.0    callr_3.7.6       vctrs_0.7.3       tools_4.5.3       pak_0.9.5         ps_1.9.3         
+#>  [9] generics_0.1.4    curl_7.1.0        tibble_3.3.1      pkgconfig_2.0.3   xopen_1.0.1       desc_1.4.3        lifecycle_1.0.5   compiler_4.5.3   
+#> [17] credentials_2.0.3 devtag_0.0.0.9000 brio_1.1.5        roxyglobals_1.0.0 codetools_0.2-19  htmltools_0.5.9   sys_3.4.3         yaml_2.3.12      
+#> [25] pillar_1.11.1     crayon_1.5.3      ellipsis_0.3.3    openssl_2.4.1     cachem_1.1.0      sessioninfo_1.2.3 commonmark_2.0.0  tidyselect_1.2.1 
+#> [33] digest_0.6.39     stringi_1.8.7     dplyr_1.2.1       diffobj_0.3.6     purrr_1.2.2       rprojroot_2.1.1   fastmap_1.2.0     cli_3.6.6        
+#> [41] magrittr_2.0.5    pkgbuild_1.4.8    utf8_1.2.6        withr_3.0.2       prettyunits_1.2.0 waldo_0.6.2       roxygen2_8.0.0    rmarkdown_2.31   
+#> [49] otel_0.2.0        askpass_1.2.1     memoise_2.0.1     evaluate_1.0.5    rcmdcheck_1.4.0   rlang_1.2.0       gert_2.3.1        glue_1.8.1       
+#> [57] xml2_1.5.2        pkgload_1.5.2     rstudioapi_0.18.0 R6_2.6.1          fs_2.1.0
 ```
 
-## 4. Acknowledgements
+</details>
 
-This work was supported by resources provided by the Pawsey Supercomputing Research Centres Nimbus Research Cloud (<https://doi.org/10.48569/v0j3-qd51>), with funding from the Australian Government and the Government of Western Australia.
+## Citation
+
+Please cite this tool if you use it
+
+``` r
+citation("scShardSplitRef")
+#> Warning in citation("scShardSplitRef"): could not determine year for 'scShardSplitRef' from package DESCRIPTION file
+#> To cite package 'scShardSplitRef' in publications use:
+#> 
+#>   Kuznetsova I, Pembleton L, Curci L, Sparks A (????). _scShardSplitRef: Build Custom Reference Genome for Single-Cell Multiome ATAC
+#>   and Gene Expression Data of Large-genome Species._. R package version 0.0.0.9000.
+#> 
+#> A BibTeX entry for LaTeX users is
+#> 
+#>   @Manual{,
+#>     title = {scShardSplitRef: Build Custom Reference Genome for Single-Cell Multiome ATAC and
+#> Gene Expression Data of Large-genome Species.},
+#>     author = {Irina Kuznetsova and Luke Pembleton and Luca Curci and Adam H. Sparks},
+#>     note = {R package version 0.0.0.9000},
+#>   }
+```
+
+## License
+
+This project is licensed under the [GPL-3.0 license](LICENSE.md).
+
+## Contributing
+
+Please refer to the [CONTRIBUTING.md]() \<-- TODO: Provide link once this is public ---!\> If you'd like to help improve this tool, please send your suggestions via email. Please clearly outline the feature(s) you think should be added. As the tool develops, new features can be added as separate package functions and contributed back to the project.\
+Remember that improving tools is important, but keeping them neat and not over-complicated is just as essential.
+
+## Acknowledgements
+
+This work was supported by resources provided by the [Pawsey Supercomputing Research Centres](https://pawsey.org.au/) Nimbus Research Cloud (<https://doi.org/10.48569/v0j3-qd51>), with funding from the Australian Government and the Government of Western Australia.
+
+GRDC funded this project through the Analytics for the Australian Grains Industry (AAGI) investment, CUR2210-005OPX (AAGI-CU).
