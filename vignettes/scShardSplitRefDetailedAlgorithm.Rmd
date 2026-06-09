@@ -18,7 +18,8 @@ devtools::load_all() #### delete after publishing
 
 ## 1. Purpose
 
-This toy dataset provides a minimal example to demonstrate the logic of the algorithm that prepares reference files (GTF and FASTA) for `cellranger‑arc mkref`. It allows users to test the workflow without needing large genome files and helps confirm that the proposed workflow is functioning correctly. It also provides an example of how to use it.
+This toy dataset provides a minimal example to demonstrate the logic of the algorithm that prepares compatible reference files (GTF and FASTA) for `cellranger-arc mkref`. It allows users to test the workflow using toy data and explains the algorithm logic in detail.
+
 
 ## 2. {scShardSplitRef} Guided Walkthrough Using a Toy Example
 
@@ -51,17 +52,17 @@ library("knitr") # used for a kable table later in the document
 
 The first function called `validate_inputs()`, checks the correct format of (GTF and BED-like) input files.
 
--   **BED:** 3 columns, tab-delimited, no header, no comments format (this centromere coordinates file is created manually)
+-   **BED:** 3 columns, tab-delimited, no header, no comments format (this centromere coordinates/`0` file is created manually)
 -   **GTF**: 9 columns, tab-delimited, lines beginning with `#` at the top of the file are treated as comments and allowed
 -   All files need to be decompressed
 
-##### The Help Page for *validate_inputs()*
+##### The Help Page for `validate_inputs()`
 
 ```{r, eval=FALSE}
 ?validate_inputs
 ```
 
-##### Usage Example: *validate_inputs()* 
+##### Usage Example: `validate_inputs()` 
 
 ```{r}
 bed_path <- system.file(
@@ -79,7 +80,8 @@ kable(input_verif$bed)
 kable(input_verif$gtf[1:5,])
 ```
 
-> If the GTF and BED formats are correct, a confirmation message will be printed to the console: *"All files loaded and validated successfully"*
+> If the GTF and BED formats are correct, a confirmation message will be printed to the console:\
+> *"All files loaded and validated successfully"*
 
 
 
@@ -87,7 +89,7 @@ kable(input_verif$gtf[1:5,])
 
 The next function called ```determine_split_regions()``` prepares split coordinates in appropriate BED-like format. This function ensures that chromosomes are not split in the middle of a gene region.
 
-##### The Help Page for *determine_split_regions()*
+##### The Help Page for `determine_split_regions()`
 
 ```{r, eval=FALSE}
 ?determine_split_regions
@@ -101,7 +103,7 @@ This function takes a BED file and a GTF file as input.
 **Parameters:**
 
 - `limit`: can be left as the default, which is the Cell Ranger ARC limit 
-of 2²⁹ (536,870,912 bp). For the purpose of this tutorial, to better 
+of `2^²⁹ (536,870,912 bp)`. For the purpose of this tutorial, to better 
 understand the algorithm, we set `limit=540`
 - `shift_by`: the step size used to move the split coordinate to the right 
 when searching for a safe location outside a genic region
@@ -109,7 +111,7 @@ when searching for a safe location outside a genic region
 genes on both sides of the proposed split coordinate
 
 
-##### Usage Example: *determine_split_regions()*
+##### Usage Example: `determine_split_regions()`
 
 In this example we use:
 ```
@@ -151,7 +153,7 @@ get_split_reg
 
 <br>
 
-##### Algorithm Explanation: How *determine_split_regions()* works 
+##### Algorithm Explanation: How `determine_split_regions()` works 
   
 #### No Overlap with Gene Coordinates  
 The chromosome is split at that coordinate, producing two regions:
@@ -159,7 +161,7 @@ The chromosome is split at that coordinate, producing two regions:
 - Left arm: from the beginning of the chromosome to the split coordinate
 - Right arm: from the split coordinate to the end of the chromosome
 
-> Note: If centromere locations are not provided (i.e., BED start position is `0` for a chromosome), the algorithm first creates provisional *even shards* based on `limit`. It then applies the same gene-clearance logic to each proposed split boundary, shifting boundaries as needed to avoid splitting through genic regions. 
+> Note: If centromere locations are not provided (i.e., BED start position or 2nd column is `0`), the algorithm first creates provisional *even shards* based on `limit`. It then applies the same gene-clearance logic to each proposed split boundary, shifting boundaries as needed to avoid splitting through genic regions. 
 
 
 <details>
@@ -523,7 +525,7 @@ five_prime_utr[G6R]:  400-409
 
 
 
-> Note: in real world scenarios users should consider picking ```clearance = 900 (2 x 150 bp reads with up to a 600 bp insert size)```, and ```shift_by in the region of 1000 to 4000``` to ensure the algorithm can easily walk through a whole gene if needed.
+> Note: in real world scenarios users should consider picking `clearance = 900 (2 x 150 bp reads with up to a 600 bp insert size)`, and `shift_by in the region of 1000 to 4000` to ensure the algorithm can easily walk through a whole gene if needed.
 
 
 
@@ -531,9 +533,9 @@ five_prime_utr[G6R]:  400-409
 
 #### 3. Process a GTF file by assigning split-region sequence names
 
-Reads a BED-like "split regions" file and a GTF, assigns each GTF feature to exactly one split-region interval, and replaces the GTF Chr field with a split-region name of the form Chr-RegionStart-RegionEnd
+Reads BED-like "split regions" and GTF files. Assigns each GTF feature to exactly one split-region interval, and replaces the GTF Chr field with a split-region name of the form `Chr-RegionStart-RegionEnd`.
 
-##### The Help Page for *process_gtf()*
+##### The Help Page for `process_gtf()`
 
 ```{r, eval=FALSE}
 ?process_gtf
@@ -541,9 +543,9 @@ Reads a BED-like "split regions" file and a GTF, assigns each GTF feature to exa
 
 
 **Input Data** 
-This function takes a BED-like file containing split intervals as produced by *process_gtf()*  and a GTF file as the input.
+This function takes a BED-like file containing split intervals as produced by `process_gtf()`  and a GTF file as the input.
 
-##### Usage Example: *process_gtf()*
+##### Usage Example: `process_gtf()`
 ```{r, eval=FALSE}
 gtf_processed = process_gtf(
   split_regions_bed = "DetermineSplitReg_AlgorithmToy.bed",
