@@ -4,28 +4,21 @@ author: "Irina Kuznetsova"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{scShardSplitRef}
-  %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
-editor_options: 
-  markdown: 
-    wrap: sentence
+  %\VignetteEncoding{UTF-8}
 ---
 
 ## Package overview
 
-{scShardSplitRef} designed for researchers working with multiome single-cell data from species that require building a custom reference genome, particularly when one or more chromosomes/contigs in the reference FASTA exceed the Cell Ranger ARC limit of 536.8Mb (2\^29 bases).
-{scShardSplitRef} enables splitting of long chromosomes/contigs generating shorter fragments that are compitable with Cell Ranger ARC requirements.
-The software outputs FASTA and GTF files containing the split chromosomes/contigs, which can be directly processed by `cellranger-arc mkref`.
+{scShardSplitRef} designed for researchers working with multiome single-cell data from species that require building a custom reference genome, particularly when one or more chromosomes/contigs in the reference FASTA exceed the Cell Ranger ARC limit of `536.8Mb (2\^29 bases)`. {scShardSplitRef} enables splitting of long chromosomes/contigs generating shorter fragments that are compitable with Cell Ranger ARC requirements. The software outputs FASTA and GTF files containing the split chromosomes/contigs, which can be directly processed by `cellranger-arc mkref`.
 
-To familiarise yourself with the package and workflow of preparing reference genome sequence (FASTA file) and gene annotations (GTF file) for Cell Ranger ARC we suggest starting with a guided walk through.
-We are using barley genome (MOREX V3) as an example genome.
-Example data files are distributed with the package for example purposes.
+To familiarise yourself with the package and workflow of preparing reference genome sequence (FASTA file) and gene annotations (GTF file) for Cell Ranger ARC we suggest starting with a \@ref(guided-walk-through). In this tutorial we are using barley genome (MOREX V3). Example data files are distributed with the package for example purposes.
 
-## {scShardSplitRef} guided walk through
+## Guided walk through {#guided-walk-through}
 
 ### Installation
 
-``` r
+``` {r, eval=FALSE}
 library("scShardSplitRef")
 library("knitr") # used for a kable table later in the document
 ```
@@ -45,7 +38,7 @@ library("knitr") # used for a kable table later in the document
 | Gene annotations       | GTF      | Gene features and coordinates           |
 | Centromere coordinates | BED-like | Centromere positions per chromosome (x) |
 
-> (x) **Note:** The second column in the BED-like file is assigned to the centromere coordinate, or '0' if this information is not accessible for your species. {scShardSplitRef} will then check for any overlaps with genic regions and generate the correct BED files for splitting.
+> **(x) Note:** The second column in the BED-like file is assigned to the centromere coordinate, or 0 if this information is not accessible for your species. {scShardSplitRef} will then check for any overlaps with genic regions and generate the correct BED files for splitting.
 
 <br>
 
@@ -55,12 +48,9 @@ For this tutorial, we will be using a genome sequence (FASTA) and gene annotatio
 
 <details>
 
-<summary>
+<summary><b>What does a GTF file for MOREX V3 look like?</b></summary>
 
-<b>What does a GTF file for MOREX V3 look like?`<`{=html}
-`/b></summary>`{=html}
-
-``` r
+```  {r, eval=FALSE}
 # Gene annotations (GTF) file. The format of the GTF file is a tab-delimited 9-column file.
 # data.dir = "/inst/extdata/01_Hordeum_vulgare.Mt_Pt_v49_Barley_v62_COMBINED.gtf"
 
@@ -103,14 +93,14 @@ gtf_df[1:10, ]
 
 <details>
 
-<summary>
+<summary><b>What does a BED-like centromere file for MOREX V3 look like?</b></summary>
 
-<b>What does a BED-like centromere file for MOREX V3 look like?`<`{=html}
-`/b></summary>`{=html}
-
-``` r
-# The format of the centromere coordinates file is a tab-delimited 3-column file, where the 1st column contains chromosome/contig names, the 2nd column contains the centromere coordinate, and the 3rd column contains chromosome/contig region end coordinates.
-# Manually formatted centromere file (please check what it should look like below):
+```  {r, eval=FALSE}
+# The format of the centromere coordinates file is a tab-delimited 3-column file, where 
+#   the 1st column contains chromosome/contig names, 
+#   the 2nd column contains the centromere coordinate (or 0 if this information is not available for your species), 
+#   the 3rd column contains the chromosome/contig end coordinates.
+# Manually formatted centromere file (please check the expected format below):
 # data.dir = "/inst/extdata/02_MorexV3_centromere_coordinates.bed"
 
 bed_file <- system.file(
@@ -141,25 +131,21 @@ centr_bed_df[1:10, ]
 
 ## Step-by-step Guide
 
-We begin by assessing the formatting of the input GTF and BED files provided by the user, followed by checking and, if necessary, modifying the split coordinates in the BED file.
-The GTF file is then updated according to the split position.
-Finally, the FASTA file is split and formatted for compatibility with Cell Ranger ARC. All files need to be decompressed for use in Cell Ranger.
+We begin by assessing the formatting of the input GTF and BED files provided by the user, followed by checking and, if necessary, modifying the split coordinates in the BED file. The GTF file is then updated according to the split position. Finally, the FASTA file is split and formatted for compatibility with Cell Ranger ARC. All files need to be decompressed.
 
 ### Step-1
 
-The first function called `validate_inputs()`, checks the correct format of (FASTA and BED-like) input files.
-The centromere coordinate file is manually created in BED-like format and should be tab-delimited.
-All files need to be decompressed for use in Cell Ranger.
+The first function called `validate_inputs()`, checks FASTA and BED-like input files. The centromere coordinate file is manually created in BED-like format and should be tab-delimited. All files need to be decompressed.
 
 #### The help page for the validate_inputs()
 
-``` r
+``` r {r, eval=FALSE}
 ?validate_inputs
 ```
 
 #### Validate (FASTA and BED) input files
 
-``` r
+``` {r, eval=FALSE}
 # Load MOREX V3 files
 # Note1: all files need to be decompressed for use in Cell Ranger
 # Note2: use correctly formatted BED file with centromere coordinates
@@ -179,45 +165,30 @@ input_verif <- validate_inputs(bed = bed_path,
 kable(input_verif$bed[1:5,])
 ```
 
-| Chr | RegionStart | RegionEnd |
-|:----|------------:|----------:|
-| 1H  |   206486643 | 516505932 |
-| 2H  |   301293086 | 665585731 |
-| 3H  |   267852507 | 621516506 |
-| 4H  |   276149121 | 610333535 |
-| 5H  |   204878572 | 588218686 |
 
-``` r
+
+``` {r, eval=FALSE}
 kable(input_verif$gtf[1:5,])
 ```
 
-| Chr | source | feature | start | end | score | strand | frame | attribute |
-|:-----|:-----|:-----|-----:|-----:|:-----|:-----|:-----|:------------------------|
-| 2H | IPK | gene | 601169528 | 601171444 | . | \- | . | gene_id "HORVU.MOREX.r3.2HG0191020"; gene_source "IPK"; gene_biotype "protein_coding"; |
-| 2H | IPK | transcript | 601169528 | 601171444 | . | \- | . | gene_id "HORVU.MOREX.r3.2HG0191020"; transcript_id "HORVU.MOREX.r3.2HG0191020.1"; gene_source "IPK"; gene_biotype "protein_coding"; transcript_source "IPK"; transcript_biotype "protein_coding"; tag "Ensembl_canonical"; |
-| 2H | IPK | exon | 601169754 | 601171444 | . | \- | . | gene_id "HORVU.MOREX.r3.2HG0191020"; transcript_id "HORVU.MOREX.r3.2HG0191020.1"; exon_number "1"; gene_source "IPK"; gene_biotype "protein_coding"; transcript_source "IPK"; transcript_biotype "protein_coding"; exon_id "HORVU.MOREX.r3.2HG0191020.1-E1"; tag "Ensembl_canonical"; |
-| 2H | IPK | CDS | 601169754 | 601171444 | . | \- | 0 | gene_id "HORVU.MOREX.r3.2HG0191020"; transcript_id "HORVU.MOREX.r3.2HG0191020.1"; exon_number "1"; gene_source "IPK"; gene_biotype "protein_coding"; transcript_source "IPK"; transcript_biotype "protein_coding"; protein_id "HORVU.MOREX.r3.2HG0191020.1"; tag "Ensembl_canonical"; |
-| 2H | IPK | start_codon | 601171442 | 601171444 | . | \- | 0 | gene_id "HORVU.MOREX.r3.2HG0191020"; transcript_id "HORVU.MOREX.r3.2HG0191020.1"; exon_number "1"; gene_source "IPK"; gene_biotype "protein_coding"; transcript_source "IPK"; transcript_biotype "protein_coding"; tag "Ensembl_canonical"; |
 
 > If GTF and BED formats are correct, a confirmation message will be printed to the console:\
-> *"All files loaded and validated successfully"*
+>  *"All files loaded and validated successfully"*
 
 ### Step-2
 
-The next step is to prepare split coordinates in appropriate BED-like format.
-This function ensures that chromosomes are not split in the middle of a gene region.
-To achieve this, we first check whether the centromere coordinates overlap with any gene features, and if they do, we shift the split position by a specified length in base pairs (bp).
+The next step is to prepare split coordinates in appropriate BED-like format. This function ensures that chromosomes are not split in the middle of a gene region. 
 
-### The help page for the determine_split_regions() function
+### The help page for the `determine_split_regions()` function
 
-``` r
+``` {r, eval=FALSE}
 ?determine_split_regions
 ```
 
 #### Define output directory
 
-``` r
-# Build BED-like split intervals from genomic regions (BED) and gene annotations (GTF)
+``` {r, eval=FALSE}
+# Build BED-like split intervals using genomic regions (BED) and gene annotations (GTF) input files
 
 # Define output directory
 output_file <- file.path(tempdir(), 
@@ -248,10 +219,7 @@ get_split_reg
 
 <details>
 
-<summary>
-
-<b>What does the generated BED file look like?`<`{=html}
-`/b></summary>`{=html}
+<summary><b>What does the generated BED file look like?</b></summary>
 
 ``` r
 bed_f <- system.file(
@@ -282,9 +250,7 @@ split_region_bed_df[1:10, ]
 
 ### Step-3
 
-Generate a gene annotation (GTF) file in compatible to Cell Ranger ARC format.
-The first column of the GTF file should be in the following form `Chr-RegionStart-RegionEnd`.
-Note that the output file name is hardcoded and starts with "B1_FINAL_MODIFIED_GTF\_[*genome_name*]\_[*genome_version*].gtf".
+Generate a gene annotation (GTF) file in compatible to Cell Ranger ARC format. The first column of the GTF file should be in the following form `Chr-RegionStart-RegionEnd`. Note that the output file name is hardcoded and starts with "B1_FINAL_MODIFIED_GTF\_[*genome_name*]\_[*genome_version*].gtf".
 
 #### The help page for the `process_gtf()` function
 
@@ -314,18 +280,11 @@ process_gtf(
 #> ℹ Finished writing processed GTF: /tmp/Rtmpp4whTR/B1_FINAL_MODIFIED_GTF_barley_3.gtf
 ```
 
-> The output file is in the GTF format.\
-> Note that the first column has been reformatted — the regions are now split.\
-> The chromosome name is formatted as\
-> `1H-0-206486643`, which is the region from the beginning of the chromosome to the split position;\
-> `1H-206486643-516505932`, which is the region from the split position to the end of the chromosome.
+> The output file is in the GTF format. Note that the first column has been reformatted — the regions are now split. The chromosome name is formatted as `1H-0-206486643`, which is the region from the beginning of the chromosome to the split position; \``1H-206486643-516505932` is the region from the split position to the end of the chromosome.
 
 <details>
 
-<summary>
-
-<b>What does the generated GTF file look like?`<`{=html}
-`/b></summary>`{=html}
+<summary><b>What does the generated GTF file look like?</b></summary>
 
 ``` r
 gtf_f <- system.file(
@@ -385,10 +344,7 @@ sed '/^>/s/:/-/g' ${FASTA_FIN_OUT}/B1_FASTA_split.fasta >${FASTA_FIN_OUT}/B1_FAS
 
 <details>
 
-<summary>
-
-<b>What does the generated FASTA file look like?`<`{=html}
-`/b></summary>`{=html}
+<summary><b>What does the generated FASTA file look like?</b></summary>
 
 ```         
 # B1_FASTA_split_final.fasta
@@ -512,14 +468,11 @@ This project is licensed under the [GPL-3.0 license](LICENSE.md).
 
 ## Contributing
 
-Please refer to the [CONTRIBUTING.md]() \<-- TODO: Provide link once this is public ---!\>
-If you'd like to help improve this tool, please send your suggestions via email.
-Please clearly outline the feature(s) you think should be added.
-As the tool develops, new features can be added as separate package functions and contributed back to the project.\
+Please refer to the [CONTRIBUTING.md]() \<-- TODO: Provide link once this is public ---!\> If you'd like to help improve this tool, please send your suggestions via email. Please clearly outline the feature(s) you think should be added. As the tool develops, new features can be added as separate package functions and contributed back to the project.\
 Remember that improving tools is important, but keeping them neat and not over-complicated is just as essential.
 
 ## Acknowledgements
 
 This work was supported by resources provided by the [Pawsey Supercomputing Research Centres](https://pawsey.org.au/) Nimbus Research Cloud (<https://doi.org/10.48569/v0j3-qd51>), with funding from the Australian Government and the Government of Western Australia.
 
-GRDC funded this project through the Analytics for the Australian Grains Industry (AAGI) investment, CUR2210-005OPX (AAGI-CU).
+GRDC (?)
