@@ -186,8 +186,8 @@ gene[G0]:	100-200
             
             The centromere coordinate is define in the BED file (chr0:450-800)
             Split coordinate 450 is below the `limit` and does not overlap with any gene coordinates 
-            Note: splitting first tries to use the centromere cooridnate, not the `limit`!!!
-            Final: split at centromere cooridnate 450 -> 1 split cooridnate (2 shards)   
+            Note: splitting first tries to use the centromere coordinate, not the `limit`!!!
+            Final: split at centromere coordinate 450 -> 1 split coordinate (2 shards)   
 
 </details>
 
@@ -218,7 +218,7 @@ gene[G1]:	100-200
             The algorithm first creates provisional even shards based on `limit`: 
                 ceiling(820/540) = 2 (shards) -> 820/2 = 410 
             Split coordinate 410 -> outside of G1[100-200], PASSING clearance = 40
-            Final: split at 410 -> 1 split cooridnate (2 shards)   
+            Final: split at 410 -> 1 split coordinate (2 shards)   
 
 </details>
 
