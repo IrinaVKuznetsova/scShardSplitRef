@@ -10,7 +10,7 @@ vignette: >
 
 ## Package Overview
 
-{scShardSplitRef} designed for researchers working with multiome single-cell data from species that require building a custom reference genome, particularly when one or more chromosomes/contigs in the reference FASTA exceed the Cell Ranger ARC limit of `536.8Mb (2\^29 bases)`. {scShardSplitRef} enables splitting of long chromosomes/contigs generating shorter fragments that are compitable with Cell Ranger ARC requirements. The software outputs FASTA and GTF files containing the split chromosomes/contigs, which can be directly processed by `cellranger-arc mkref`.
+{scShardSplitRef} designed for researchers working with multiome single-cell data from species that require building a custom reference genome, particularly when one or more chromosomes/contigs in the reference FASTA exceed the Cell Ranger ARC limit of `536.8Mb (2\^29 bases)`. {scShardSplitRef} enables splitting of long chromosomes/contigs generating shorter fragments that are compatible with Cell Ranger ARC requirements. The software outputs FASTA and GTF files containing the split chromosomes/contigs, which can be directly processed by `cellranger-arc mkref`.
 
 To familiarise yourself with the package and workflow of preparing reference genome sequence (FASTA file) and gene annotations (GTF file) for Cell Ranger ARC we suggest starting with the [Guided Walk-Through](#guided-walk-through). In this tutorial we are using barley genome (MOREX V3). Example data files are distributed with the package for example purposes.
 
@@ -342,7 +342,7 @@ kable(rbind(
 
 ### Step-4
 
-Final steps is to split the FASTA file, where the header lines should have the same chrosomome annotations as the GTF file.
+Final steps is to split the FASTA file, where the header lines should have the same chromosome annotations as the GTF file.
 
 ``` bash
 # Please note that due to file size limitations, the barley genome FASTA file is not available on our GitHub repository at /inst/extdata/
