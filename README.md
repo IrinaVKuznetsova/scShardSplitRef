@@ -41,14 +41,20 @@ library("scShardSplitRef")
 library("knitr") # used for a kable table later in the document
 ```
 ### Input Files
-| File | Format | Description |
-|------|--------|-------------|
-| Genome sequence | FASTA | Reference genome sequence |
-| Gene annotations | GTF | Gene features and coordinates |
-| Centromere coordinates | BED-like | Centromere positions per chromosome (x) |
+| File | Format | Description | Comment |
+|------|--------|-------------|-------------|
+| Gene annotations | GTF | Gene features and coordinates | Morex v3, subset to 3 chromosomes |
+| Centromere coordinates | BED-like | Centromere positions per chromosome (x) | 3 chromosomes |
+| Genome sequence | FASTA | Reference genome sequence | (x) Not bundled; used for Cell Ranger demo only; download from Ensembl |
 
-> (x) **Note:** If centromere coordinates are not available for your species, the second column of the BED-like file should be set to `0`. If centromere coordinates are available, the second column should be set to the centromere coordinate. 
+
+
+
+
+> (x) **Note1:** If centromere coordinates are not available for your species, the second column of the BED-like file should be set to `0`. If centromere coordinates are available, the second column should be set to the centromere coordinate. 
 > {scShardSplitRef} will then check for any overlaps with genic regions and generate the correct GTF file that is compitable with `cellranger-arc mkref`.
+>
+> (x) **Note2:** Please note that the FASTA file is not required for the package, but is used to demonstrate FASTA preparation for the Cell Ranger ARC command in the workflow description. It is not included in the repository due to the large file size; download from Ensembl.
 <br>
 
 <details>
