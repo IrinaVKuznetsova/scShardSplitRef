@@ -57,18 +57,20 @@ For this tutorial, we will be using a genome sequence (FASTA) and gene annotatio
 
 ``` r
 # Gene annotations (GTF) file. The format of the GTF file is a tab-delimited 9-column file.
-# data.dir = "/inst/extdata/01_Hordeum_vulgare.Mt_Pt_v49_Barley_v62_COMBINED.gtf"
+# data.dir = "/inst/extdata/morex3_subset_1H_2H_3H.gtf.gz"
 
 gtf_file <- system.file(
-  "extdata/01_Hordeum_vulgare.Mt_Pt_v49_Barley_v62_COMBINED.gtf",
+  "extdata/morex3_subset_1H_2H_3H.gtf.gz",
   package = "scShardSplitRef"
   )
-gtf_df <- read.table(file = gtf_file, 
+decompress_gtf <- gzfile(gtf_file, open = "rt")
+gtf_df <- read.table(file = decompress_gtf, 
                      header = FALSE, 
                      sep = "\t"
                      )
+close(decompress_gtf)
 dim(gtf_df)
-#> [1] 524562      9
+#> [1] 232942      9
 gtf_df[1:10, ]
 #>    V1  V2          V3        V4        V5 V6 V7 V8
 #> 1  2H IPK        gene 601169528 601171444  .  -  .
@@ -107,30 +109,23 @@ gtf_df[1:10, ]
 #   the 2nd column contains the centromere coordinate (or 0 if this information is not available for your species), 
 #   the 3rd column contains the chromosome/contig end coordinates.
 # Manually formatted centromere file (please check the expected format below):
-# data.dir = "/inst/extdata/02_MorexV3_centromere_coordinates.bed"
+# data.dir = "/inst/extdata/morex3_subset_1H_2H_3H.bed"
 
 bed_file <- system.file(
-  "extdata/02_MorexV3_centromere_coordinates.bed",
+  "extdata/morex3_subset_1H_2H_3H.bed",
   package = "scShardSplitRef"
   )
 centr_bed_df <- read.table(file = bed_file, 
                            header = FALSE, 
                            sep = "\t"
                            )
-dim(centr_bed_df) ## 292 x 3
-#> [1] 292   3
-centr_bed_df[1:10, ]
+dim(centr_bed_df) ## 3 x 3
+#> [1] 3   3
+centr_bed_df
 #>                   V1        V2        V3
 #> 1                 1H 206486643 516505932
 #> 2                 2H 301293086 665585731
 #> 3                 3H 267852507 621516506
-#> 4                 4H 276149121 610333535
-#> 5                 5H 204878572 588218686
-#> 6                 6H 256319444 561794515
-#> 7                 7H 328847192 632540561
-#> 8  CAJHDD010000004.1         0    972986
-#> 9  CAJHDD010000001.1         0    680018
-#> 10 CAJHDD010000005.1         0    517010
 ```
 
 </details>
@@ -156,27 +151,34 @@ The first function called `validate_inputs()`, checks FASTA and BED-like input f
 # Load MOREX V3 files
 # Note1: all files need to be decompressed for use in Cell Ranger
 # Note2: use correctly formatted BED file with centromere coordinates
-bed_path <- system.file(
-  "extdata/02_MorexV3_centromere_coordinates.bed",
-  package = "scShardSplitRef"
-  )
+# GTF PATH
 gtf_path <- system.file(
-  "extdata/01_Hordeum_vulgare.Mt_Pt_v49_Barley_v62_COMBINED.gtf",
+  "extdata/morex3_subset_1H_2H_3H.gtf.gz",
   package = "scShardSplitRef"
   )
-# Validate input (FASTA and BED) files
+tmp_gtf_path <- tempfile(fileext = ".gtf")
+con_in  <- gzcon(file(gtf_path, open = "rb"))
+con_out <- file(tmp_gtf_path, open = "wb")
+writeBin(readBin(con_in, raw(), n = 1e8), con_out)
+close(con_in)
+close(con_out)
+
+# BED 
+bed_path <- system.file(
+  "extdata/morex3_subset_1H_2H_3H.bed",
+  package = "scShardSplitRef"
+  )
+  
+# Validate input (GTF and BED) files
 input_verif <- validate_inputs(bed = bed_path, 
-                               gtf = gtf_path
+                               gtf = tmp_gtf_path
                                )
 #> All files loaded and validated successfully.
-kable(input_verif$bed[1:5,])
+kable(input_verif$bed[1:3,])
 ```
 
-
-
-
 ``` r
-kable(input_verif$gtf[1:5,])
+kable(input_verif$gtf[1:3,])
 ```
 
 
@@ -209,13 +211,13 @@ dir.create(output_file,
            showWarnings = FALSE
            )
 output_file_name_dir <- file.path(output_file, 
-                                  "B1_Split_regions.bed"
+                                  "morex3_Split_regions.bed"
                                   )
 
 # Determine split regions
 get_split_reg <- determine_split_regions(
   bed = bed_path,
-  gtf = gtf_path,
+  gtf = tmp_gtf_path,
   output_bed = output_file_name_dir,
   limit = 2L^29L,
   shift_by = 20L
@@ -233,7 +235,7 @@ get_split_reg
 
 ``` r
 bed_f <- system.file(
-  "outdata/B1_Split_regions.bed",
+  "outdata/morex3_Split_regions.bed",
   package = "scShardSplitRef"
 )
 split_region_bed_df <- read.table(file = bed_f, 
@@ -241,8 +243,8 @@ split_region_bed_df <- read.table(file = bed_f,
                                   sep = "\t"
                                   )
 dim(split_region_bed_df)
-#> [1] 299   3
-split_region_bed_df[1:10, ]
+#> [1] 6   3
+split_region_bed_df
 #>    V1        V2        V3
 #> 1  1H         0 206486643
 #> 2  1H 206486643 516505932
@@ -250,10 +252,6 @@ split_region_bed_df[1:10, ]
 #> 4  2H 301293086 665585731
 #> 5  3H         0 267852507
 #> 6  3H 267852507 621516506
-#> 7  4H         0 276149121
-#> 8  4H 276149121 610333535
-#> 9  5H         0 204878572
-#> 10 5H 204878572 588218686
 ```
 
 </details>
@@ -273,23 +271,17 @@ Generate a gene annotation (GTF) file in compatible to Cell Ranger ARC format. T
 
 
 ``` r
-# Define output directory
-gtf_path <- system.file(
-  "extdata/01_Hordeum_vulgare.Mt_Pt_v49_Barley_v62_COMBINED.gtf",
-  package = "scShardSplitRef"
-)
-
 # Process GTF file and write file to tempdir()
 process_gtf(
   split_regions_bed = output_file_name_dir,
-  gtf = gtf_path,
-  genome_name = "barley",
+  gtf = tmp_gtf_path,
+  genome_name = "subset_barley",
   genome_version = "3",
   out_path = tempdir()
   )
 #> ℹ Validating inputs and reading files...
 #> All files loaded and validated successfully.
-#> ℹ Finished writing processed GTF: /tmp/Rtmpp4whTR/B1_FINAL_MODIFIED_GTF_barley_3.gtf
+#> ℹ Finished writing processed GTF: /tmp/Rtmpp4whTR/B1_FINAL_MODIFIED_GTF_subset_barley_3.gtf
 ```
 
 > The output file is in the GTF format. Note that the first column has been reformatted, the regions are now split.\
@@ -302,17 +294,17 @@ process_gtf(
 
 
 ``` r
-gtf_f <- system.file(
-  "outdata/B1_FINAL_MODIFIED_GTF_barley_3.gtf",
+gtf_modified <- system.file(
+  "outdata/B1_FINAL_MODIFIED_GTF_subset_barley_3.gtf",
   package = "scShardSplitRef"
   )
-processed_gtf <- read.table(file = gtf_f, 
+processed_gtf <- read.table(file = gtf_modified, 
                             header = FALSE, 
                             sep = "\t"
                             )
-print(gtf_f)
+print(gtf_modified)
 dim(processed_gtf)
-#> [1] 524562      9
+#> [1] 232942 9
 
 sep <- as.data.frame(matrix("...", 
                             nrow = 1, 
@@ -335,29 +327,61 @@ kable(rbind(
 |201    |2H-0-301293086         |IPK |stop_codon |146924962 |146924964 |
 |202    |2H-301293086-665585731 |IPK |gene       |130299937 |130300482 |
 |203    |2H-301293086-665585731 |IPK |transcript |130299937 |130300482 |
-|1      |...                    |... |...        |...       |...       |
-|524560 |Pt-0-115974            |ena |gene       |115423    |115519    |
-|524561 |Pt-0-115974            |ena |transcript |115423    |115519    |
-|524562 |Pt-0-115974            |ena |exon       |115423    |115519    |
+|1      |...                    |... |...             |...       |...       |
+|232940 |1H-206486643-516505932 |IPK |stop_codon      |291315417 |291315419 |
+|232941 |1H-206486643-516505932 |IPK |five_prime_utr  |291310927 |291310985 |
+|232942 |1H-206486643-516505932 |IPK |three_prime_utr |291315420 |291315710 |
 ```
 
 </details>
 
 ### Step-4
-
-Final steps is to split the FASTA file, where the header lines should have the same chromosome annotations as the GTF file.
+Final step is to split the FASTA file, where the header lines should have the same chromosome annotations as the GTF file.
+The following steps are not part of the package itself, but here to demonstrate the complete workflow for preparing all required input files for the Cell Ranger ARC command.
 
 ``` bash
-# Please note that due to file size limitations, the barley genome FASTA file is not available on our GitHub repository at /inst/extdata/
-IN_FA="/inst/extdata/01_Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly_COMBINED_Mt_Pt_v49_Barley_v62.fa"
-BED_FIN_OUT="/inst/outdata/B1_Split_regions.bed"
-FASTA_FIN_OUT="/inst/outdata/"
+# Get FASTA from Ensembl 
+# Hordeum vulgare, (release-62), Ensembl 
+wget https://ftp.ensemblgenomes.ebi.ac.uk/pub/plants/release-62/fasta/hordeum_vulgare/dna/Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly.1H.fa.gz
+wget https://ftp.ensemblgenomes.ebi.ac.uk/pub/plants/release-62/fasta/hordeum_vulgare/dna/Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly.2H.fa.gz
+wget https://ftp.ensemblgenomes.ebi.ac.uk/pub/plants/release-62/fasta/hordeum_vulgare/dna/Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly.3H.fa.gz
+```
+
+
+``` bash
+# Decompress FASTA
+gunzip 	Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly.1H.fa.gz
+gunzip 	Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly.2H.fa.gz
+gunzip 	Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly.3H.fa.gz
+```
+
+``` bash 
+# Concatenate into one file
+cat Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly.1H.fa Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly.2H.fa Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly.3H.fa > morex3_subset_1H_2H_3H.fasta
+```
+
+
+``` bash
+# Please note that due to the file size limitations, the barley genome FASTA file is not available on our GitHub repository at /inst/extdata/
+IN_FA="/data/morex3_subset_1H_2H_3H.fasta"
+BED_FIN_OUT="/inst/outdata/morex3_Split_regions.bed"
+FASTA_FIN_OUT="/data/"
 
 # Split FASTA
-bedtools getfasta -fi ${IN_FA} -bed ${BED_FIN_OUT} -fo ${FASTA_FIN_OUT}/B1_FASTA_split.fasta
+bedtools getfasta -fi ${IN_FA} -bed ${BED_FIN_OUT} -fo ${FASTA_FIN_OUT}/morex3_SPLIT_1H_2H_3H.fasta
 
 # Note, FASTA heading should be in `Chr-RegionStart-RegionEnd` format to be compitable with Cell Ranger ARC
-sed '/^>/s/:/-/g' ${FASTA_FIN_OUT}/B1_FASTA_split.fasta >${FASTA_FIN_OUT}/B1_FASTA_split_FINAL.fasta
+sed '/^>/s/:/-/g' ${FASTA_FIN_OUT}/morex3_SPLIT_1H_2H_3H.fasta >${FASTA_FIN_OUT}/morex3_split_FINAL_1H_2H_3H.fasta
+
+# Validate
+seqkit fx2tab --length --name ${FASTA_FIN_OUT}/morex3_split_FINAL_1H_2H_3H.fasta
+
+1H-0-206486643  206486643
+1H-206486643-516505932  310019289
+2H-0-301293086  301293086
+2H-301293086-665585731  364292645
+3H-0-267852507  267852507
+3H-267852507-621516506  353663999
 ```
 
 <details>
@@ -365,7 +389,7 @@ sed '/^>/s/:/-/g' ${FASTA_FIN_OUT}/B1_FASTA_split.fasta >${FASTA_FIN_OUT}/B1_FAS
 <summary><b>What does the generated FASTA file look like?</b></summary>
 
 ```         
-# B1_FASTA_split_FINAL.fasta
+# morex3_split_FINAL_1H_2H_3H.fasta
 
 >1H-0-206486643
 GCATTTGGTTGCTTTTATTCTAAACTA...
@@ -397,12 +421,15 @@ cat 03_cellranger_arc_barley.config
 ``` json
 {
     "organism": "barley",
-    "genome": ["MOREX3_v3"],
-    "input_fasta": ["/outdata/B1_FASTA_split_FINAL.fasta"],
+    "genome": ["MOREX3_subset_v3"],
+    "input_fasta": ["/data/morex3_split_FINAL_1H_2H_3H.fasta"],
     "input_gtf": ["/outdata/B1_FINAL_MODIFIED_GTF_barley_3.gtf"],
-    "non_nuclear_contigs": ["Mt-0-525599", "Pt-0-115974"]
 }
 ```
+
+> (x) **Note:** In the full genome (not the subset), you need to add infomation about mitochondrial and chloroplast to the "non_nuclear_contigs" field in the config file:
+>   "non_nuclear_contigs": ["Mt-0-525599", "Pt-0-115974"] in the config file
+
 
 #### Run Cell Ranger ARC
 
