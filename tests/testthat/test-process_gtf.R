@@ -1,19 +1,19 @@
 test_that("process_gtf works on example files and preserves order", {
   gtf_file <- system.file(
     "extdata",
-    "A3_toy_all_scenarios_2chr.gtf",
+    "AlgorithmToy.gtf",
     package = "scShardSplitRef",
     mustWork = TRUE
   )
 
   reg_file <- system.file(
     "extdata",
-    "IN0_toy_centromeres_for_gtf.bed",
+    "AlgorithmToy.bed",
     package = "scShardSplitRef",
     mustWork = TRUE
   )
 
-  out <- process_gtf(gtf_file, reg_file)
+  out <- process_gtf(reg_file, gtf_file, genome_name = "test", genome_version = "v1")
 
   # Basic structure checks
   expect_s3_class(out, "data.frame")
@@ -59,7 +59,7 @@ test_that("process_gtf works on example files and preserves order", {
 test_that("process_gtf aborts when split regions overlap (ambiguous)", {
   gtf_file <- system.file(
     "extdata",
-    "A3_toy_all_scenarios_2chr.gtf",
+    "AlgorithmToy.gtf",
     package = "scShardSplitRef",
     mustWork = TRUE
   )
@@ -68,7 +68,7 @@ test_that("process_gtf aborts when split regions overlap (ambiguous)", {
   reg <- read.table(
     system.file(
       "extdata",
-      "IN0_toy_centromeres_for_gtf.bed",
+      "AlgorithmToy.bed",
       package = "scShardSplitRef",
       mustWork = TRUE
     ),
@@ -94,7 +94,7 @@ test_that("process_gtf aborts when split regions overlap (ambiguous)", {
   )
 
   expect_error(
-    process_gtf(gtf_file, reg_file),
+    process_gtf(reg_file, gtf_file,  genome_name = "test", genome_version = "v1"),
     "Ambiguous split-region matches"
   )
 })
@@ -103,7 +103,7 @@ test_that("process_gtf aborts when split regions overlap (ambiguous)", {
 test_that("process_gtf aborts when some features match no region", {
   gtf_file <- system.file(
     "extdata",
-    "A3_toy_all_scenarios_2chr.gtf",
+    "AlgorithmToy.gtf",
     package = "scShardSplitRef",
     mustWork = TRUE
   )
@@ -112,7 +112,7 @@ test_that("process_gtf aborts when some features match no region", {
   reg <- read.table(
     system.file(
       "extdata",
-      "IN0_toy_centromeres_for_gtf.bed",
+      "AlgorithmToy.bed",
       package = "scShardSplitRef",
       mustWork = TRUE
     ),
@@ -137,7 +137,7 @@ test_that("process_gtf aborts when some features match no region", {
   )
 
   expect_error(
-    process_gtf(gtf_file, reg_file),
+    process_gtf(reg_file, gtf_file, genome_name = "test", genome_version = "v1"),
     "do not fall within any split-region interval"
   )
 })
