@@ -68,7 +68,8 @@ test_that(".check_tab_file errors on non-tab-separated file", {
 
   expect_error(
     .check_tab_file(tmp, min_fields = 3L, label = "BED"),
-    "tab-separated"
+    regexp = "tab-separated",
+    ignore.case = TRUE 
   )
 })
 

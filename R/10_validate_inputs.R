@@ -134,7 +134,8 @@ validate_inputs <- function(bed, gtf) {
         x = "Problematic lines: {invalid_idx}.",
         i = "Example: {example_bad}",
         i = "Expected: {expected}"
-      )
+      ),
+      class = "invalid_tab_file_error"
     )
   }
 
