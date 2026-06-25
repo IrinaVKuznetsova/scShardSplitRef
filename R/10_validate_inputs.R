@@ -131,7 +131,7 @@ validate_inputs <- function(bed, gtf) {
       call = rlang::caller_env(),
       c(
         "Invalid {label} file format.",
-        x = "Problematic line{?s}: {invalid_idx}.",
+        x = "Problematic lines: {invalid_idx}.",
         i = "Example: {example_bad}",
         i = "Expected: {expected}"
       )
@@ -326,7 +326,7 @@ validate_inputs <- function(bed, gtf) {
       c(
         "Invalid BED coordinates.",
         x = "Each row must satisfy {.field RegionStart < RegionEnd}.",
-        i = "Problematic row{?s}: {invalid_ranges}"
+        i = "Problematic rows: {invalid_ranges}"
       )
     )
   }
