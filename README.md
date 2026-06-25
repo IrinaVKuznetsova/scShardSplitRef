@@ -118,7 +118,6 @@ CAJHDD010000005.1       0       517010
 
 ### Key Functions
 ```
-?validate_inputs
 ?determine_split_regions
 ?process_gtf
 ```
