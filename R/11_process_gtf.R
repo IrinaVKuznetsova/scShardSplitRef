@@ -144,7 +144,7 @@ process_gtf <- function(
 #' @dev
 .prepare_split_regions <- function(regions) {
   regions$NEW <- sprintf(
-    "%s-%s-%s",
+    "%s:%s-%s",
     regions$Chr,
     regions$RegionStart,
     regions$RegionEnd
@@ -191,8 +191,8 @@ process_gtf <- function(
     cli::cli_abort(
       call = rlang::caller_env(),
       c(
-        "{n_dup} ambiguous split-region match{?es} detected.",
-        x = "{n_dup} feature ID{?s} matched multiple intervals.",
+        "{n_dup} ambiguous split-region matches detected.",
+        x = "{n_dup} feature IDs matched multiple intervals.",
         i = "Affected IDs:",
         i = paste0("* {.val ", dup_ids, "}"),
         i = "Ensure the split-regions BED has no overlapping intervals per chromosome."
@@ -239,7 +239,7 @@ process_gtf <- function(
   cli::cli_abort(
     call = rlang::caller_env(),
     c(
-      "{n_missing} GTF feature{?s} do not fall within any split-region interval.",
+      "{n_missing} GTF features do not fall within any split-region interval.",
       x = "{n_missing} unmatched feature{?s} found.",
       i = "Example:",
       i = paste0("* ", preview_items),
