@@ -12,8 +12,14 @@ test_that("process_gtf works on example files and preserves order", {
     package = "scShardSplitRef",
     mustWork = TRUE
   )
-
-  out <- process_gtf(reg_file, gtf_file, genome_name = "test", genome_version = "v1")
+  
+  # Define param
+  genome_name     <- "synthetic"
+  genome_version  <- "v1"
+  keep_attributes <- FALSE
+  out_path        <- tempdir()
+  
+  out <- process_gtf(reg_file, gtf_file, genome_name, genome_version, keep_attributes, out_path )
 
   # Basic structure checks
   expect_s3_class(out, "data.frame")
@@ -92,9 +98,15 @@ test_that("process_gtf aborts when split regions overlap (ambiguous)", {
     row.names = FALSE,
     quote = FALSE
   )
+  
+    # Define param
+  genome_name     <- "synthetic"
+  genome_version  <- "v1"
+  keep_attributes <- FALSE
+  out_path        <- tempdir()
 
   expect_error(
-    process_gtf(reg_file, gtf_file,  genome_name = "test", genome_version = "v1"),
+    process_gtf(reg_file, gtf_file, genome_name, genome_version, keep_attributes, out_path),
     "Ambiguous split-region matches"
   )
 })
@@ -136,8 +148,14 @@ test_that("process_gtf aborts when some features match no region", {
     quote = FALSE
   )
 
+  # Define param
+  genome_name     <- "synthetic"
+  genome_version  <- "v1"
+  keep_attributes <- FALSE
+  out_path        <- tempdir()
+  
   expect_error(
-    process_gtf(reg_file, gtf_file, genome_name = "test", genome_version = "v1"),
+    process_gtf(reg_file, gtf_file, genome_name, genome_version, keep_attributes, out_path),
     "do not fall within any split-region interval"
   )
 })

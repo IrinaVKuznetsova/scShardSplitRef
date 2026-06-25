@@ -39,4 +39,3 @@ chr6	demo	exon	460	480	.	+	.	gene_id "G6_REAL"; transcript_id "G6_REAL.1"; exon_
 chr6	demo	exon	490	500	.	+	.	gene_id "G6_REAL"; transcript_id "G6_REAL.1"; exon_number "3";
 chr6	demo	CDS	410	495	.	+	0	gene_id "G6_REAL"; transcript_id "G6_REAL.1";
 chr6	demo	five_prime_utr	400	409	.	+	.	gene_id "G6_REAL"; transcript_id "G6_REAL.1";
-
