@@ -41,51 +41,13 @@ library("knitr") # used for a kable table later in the document
 | File | Format | Description | File Name |
 |------------------|------------------|------------------|------------------|
 | Gene annotations | GTF | Gene features and coordinates | extdata/AlgorithmToy.gtf |
-| Centromere coordinates | BED-like | Centromere positions per chromosome (x) | extdata/AlgorithmToy.bed |
+| Centromere coordinates | BED-like | Centromere positions per chromosome | extdata/AlgorithmToy.bed |
 
 
 
 
 ### Workflow
-
-#### 1. Validate Input Files  
-
-The first function called `validate_inputs()`, checks the correct format of (GTF and BED-like) input files.
-
--   **BED:** 3 columns, tab-delimited, no header, no comments format (this centromere coordinates/`0` file is created manually)
--   **GTF**: 9 columns, tab-delimited, lines beginning with `#` at the top of the file are treated as comments and allowed
--   All files need to be decompressed
-
-##### The Help Page for `validate_inputs()`
-
-```{r, eval=FALSE}
-?validate_inputs
-```
-
-##### Usage Example: `validate_inputs()` 
-
-```{r}
-bed_path <- system.file(
-  "extdata/AlgorithmToy.bed",
-  package = "scShardSplitRef" )
-
-gtf_path <- system.file(
-  "extdata/AlgorithmToy.gtf",
-  package = "scShardSplitRef"  )
-
-# Validate input (FASTA and BED) files
-input_verif <- validate_inputs(bed = bed_path, 
-                               gtf = gtf_path )
-kable(input_verif$bed)
-kable(input_verif$gtf[1:5,])
-```
-
-> If the GTF and BED formats are correct, a confirmation message will be printed to the console:\
-> *"All files loaded and validated successfully"*
-
-
-
-#### 2. Determine Split Regions
+#### 1. Determine Split Regions
 
 The next function called ```determine_split_regions()``` prepares split coordinates in appropriate BED-like format. This function ensures that chromosomes are not split in the middle of a gene region.
 
@@ -97,16 +59,24 @@ The next function called ```determine_split_regions()``` prepares split coordina
 
 
 **Input Data** 
-This function takes a BED file and a GTF file as input.
+This function takes a BED file and a GTF file as input. 
+ 
+- `BED`: 3 columns, tab-delimited, no header, no comments format (this centromere coordinates/`0` file is created manually) 
+ 
+- `GTF`: 9 columns, tab-delimited, lines beginning with `#` at the top of the file are treated as comments and allowed 
+ 
+- All files need to be decompressed
+ 
 
-
-**Parameters:**
+**Parameters:** 
 
 - `limit`: can be left as the default, which is the Cell Ranger ARC limit 
 of `2^²⁹ (536,870,912 bp)`. For the purpose of this tutorial, to better 
-understand the algorithm, we set `limit=540`
+understand the algorithm, we set `limit=540` 
+
 - `shift_by`: the step size used to move the split coordinate to the right 
-when searching for a safe location outside a genic region
+when searching for a safe location outside a genic region 
+
 - `clearance`: a buffer that checks whether there is a clear region free of 
 genes on both sides of the proposed split coordinate
 
@@ -531,7 +501,7 @@ five_prime_utr[G6R]:  400-409
 
 
 
-#### 3. Process a GTF file by assigning split-region sequence names
+#### 2. Process a GTF file by assigning split-region sequence names
 
 Reads BED-like "split regions" and GTF files. Assigns each GTF feature to exactly one split-region interval, and replaces the GTF Chr field with a split-region name of the form `Chr-RegionStart-RegionEnd`.
 
