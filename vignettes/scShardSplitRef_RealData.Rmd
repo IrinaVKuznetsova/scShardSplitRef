@@ -1,9 +1,9 @@
 ---
-title: "scShardSplitRef"
+title: "scShardSplitRef: Getting Started"
 author: "Irina Kuznetsova"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{scShardSplitRef}
+  %\VignetteIndexEntry{scShardSplitRef: Getting Started}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
