@@ -66,11 +66,11 @@ satisfy the constraint.
   # R's tempdir()
 
   chromosomes <- system.file("extdata",
-                   "IN0_toy_centromeres_for_gtf.bed",
+                   "AlgorithmToy.bed",
                    package = "scShardSplitRef",
                    mustWork = TRUE)
   genes <- system.file("extdata",
-             "A3_toy_all_scenarios_2chr.gtf",
+             "AlgorithmToy.gtf",
              package = "scShardSplitRef",
              mustWork = TRUE)
 
