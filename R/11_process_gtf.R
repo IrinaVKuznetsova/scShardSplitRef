@@ -36,12 +36,12 @@
 #'
 #' @examples
 #' reg_file <- system.file(
-#'   "outdata/A3_toy_split_regions.bed",
+#'   "outdata/DetermineSplitReg_AlgorithmToy.bed",
 #'   package = "scShardSplitRef",
 #'   mustWork = TRUE
 #' )
 #' gtf_file <- system.file(
-#'   "extdata/A3_toy_all_scenarios_2chr.gtf",
+#'   "extdata/AlgorithmToy.gtf",
 #'   package = "scShardSplitRef",
 #'   mustWork = TRUE
 #' )
