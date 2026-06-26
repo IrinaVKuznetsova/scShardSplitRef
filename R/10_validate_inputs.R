@@ -20,11 +20,11 @@
 #' 4. All BED ranges satisfy RegionStart < RegionEnd
 #'
 #' @examples
-#'   regions <- system.file("extdata/A3_toy_centromeres.bed",
+#'   regions <- system.file("extdata/AlgorithmToy.bed",
 #'                    package = "scShardSplitRef",
 #'                    mustWork = TRUE)
 #'
-#'   genes <- system.file("extdata/A3_toy_all_scenarios_2chr.gtf",
+#'   genes <- system.file("extdata/AlgorithmToy.gtf",
 #'              package = "scShardSplitRef",
 #'              mustWork = TRUE)
 #'
