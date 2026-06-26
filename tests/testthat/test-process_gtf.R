@@ -1,63 +1,50 @@
-test_that("process_gtf works on example files and preserves order", {
+test_that("process_gtf works on example files and preserves order, writes a correctly ordered GTF to disk", {
   gtf_file <- system.file(
-    "extdata",
-    "AlgorithmToy.gtf",
-    package = "scShardSplitRef",
-    mustWork = TRUE
+    "extdata", "AlgorithmToy.gtf",
+    package = "scShardSplitRef", mustWork = TRUE
   )
-
   reg_file <- system.file(
-    "extdata",
-    "AlgorithmToy.bed",
-    package = "scShardSplitRef",
-    mustWork = TRUE
+    "outdata", "DetermineSplitReg_AlgorithmToy.bed",
+    package = "scShardSplitRef", mustWork = TRUE
   )
   
-  # Define param
-  genome_name     <- "synthetic"
-  genome_version  <- "v1"
-  keep_attributes <- FALSE
-  out_path        <- tempdir()
+  genome_name    <- "synthetic"
+  genome_version <- "v1"
+  keep_attributes <- NULL   ## (FALSE was wrong; NULL - "keep all attributes")
+  out_path       <- tempdir()
   
-  out <- process_gtf(reg_file, gtf_file, genome_name, genome_version, keep_attributes, out_path )
-
-  # Basic structure checks
-  expect_s3_class(out, "data.frame")
-  expect_true(all(
-    c(
-      "Chr",
-      "source",
-      "feature",
-      "start",
-      "end",
-      "score",
-      "strand",
-      "frame",
-      "attribute"
-    ) %in%
-      colnames(out)
-  ))
-
-  # Chr column must contain split-region names
+  res <- process_gtf(reg_file, gtf_file, genome_name, genome_version,
+                     keep_attributes=NULL, out_path)
+  
+  # Write to disk and return NULL (in the initial code this part was a data.frame, thus checks were failing now)
+  expect_null(res)
+  
+  # write output to disk, and read back in the next line so all checks can be done
+  written <- file.path(out_path,
+                       "B1_FINAL_MODIFIED_GTF_synthetic_v1.gtf")
+  expect_true(file.exists(written))
+  
+  # Read the just written file back and run checks
+  out <- read.table(written, sep = "\t", header = FALSE, quote = "",
+                    stringsAsFactors = FALSE)
+  colnames(out) <- c("Chr", "source", "feature", "start", "end",
+                     "score", "strand", "frame", "attribute")
+  
+  gtf_raw <- read.table(gtf_file, sep = "\t", header = FALSE, quote = "",
+                        comment.char = "#", stringsAsFactors = FALSE)
+  
+  # Same number of rows, in the same order
+  expect_identical(nrow(out), nrow(gtf_raw))
+  
+  # Chr column has split-region e.g. "chr1:0-410"
   expect_true(all(grepl(":", out$Chr, fixed = TRUE)))
   expect_true(all(grepl("-", out$Chr, fixed = TRUE)))
-
-  # Start/end must be positive after shifting
+  
+  # Coordinates are valid after shifting
   expect_true(all(out$start >= 1L))
   expect_true(all(out$end >= out$start))
-
-  # Output row order must match input GTF order
-  gtf_raw <- read.table(
-    gtf_file,
-    sep = "\t",
-    header = FALSE,
-    quote = "",
-    comment.char = "#",
-    stringsAsFactors = FALSE
-  )
-
-  # attribute is column 9
-  expect_identical(nrow(out), nrow(gtf_raw))
+  
+  # Attributes are unchanged (keep_attributes = NULL)
   expect_identical(out$attribute, gtf_raw[[9]])
 })
 
@@ -73,8 +60,8 @@ test_that("process_gtf aborts when split regions overlap (ambiguous)", {
   # Load BED using base R
   reg <- read.table(
     system.file(
-      "extdata",
-      "AlgorithmToy.bed",
+      "outdata",
+      "DetermineSplitReg_AlgorithmToy.bed",
       package = "scShardSplitRef",
       mustWork = TRUE
     ),
@@ -85,9 +72,11 @@ test_that("process_gtf aborts when split regions overlap (ambiguous)", {
 
   colnames(reg)[1:3] <- c("Chr", "RegionStart", "RegionEnd")
 
-  # Force overlap on chr1
-  reg$RegionStart[1] <- reg$RegionStart[2] - 5
-  reg$RegionEnd[1] <- reg$RegionEnd[2] + 5
+  # Force overlap on chr1 - hard coded
+  #reg$RegionStart[1] <- reg$RegionStart[2] - 5
+  #reg$RegionEnd[1] <- reg$RegionEnd[2] + 5
+  chr1_rows <- which(reg$Chr == "chr1")   # removing hard coded lines, changed to chr1 
+  reg$RegionStart[chr1_rows[2]] <- reg$RegionStart[chr1_rows[1]]  # [2/1]chr regions Start and End
 
   reg_file <- tempfile(fileext = ".bed")
   write.table(
@@ -99,15 +88,15 @@ test_that("process_gtf aborts when split regions overlap (ambiguous)", {
     quote = FALSE
   )
   
-    # Define param
+  # Define param
   genome_name     <- "synthetic"
   genome_version  <- "v1"
-  keep_attributes <- FALSE
+  keep_attributes <- NULL
   out_path        <- tempdir()
 
   expect_error(
-    process_gtf(reg_file, gtf_file, genome_name, genome_version, keep_attributes, out_path),
-    "Ambiguous split-region matches"
+    process_gtf(reg_file, gtf_file, genome_name, genome_version, keep_attributes=NULL, out_path),
+    "ambiguous split-region matches"
   )
 })
 
@@ -123,8 +112,8 @@ test_that("process_gtf aborts when some features match no region", {
   # Load BED using base R
   reg <- read.table(
     system.file(
-      "extdata",
-      "AlgorithmToy.bed",
+      "outdata",
+      "DetermineSplitReg_AlgorithmToy.bed",
       package = "scShardSplitRef",
       mustWork = TRUE
     ),
@@ -151,11 +140,11 @@ test_that("process_gtf aborts when some features match no region", {
   # Define param
   genome_name     <- "synthetic"
   genome_version  <- "v1"
-  keep_attributes <- FALSE
+  keep_attributes <- NULL
   out_path        <- tempdir()
   
   expect_error(
-    process_gtf(reg_file, gtf_file, genome_name, genome_version, keep_attributes, out_path),
+    process_gtf(reg_file, gtf_file, genome_name, genome_version, keep_attributes=NULL, out_path),
     "do not fall within any split-region interval"
   )
 })
