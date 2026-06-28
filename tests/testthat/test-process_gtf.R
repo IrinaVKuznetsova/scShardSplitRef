@@ -201,7 +201,7 @@ test_that(".prepare_split_regions constructs NEW correctly", {
     stringsAsFactors = FALSE
   )
 
-  out <- scShardSplitRef:::`.prepare_split_regions`(regions)
+  out <- .prepare_split_regions(regions)
 
   expect_identical(out$NEW, "chrX:100-200")
 })
@@ -215,7 +215,7 @@ test_that(".rows_within_region applies matching rules correctly", {
   )
 
   expect_identical(
-    scShardSplitRef:::`.rows_within_region`(df),
+    .rows_within_region(df),
     c(FALSE, TRUE, TRUE, TRUE)
   )
 })
