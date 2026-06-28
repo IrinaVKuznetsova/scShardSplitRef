@@ -61,27 +61,3 @@ scs_cli_alert_info <- function(text, ..., .envir = parent.frame()) {
 
   invisible(TRUE)
 }
-
-#' scShardSplitRef cli success alert (internal)
-#'
-#' Wrapper for [cli::cli_alert_success()] that respects
-#' `options(scShardSplitRef.verbosity = "quiet"|"minimal"|"verbose")`.
-#'
-#' @inheritParams scs_cli_alert_info
-#' @return Invisibly `TRUE`.
-#' @dev
-scs_cli_alert_success <- function(text, ..., .envir = parent.frame()) {
-  if (!.scs_emit_success()) {
-    return(invisible(TRUE))
-  }
-
-  dots <- list(...)
-  if (length(dots) > 0L) {
-    e <- rlang::env(.parent = .envir, !!!dots)
-    cli::cli_alert_success(text, .envir = e)
-  } else {
-    cli::cli_alert_success(text, .envir = .envir)
-  }
-
-  invisible(TRUE)
-}
