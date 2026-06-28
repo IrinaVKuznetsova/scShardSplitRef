@@ -12,7 +12,7 @@ test_that(".build_boundaries respects size limit", {
   expect_identical(.build_boundaries(0L, 100L, 200L), integer(0L))
   result <- .build_boundaries(0L, 1000L, 250L)
   expect_type(result, "integer")
-  expect_length(result > 0L)
+  expect_gt(length(result), 0L)
 })
 
 test_that(".build_boundaries creates valid chunks", {
@@ -20,7 +20,7 @@ test_that(".build_boundaries creates valid chunks", {
   points <- c(0L, boundaries, 1000L)
   widths <- diff(points)
   expect_true(all(widths <= 250L))
-  expect_true(all(widths > 0L))
+  expect_gt(all(widths), 0L)
 })
 
 test_that(".build_boundaries handles exact multiples", {
@@ -132,7 +132,7 @@ test_that(".subdivide_oversized identifies needed splits", {
 
   # Splits needed
   result <- .subdivide_oversized(c(0L, 500L), limit = 100L)
-  expect_length(result > 0L)
+  expect_gt(length(result), 0L)
   expect_true(all(result > 0L & result < 500L))
 })
 
