@@ -1,7 +1,7 @@
 ---
 title: "scShardSplitRef: Algorithm Description"
 author: "Irina Kuznetsova"
-output: rmarkdown::html_vignette    
+output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{scShardSplitRef: Algorithm Description}
   %\VignetteEngine{knitr::rmarkdown}
@@ -12,7 +12,7 @@ vignette: >
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
-  )
+)
 #devtools::load_all() #### delete after publishing
 ```
 
@@ -92,20 +92,17 @@ clearance = 40L
 
 ```{r}
 # Define input files directory
-bed_path <- system.file("extdata/AlgorithmToy.bed",
-  package = "scShardSplitRef" )
+bed_path <- system.file("extdata/AlgorithmToy.bed", package = "scShardSplitRef")
 
-gtf_path <- system.file("extdata/AlgorithmToy.gtf",
-  package = "scShardSplitRef"  )
+gtf_path <- system.file("extdata/AlgorithmToy.gtf", package = "scShardSplitRef")
 
 # Define output directory
-output_file <- file.path(tempdir(), 
-                         "outdata")
-dir.create(output_file, 
-           recursive = TRUE, 
-           showWarnings = FALSE           )
-output_file_name_dir <- file.path(output_file, 
-                                  "DetermineSplitReg_AlgorithmToy.bed")
+output_file <- file.path(tempdir(), "outdata")
+dir.create(output_file, recursive = TRUE, showWarnings = FALSE)
+output_file_name_dir <- file.path(
+  output_file,
+  "DetermineSplitReg_AlgorithmToy.bed"
+)
 
 # Determine split regions
 get_split_reg <- determine_split_regions(
@@ -115,10 +112,9 @@ get_split_reg <- determine_split_regions(
   limit = 540L,
   shift_by = 30L,
   clearance = 40L
-  )
+)
 
 get_split_reg
-
 ```
 
 <br>
@@ -517,7 +513,7 @@ This function takes a BED-like file containing split intervals as produced by `p
 
 ##### Usage Example: `process_gtf()`
 ```{r, eval=FALSE}
-gtf_processed = process_gtf(
+gtf_processed <- process_gtf(
   split_regions_bed = "DetermineSplitReg_AlgorithmToy.bed",
   gtf = "AlgorithmToy.gtf",
   genome_name = "ToyExample",
@@ -525,7 +521,6 @@ gtf_processed = process_gtf(
   keep_attributes = NULL,
   out_path = "."
 )
-
 ```
 
 
