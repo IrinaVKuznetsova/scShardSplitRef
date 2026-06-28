@@ -14,9 +14,7 @@ test_that(".check_tab_file passes for valid BED file", {
 test_that(".check_tab_file passes for valid GTF file", {
   tmp <- withr::local_tempfile(fileext = ".gtf")
   writeLines(
-    c(
-      "chr1\tsource\tgene\t1\t100\t.\t+\t.\tattribute"
-    ),
+    "chr1\tsource\tgene\t1\t100\t.\t+\t.\tattribute",
     tmp
   )
 
@@ -124,21 +122,21 @@ test_that(".check_tab_file error message includes problematic line number", {
 # .find_invalid_field_counts --------------------------------------------------
 
 test_that(".find_invalid_field_counts returns empty for valid counts", {
-  expect_equal(
+  expect_identical(
     .find_invalid_field_counts(c(3L, 3L, 4L), min_fields = 3L),
     integer(0)
   )
 })
 
 test_that(".find_invalid_field_counts catches below min", {
-  expect_equal(
+  expect_identical(
     .find_invalid_field_counts(c(3L, 2L, 3L), min_fields = 3L),
     2L
   )
 })
 
 test_that(".find_invalid_field_counts catches above max", {
-  expect_equal(
+  expect_identical(
     .find_invalid_field_counts(c(3L, 5L, 3L), min_fields = 3L, max_fields = 4L),
     2L
   )
@@ -150,7 +148,7 @@ test_that(".find_invalid_field_counts catches both below and above bounds", {
     min_fields = 3L,
     max_fields = 4L
   )
-  expect_equal(result, c(1L, 3L))
+  expect_identical(result, c(1L, 3L))
 })
 
 test_that(".find_invalid_field_counts deduplicates and sorts", {
@@ -159,20 +157,20 @@ test_that(".find_invalid_field_counts deduplicates and sorts", {
     min_fields = 3L,
     max_fields = 4L
   )
-  expect_equal(result, c(1L, 2L, 3L)) # 1 & 3 exceed max, 2 below min
+  expect_identical(result, c(1L, 2L, 3L)) # 1 & 3 exceed max, 2 below min
 })
 
 # .format_field_expectation ---------------------------------------------------
 
 test_that(".format_field_expectation with no max", {
-  expect_equal(
+  expect_identical(
     .format_field_expectation(9L, NA_integer_),
     "at least 9 TAB-separated fields"
   )
 })
 
 test_that(".format_field_expectation with min and max", {
-  expect_equal(
+  expect_identical(
     .format_field_expectation(3L, 9L),
     "3-9 TAB-separated fields"
   )
@@ -272,7 +270,7 @@ test_that("validate_inputs assigns correct BED column names", {
 
   result <- validate_inputs(bed_tmp, gtf_tmp)
 
-  expect_equal(colnames(result$bed)[1:3], c("Chr", "RegionStart", "RegionEnd"))
+  expect_named(result$bed[1:3], c("Chr", "RegionStart", "RegionEnd"))
 })
 
 test_that("validate_inputs assigns correct GTF column names", {
@@ -284,8 +282,8 @@ test_that("validate_inputs assigns correct GTF column names", {
 
   result <- validate_inputs(bed_tmp, gtf_tmp)
 
-  expect_equal(
-    colnames(result$gtf),
+  expect_named(
+    result$gtf,
     c(
       "Chr",
       "source",
