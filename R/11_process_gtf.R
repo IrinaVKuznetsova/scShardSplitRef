@@ -60,7 +60,7 @@ process_gtf <- function(
   split_regions_bed,
   gtf,
   genome_name,
-  genome_version,
+  genome_version = NULL,
   keep_attributes = NULL,
   out_path = "."
 ) {
@@ -74,7 +74,7 @@ process_gtf <- function(
     )
   }
 
-  if (missing(genome_version) || is.null(genome_version)) {
+  if (is.null(genome_version)) {
     cli::cli_abort(
       call = rlang::caller_env(),
       c(x = "Parameter {.arg genome_version} is required.")
