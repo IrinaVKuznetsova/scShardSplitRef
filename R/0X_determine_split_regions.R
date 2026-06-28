@@ -155,7 +155,7 @@ determine_split_regions <- function(
   if (!file.exists(path)) {
     cli::cli_abort(
       call = rlang::caller_env(),
-      "BED file not found: {.file {path}}",
+      "BED file not found: {.file {path}}"
     )
   }
 
