@@ -6,7 +6,10 @@ library("knitr")
 install() # ensure we're using the latest version of scShardSplitRef
 
 # Precompile the vignette
-knit("vignettes/scShardSplitRef_RealData.Rmd.orig", "vignettes/scShardSplitRef_RealData.Rmd")
+knit(
+  "vignettes/scShardSplitRef_RealData.Rmd.orig",
+  "vignettes/scShardSplitRef_RealData.Rmd"
+)
 
 # remove file path such that vignettes will build with figures
 replace <- readLines("vignettes/scShardSplitRef_RealData.Rmd")

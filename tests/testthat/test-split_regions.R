@@ -217,7 +217,11 @@ test_that(".assert_feasible_limit accepts feasible configs", {
     start = integer(0),
     end = integer(0)
   )
-  expect_invisible(.assert_feasible_limit(genes, limit = 50000L, clearance = 1L))
+  expect_invisible(.assert_feasible_limit(
+    genes,
+    limit = 50000L,
+    clearance = 1L
+  ))
 
   genes <- data.frame(
     chr = c("chr1", "chr1"),

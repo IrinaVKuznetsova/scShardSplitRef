@@ -118,7 +118,11 @@ test_that(".assert_feasible_limit accepts feasible configs", {
     end = integer(0),
     stringsAsFactors = FALSE
   )
-  expect_invisible(.assert_feasible_limit(genes, limit = 50000L, clearance = 1L))
+  expect_invisible(.assert_feasible_limit(
+    genes,
+    limit = 50000L,
+    clearance = 1L
+  ))
 })
 
 test_that(".process_single_region handles basic regions", {

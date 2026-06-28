@@ -69,16 +69,24 @@ determine_split_regions <- function(
   shift_by = 1L,
   clearance = 1L
 ) {
-  if (!is.numeric(shift_by) || length(shift_by) != 1L || is.na(shift_by) ||
-    shift_by < 1L) {
+  if (
+    !is.numeric(shift_by) ||
+      length(shift_by) != 1L ||
+      is.na(shift_by) ||
+      shift_by < 1L
+  ) {
     cli::cli_abort(
       call = rlang::caller_env(),
       "{.arg shift_by} must be a single numeric value >= 1."
     )
   }
 
-  if (!is.numeric(clearance) || length(clearance) != 1L ||
-    is.na(clearance) || clearance < 0L) {
+  if (
+    !is.numeric(clearance) ||
+      length(clearance) != 1L ||
+      is.na(clearance) ||
+      clearance < 0L
+  ) {
     cli::cli_abort(
       call = rlang::caller_env(),
       "{.arg clearance} must be a single numeric value >= 0."
