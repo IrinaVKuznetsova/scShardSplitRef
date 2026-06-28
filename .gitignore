@@ -19,6 +19,9 @@ inst/doc
 *.sam
 *.fai
 
+# cellranger files
+mkref.log
+
 
 # Large data files
 /vignettes/B1_FINAL_MODIFIED_GTF_barley_3.gtf
