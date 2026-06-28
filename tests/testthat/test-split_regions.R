@@ -7,23 +7,12 @@
   )
 }
 
-# Helper to create test GTF data
-.make_gtf <- function(chrs, starts, ends, ids) {
-  data.frame(
-    chr = chrs,
-    start = starts,
-    end = ends,
-    unique_ID = ids,
-    stringsAsFactors = FALSE
-  )
-}
-
 # .build_boundaries tests
 test_that(".build_boundaries respects size limit", {
   expect_identical(.build_boundaries(0L, 100L, 200L), integer(0L))
   result <- .build_boundaries(0L, 1000L, 250L)
   expect_type(result, "integer")
-  expect_true(length(result) > 0L)
+  expect_length(result > 0L)
 })
 
 test_that(".build_boundaries creates valid chunks", {
@@ -143,7 +132,7 @@ test_that(".subdivide_oversized identifies needed splits", {
 
   # Splits needed
   result <- .subdivide_oversized(c(0L, 500L), limit = 100L)
-  expect_true(length(result) > 0L)
+  expect_length(result > 0L)
   expect_true(all(result > 0L & result < 500L))
 })
 
@@ -199,7 +188,7 @@ test_that(".shift_boundaries_past_genes deduplicates and filters", {
   gene_ranges <- .make_gene_ranges(50L, 100L)
   boundaries <- c(75L, 75L, 200L)
   result <- .shift_boundaries_past_genes(boundaries, gene_ranges, 300L, 1L)
-  expect_identical(length(result), length(unique(result)))
+  expect_length(result, length(unique(result)))
 
   # Test 2: filters boundaries (only interior boundaries kept)
   boundaries <- c(50L, 100L, 200L)
