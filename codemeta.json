@@ -3,7 +3,7 @@
   "@type": "SoftwareSourceCode",
   "identifier": "scShardSplitRef",
   "description": "Provides utilities that enable researchers to build custom references for the Multiome ATAC Gene Expression sequencing data for large-genome species without manual intervention.",
-  "name": "scShardSplitRef: Build Custom Reference Genome for Single-Cell Multiome ATAC and\n    Gene Expression Data of Large-genome Species.",
+  "name": "scShardSplitRef: Build Custom Reference Genome for Single-Cell Multiome ATAC and\n    Gene Expression Data of Large-genome Species",
   "license": "https://spdx.org/licenses/GPL-3.0",
   "version": "0.0.0.9000",
   "programmingLanguage": {
@@ -11,7 +11,7 @@
     "name": "R",
     "url": "https://r-project.org"
   },
-  "runtimePlatform": "R version 4.6.0 (2026-04-24)",
+  "runtimePlatform": "R version 4.6.1 (2026-06-24)",
   "author": [
     {
       "@type": "Person",
@@ -169,6 +169,18 @@
       "@type": "SoftwareApplication",
       "identifier": "utils",
       "name": "utils"
+    },
+    "6": {
+      "@type": "SoftwareApplication",
+      "identifier": "withr",
+      "name": "withr",
+      "provider": {
+        "@id": "https://cran.r-project.org",
+        "@type": "Organization",
+        "name": "Comprehensive R Archive Network (CRAN)",
+        "url": "https://cran.r-project.org"
+      },
+      "sameAs": "https://CRAN.R-project.org/package=withr"
     },
     "SystemRequirements": null
   },
