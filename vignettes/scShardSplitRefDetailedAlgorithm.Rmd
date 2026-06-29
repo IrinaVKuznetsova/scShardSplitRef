@@ -91,18 +91,23 @@ clearance = 40L
 ```
 
 ```{r}
-# Define input files directory
-bed_path <- system.file("extdata/AlgorithmToy.bed", package = "scShardSplitRef")
-
-gtf_path <- system.file("extdata/AlgorithmToy.gtf", package = "scShardSplitRef")
-
-# Define output directory
-output_file <- file.path(tempdir(), "outdata")
-dir.create(output_file, recursive = TRUE, showWarnings = FALSE)
-output_file_name_dir <- file.path(
-  output_file,
-  "DetermineSplitReg_AlgorithmToy.bed"
-)
+# Read GTF file
+gtf_path <- system.file(
+  "extdata/AlgorithmToy.gtf",
+  package = "scShardSplitRef" )
+# Read BED file 
+bed_path <- system.file(
+  "extdata/AlgorithmToy.bed",
+  package = "scShardSplitRef")
+  
+# Define output path
+output_file <- file.path(tempdir(), 
+                         "extdata")
+dir.create(output_file, 
+           recursive = TRUE, 
+           showWarnings = FALSE)
+output_file_name_dir <- file.path(output_file, 
+                                  "AlgorithmToy_DetermineSplitReg.bed")
 
 # Determine split regions
 get_split_reg <- determine_split_regions(
@@ -513,13 +518,19 @@ This function takes a BED-like file containing split intervals as produced by `p
 
 ##### Usage Example: `process_gtf()`
 ```{r, eval=FALSE}
+# BED
+bed_modif <- system.file(
+  "extdata/AlgorithmToy_DetermineSplitReg.bed",
+  package = "scShardSplitRef")
+
+# Function
 gtf_processed <- process_gtf(
-  split_regions_bed = "DetermineSplitReg_AlgorithmToy.bed",
-  gtf = "AlgorithmToy.gtf",
-  genome_name = "ToyExample",
+  split_regions_bed = bed_modif,
+  gtf = gtf_path,
+  genome_name = "AlgorithmToyExample",
   genome_version = "v1",
   keep_attributes = NULL,
-  out_path = "."
+  out_path = tempdir()
 )
 ```
 
