@@ -21,7 +21,7 @@ close(fileConn)
 # build vignette
 build_vignettes()
 
-# move resource files to /docs
+# move resource files to /doc
 resources <-
   list.files("vignettes/", pattern = ".png$", full.names = TRUE)
-file.copy(from = resources, to = "docs", overwrite = TRUE)
+file.copy(from = resources, to = "doc", overwrite = TRUE)
