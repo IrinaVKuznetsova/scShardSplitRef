@@ -54,6 +54,7 @@ For this tutorial, we will be using a genome sequence (FASTA) and gene annotatio
 
 
 ``` {r, eval=FALSE}
+# Here are the steps for downloading the files required for the package, using the full nuclear barley genome. 
 # Downloading the GTF file from Ensembl
 download.file(url="https://ftp.ensemblgenomes.ebi.ac.uk/pub/plants/release-62/gtf/hordeum_vulgare/Hordeum_vulgare.MorexV3_pseudomolecules_assembly.62.gtf.gz",
               destfile="B0_Hordeum_vulgare.MorexV3_pseudomolecules_assembly.62.gtf.gz", 
@@ -189,7 +190,7 @@ The goal of the `determine_split_regions()` function is to create appropriate sp
 ?determine_split_regions
 ```
 
-### Check formatting of input files. Build BED-like split intervals using genomic regions (BED) and gene annotations (GTF) input files
+### Check formatting of input files and build BED-like split intervals
 
 ``` r
 # Load MOREX V3 (subset to 1H, 2H)
