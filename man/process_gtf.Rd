@@ -66,7 +66,7 @@ the file in the directory specified in the \code{out_path}.
 
 \examples{
 reg_file <- system.file(
-  "outdata/DetermineSplitReg_AlgorithmToy.bed",
+  "extdata/AlgorithmToy_DetermineSplitReg.bed",
   package = "scShardSplitRef",
   mustWork = TRUE
 )
