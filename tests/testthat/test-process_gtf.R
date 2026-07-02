@@ -7,7 +7,7 @@ test_that("process_gtf works on example files and preserves order, writes a corr
   )
   reg_file <- system.file(
     "extdata",
-    "DetermineSplitReg_AlgorithmToy.bed",
+    "AlgorithmToy_DetermineSplitReg.bed",
     package = "scShardSplitRef",
     mustWork = TRUE
   )
@@ -90,7 +90,7 @@ test_that("process_gtf aborts when split regions overlap (ambiguous)", {
   reg <- read.table(
     system.file(
       "extdata",
-      "DetermineSplitReg_AlgorithmToy.bed",
+      "AlgorithmToy_DetermineSplitReg.bed",
       package = "scShardSplitRef",
       mustWork = TRUE
     ),
@@ -149,7 +149,7 @@ test_that("process_gtf aborts when some features match no region", {
   reg <- read.table(
     system.file(
       "extdata",
-      "DetermineSplitReg_AlgorithmToy.bed",
+      "AlgorithmToy_DetermineSplitReg.bed",
       package = "scShardSplitRef",
       mustWork = TRUE
     ),
