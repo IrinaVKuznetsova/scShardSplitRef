@@ -173,7 +173,7 @@ bed_path <- system.file(
   
 # Define output path
 output_file <- file.path(tempdir(), 
-                         "outdata"
+                         "extdata"
                          )
 dir.create(output_file, 
            recursive = TRUE, 
@@ -192,7 +192,7 @@ get_split_reg <- determine_split_regions(
   shift_by = 20L
   )
 #> Preparing split regions from 'bed' and 'gtf' into 'output_bed' (`limit` = 536870912, `shift_by` = 20).
-#> Built 299 split intervals across 292 chromosomes and wrote them to 'output_bed'.
+#> Built 6 split intervals across 3 chromosomes and wrote them to output_bed.
 
 get_split_reg
 ```
@@ -204,7 +204,7 @@ get_split_reg
 
 ``` r
 bed_f <- system.file(
-  "outdata/morex3_Split_regions.bed",
+  "extdata/morex3_Split_regions.bed",
   package = "scShardSplitRef"
 )
 split_region_bed_df <- read.table(file = bed_f, 
@@ -250,7 +250,20 @@ process_gtf(
   )
 #> ℹ Validating inputs and reading files...
 #> All files loaded and validated successfully.
-#> ℹ Finished writing processed GTF: /tmp/Rtmpp4whTR/B1_FINAL_MODIFIED_GTF_subset_barley_3.gtf
+#> ℹ Finished writing processed GTF: /tmp/RtmpT9huHf/B1_FINAL_MODIFIED_GTF_subset_barley_3.gtf
+
+
+# Compress large file
+tmp_gtf <- file.path(tempdir(), "B1_FINAL_MODIFIED_GTF_subset_barley_3.gtf")
+
+con_in  <- file(tmp_gtf, "r")
+con_out <- gzfile("B1_FINAL_MODIFIED_GTF_subset_barley_3.gtf.gz", "w")
+
+writeLines(readLines(con_in), con_out)
+
+close(con_in)
+close(con_out)
+
 ```
 
 > The output file is in the GTF format. Note that the first column has been reformatted, the regions are now split.\
@@ -264,7 +277,7 @@ process_gtf(
 
 ``` r
 gtf_modified <- system.file(
-  "outdata/B1_FINAL_MODIFIED_GTF_subset_barley_3.gtf",
+  "extdata/B1_FINAL_MODIFIED_GTF_subset_barley_3.gtf",
   package = "scShardSplitRef"
   )
 processed_gtf <- read.table(file = gtf_modified, 
@@ -333,7 +346,7 @@ cat Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly.1H.fa 
 ``` bash
 # Please note that due to the file size limitations, the barley genome FASTA file is not available on our GitHub repository at /inst/extdata/
 IN_FA="/data/morex3_subset_1H_2H_3H.fasta"
-BED_FIN_OUT="/inst/outdata/morex3_Split_regions.bed"
+BED_FIN_OUT="/inst/extdata/morex3_Split_regions.bed"
 FASTA_FIN_OUT="/data/"
 
 # Split FASTA
@@ -391,7 +404,7 @@ cat 03_cellranger_arc_barley.config
     "organism": "barley",
     "genome": ["MOREX3_subset_v3"],
     "input_fasta": ["/data/morex3_split_FINAL_1H_2H_3H.fasta"],
-    "input_gtf": ["/outdata/B1_FINAL_MODIFIED_GTF_barley_3.gtf"],
+    "input_gtf": ["/extdata/B1_FINAL_MODIFIED_GTF_barley_3.gtf"],
 }
 ```
 
