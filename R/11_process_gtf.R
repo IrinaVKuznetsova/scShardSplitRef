@@ -36,7 +36,7 @@
 #'
 #' @examples
 #' reg_file <- system.file(
-#'   "extdata/DetermineSplitReg_AlgorithmToy.bed",
+#'   "extdata/AlgorithmToy_DetermineSplitReg.bed",
 #'   package = "scShardSplitRef",
 #'   mustWork = TRUE
 #' )
