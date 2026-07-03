@@ -53,7 +53,8 @@ library("knitr") # used for a kable table later in the document
 For this tutorial, we will be using a genome sequence (FASTA) and gene annotations (GTF) of the barley genome (*Hordeum Vulgare, Morex V3*). We begin by downloading the FASTA and GTF files from [Ensembl](https://ftp.ensemblgenomes..ebi.ac.uk) and creating a BED-like file with centromere coordinates from [GrainGenes](https://graingenes.org/GG3/content/morex-v3-files-2021). We then assess the formatting of the input GTF and BED files, followed by checking and, if necessary, modifying the split coordinates in the BED file. The GTF file is subsequently updated according to the split position. Finally, the FASTA file is split and formatted for compatibility with Cell Ranger ARC. All files must be decompressed prior to use.
 
 
-``` {r, eval=FALSE}
+
+``` r
 # Here are the steps for downloading the files required for the package, using the full nuclear barley genome. 
 # Downloading the GTF file from Ensembl
 download.file(url="https://ftp.ensemblgenomes.ebi.ac.uk/pub/plants/release-62/gtf/hordeum_vulgare/Hordeum_vulgare.MorexV3_pseudomolecules_assembly.62.gtf.gz",

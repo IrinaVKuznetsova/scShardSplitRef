@@ -46,7 +46,55 @@ library("knitr") # used for a kable table later in the document
 
 <br>
 
-For this tutorial, we will be using a genome sequence (FASTA) and gene annotations (GTF) of the barley genome (*Hordeum Vulgare, Morex V3*) available from [Ensembl](https://ftp.ensemblgenomes..ebi.ac.uk) and centromere coordinates from [GrainGenes](https://graingenes.org/GG3/content/morex-v3-files-2021).
+
+
+## Step-by-Step Guide
+
+For this tutorial, we will be using a genome sequence (FASTA) and gene annotations (GTF) of the barley genome (*Hordeum Vulgare, Morex V3*). We begin by downloading the FASTA and GTF files from [Ensembl](https://ftp.ensemblgenomes..ebi.ac.uk) and creating a BED-like file with centromere coordinates from [GrainGenes](https://graingenes.org/GG3/content/morex-v3-files-2021). We then assess the formatting of the input GTF and BED files, followed by checking and, if necessary, modifying the split coordinates in the BED file. The GTF file is subsequently updated according to the split position. Finally, the FASTA file is split and formatted for compatibility with Cell Ranger ARC. All files must be decompressed prior to use.
+
+
+``` {r, eval=FALSE}
+# Here are the steps for downloading the files required for the package, using the full nuclear barley genome. 
+# Downloading the GTF file from Ensembl
+download.file(url="https://ftp.ensemblgenomes.ebi.ac.uk/pub/plants/release-62/gtf/hordeum_vulgare/Hordeum_vulgare.MorexV3_pseudomolecules_assembly.62.gtf.gz",
+              destfile="B0_Hordeum_vulgare.MorexV3_pseudomolecules_assembly.62.gtf.gz", 
+              method = "auto", 
+              mode = "wb")
+
+# Downloading ZIP folder from GrainGenes
+options(timeout = 600)  # increase download time to 10 minutes instead of default 60 seconds
+
+download.file(url="https://graingenes.org/GG3/sites/default/files/data_downloads/barley-morex3.zip", 
+              destfile="barley-morex3.zip", 
+              method = "auto", 
+              mode = "wb")
+
+## List contents first
+unzip("barley-morex3.zip", list = TRUE)
+
+
+# Extract TSV file with centromere coordinates
+unzip("barley-morex3.zip", exdir = "temp_extract")
+
+# Find the file
+found <- list.files("temp_extract", 
+                    pattern = "centromere_positions.tsv", 
+                    recursive = TRUE, 
+                    full.names = TRUE)
+print(found)
+
+# Copy to current directory
+file.copy(found, "./MorexV3_centromere_positions.tsv")
+
+# Remove 
+unlink("temp_extract", recursive = TRUE, force = TRUE)
+unlink("barley-morex3.zip", force = TRUE)
+```
+
+
+
+
+
 
 <br>
 
@@ -57,10 +105,10 @@ For this tutorial, we will be using a genome sequence (FASTA) and gene annotatio
 
 ``` r
 # Gene annotations (GTF) file. The format of the GTF file is a tab-delimited 9-column file.
-# data.dir = "/inst/extdata/morex3_subset_1H_2H_3H.gtf.gz"
+# data.dir = "/inst/extdata/morex3_subset_1H_2H.gtf.gz"
 
 gtf_file <- system.file(
-  "extdata/morex3_subset_1H_2H_3H.gtf.gz",
+  "extdata/morex3_subset_1H_2H.gtf.gz",
   package = "scShardSplitRef"
   )
 decompress_gtf <- gzfile(gtf_file, open = "rt")
@@ -109,10 +157,10 @@ gtf_df[1:10, ]
 #   the 2nd column contains the centromere coordinate (or 0 if this information is not available for your species), 
 #   the 3rd column contains the chromosome/contig end coordinates.
 # Manually formatted centromere file (please check the expected format below):
-# data.dir = "/inst/extdata/morex3_subset_1H_2H_3H.bed"
+# data.dir = "/inst/extdata/morex3_subset_1H_2H.bed"
 
 bed_file <- system.file(
-  "extdata/morex3_subset_1H_2H_3H.bed",
+  "extdata/morex3_subset_1H_2H.bed",
   package = "scShardSplitRef"
   )
 centr_bed_df <- read.table(file = bed_file, 
@@ -125,14 +173,11 @@ centr_bed_df
 #>                   V1        V2        V3
 #> 1                 1H 206486643 516505932
 #> 2                 2H 301293086 665585731
-#> 3                 3H 267852507 621516506
 ```
 
 </details>
 
-## Step-by-Step Guide
 
-We begin by assessing the formatting of the input GTF and BED files provided by the user, followed by checking and, if necessary, modifying the split coordinates in the BED file. The GTF file is then updated according to the split position. Finally, the FASTA file is split and formatted for compatibility with Cell Ranger ARC. All files need to be decompressed.
 
 ### Step-1
 
@@ -145,17 +190,17 @@ The goal of the `determine_split_regions()` function is to create appropriate sp
 ?determine_split_regions
 ```
 
-### Check formatting of input files. Build BED-like split intervals using genomic regions (BED) and gene annotations (GTF) input files
+### Check formatting of input files and build BED-like split intervals
 
 ``` r
-# Load MOREX V3 (subset to 1H, 2H, 3H)
+# Load MOREX V3 (subset to 1H, 2H)
 # Note1: all files need to be decompressed for use in Cell Ranger
 # Note2: use correctly formatted BED file with centromere coordinates
 # Task: Check formatting of input files. Build BED-like split intervals using genomic regions (BED) and gene annotations (GTF) input files
 
 # Read GTF file
 gtf_path <- system.file(
-  "extdata/morex3_subset_1H_2H_3H.gtf.gz",
+  "extdata/morex3_subset_1H_2H.gtf.gz",
   package = "scShardSplitRef"
   )
 tmp_gtf_path <- tempfile(fileext = ".gtf")
@@ -167,7 +212,7 @@ close(con_out)
 
 # Read BED file 
 bed_path <- system.file(
-  "extdata/morex3_subset_1H_2H_3H.bed",
+  "extdata/morex3_subset_1H_2H.bed",
   package = "scShardSplitRef"
   )
   
@@ -180,7 +225,7 @@ dir.create(output_file,
            showWarnings = FALSE
            )
 output_file_name_dir <- file.path(output_file, 
-                                  "morex3_Split_regions.bed"
+                                  "morex3_subset_1H_2H_Split_Regions.bed"
                                   )
 
 # Determine split regions
@@ -189,10 +234,11 @@ get_split_reg <- determine_split_regions(
   gtf = tmp_gtf_path,
   output_bed = output_file_name_dir,
   limit = 2L^29L,
-  shift_by = 20L
+  shift_by = 20L,
+  clearance = 20L
   )
-#> Preparing split regions from 'bed' and 'gtf' into 'output_bed' (`limit` = 536870912, `shift_by` = 20).
-#> Built 6 split intervals across 3 chromosomes and wrote them to output_bed.
+#> Preparing split regions from bed and gtf into output_bed (`limit` = 536870912, `shift_by` = 20, `clearance` = 20).
+#> Built 4 split intervals across 2 chromosomes and wrote them to output_bed.
 
 get_split_reg
 ```
@@ -204,7 +250,7 @@ get_split_reg
 
 ``` r
 bed_f <- system.file(
-  "extdata/morex3_Split_regions.bed",
+  "extdata/morex3_subset_1H_2H_Split_Regions.bed",
   package = "scShardSplitRef"
 )
 split_region_bed_df <- read.table(file = bed_f, 
@@ -219,8 +265,6 @@ split_region_bed_df
 #> 2  1H 206486643 516505932
 #> 3  2H         0 301293086
 #> 4  2H 301293086 665585731
-#> 5  3H         0 267852507
-#> 6  3H 267852507 621516506
 ```
 
 </details>
@@ -250,20 +294,7 @@ process_gtf(
   )
 #> ℹ Validating inputs and reading files...
 #> All files loaded and validated successfully.
-#> ℹ Finished writing processed GTF: /tmp/RtmpT9huHf/B1_FINAL_MODIFIED_GTF_subset_barley_3.gtf
-
-
-# Compress large file
-tmp_gtf <- file.path(tempdir(), "B1_FINAL_MODIFIED_GTF_subset_barley_3.gtf")
-
-con_in  <- file(tmp_gtf, "r")
-con_out <- gzfile("B1_FINAL_MODIFIED_GTF_subset_barley_3.gtf.gz", "w")
-
-writeLines(readLines(con_in), con_out)
-
-close(con_in)
-close(con_out)
-
+#> ℹ Finished writing processed GTF: /tmp/Rtmpp4whTR/B1_FINAL_MODIFIED_GTF_subset_1H_2H_morex_3.gtf
 ```
 
 > The output file is in the GTF format. Note that the first column has been reformatted, the regions are now split.\
@@ -277,7 +308,7 @@ close(con_out)
 
 ``` r
 gtf_modified <- system.file(
-  "extdata/B1_FINAL_MODIFIED_GTF_subset_barley_3.gtf",
+  "extdata/B1_FINAL_MODIFIED_GTF_subset_1H_2H_morex_3.gtf",
   package = "scShardSplitRef"
   )
 processed_gtf <- read.table(file = gtf_modified, 
@@ -310,9 +341,9 @@ kable(rbind(
 |202    |2H-301293086-665585731 |IPK |gene       |130299937 |130300482 |
 |203    |2H-301293086-665585731 |IPK |transcript |130299937 |130300482 |
 |1      |...                    |... |...             |...       |...       |
-|232940 |1H-206486643-516505932 |IPK |stop_codon      |291315417 |291315419 |
-|232941 |1H-206486643-516505932 |IPK |five_prime_utr  |291310927 |291310985 |
-|232942 |1H-206486643-516505932 |IPK |three_prime_utr |291315420 |291315710 |
+|150636 |1H:206486643-516505932 |IPK |stop_codon      |291315417 |291315419 |
+|150637 |1H:206486643-516505932 |IPK |five_prime_utr  |291310927 |291310985 |
+|150638 |1H:206486643-516505932 |IPK |three_prime_utr |291315420 |291315710 |
 ```
 
 </details>
@@ -326,7 +357,6 @@ Here we show the workflow on obtaining FASTA files from the Ensembl FTP server, 
 # Hordeum vulgare, (release-62), Ensembl 
 wget https://ftp.ensemblgenomes.ebi.ac.uk/pub/plants/release-62/fasta/hordeum_vulgare/dna/Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly.1H.fa.gz
 wget https://ftp.ensemblgenomes.ebi.ac.uk/pub/plants/release-62/fasta/hordeum_vulgare/dna/Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly.2H.fa.gz
-wget https://ftp.ensemblgenomes.ebi.ac.uk/pub/plants/release-62/fasta/hordeum_vulgare/dna/Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly.3H.fa.gz
 ```
 
 
@@ -334,36 +364,33 @@ wget https://ftp.ensemblgenomes.ebi.ac.uk/pub/plants/release-62/fasta/hordeum_vu
 # Decompress FASTA
 gunzip 	Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly.1H.fa.gz
 gunzip 	Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly.2H.fa.gz
-gunzip 	Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly.3H.fa.gz
 ```
 
 ``` bash 
 # Concatenate into one file
-cat Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly.1H.fa Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly.2H.fa Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly.3H.fa > morex3_subset_1H_2H_3H.fasta
+cat Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly.1H.fa Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly.2H.fa > morex3_subset_1H_2H.fasta
 ```
 
 
 ``` bash
 # Please note that due to the file size limitations, the barley genome FASTA file is not available on our GitHub repository at /inst/extdata/
-IN_FA="/data/morex3_subset_1H_2H_3H.fasta"
-BED_FIN_OUT="/inst/extdata/morex3_Split_regions.bed"
+IN_FA="/data/morex3_subset_1H_2H.fasta"
+BED_FIN_OUT="/inst/extdata/morex3_subset_1H_2H_Split_Regions.bed"
 FASTA_FIN_OUT="/data/"
 
 # Split FASTA
-bedtools getfasta -fi ${IN_FA} -bed ${BED_FIN_OUT} -fo ${FASTA_FIN_OUT}/morex3_SPLIT_1H_2H_3H.fasta
+bedtools getfasta -fi ${IN_FA} -bed ${BED_FIN_OUT} -fo ${FASTA_FIN_OUT}/morex3_SPLIT_1H_2H.fasta
 
 # Note, FASTA heading should be in `Chr-RegionStart-RegionEnd` format to be compitable with Cell Ranger ARC
-sed '/^>/s/:/-/g' ${FASTA_FIN_OUT}/morex3_SPLIT_1H_2H_3H.fasta >${FASTA_FIN_OUT}/morex3_split_FINAL_1H_2H_3H.fasta
+sed '/^>/s/:/-/g' ${FASTA_FIN_OUT}/morex3_SPLIT_1H_2H.fasta >${FASTA_FIN_OUT}/morex3_split_FINAL_1H_2H.fasta
 
 # Validate
-seqkit fx2tab --length --name ${FASTA_FIN_OUT}/morex3_split_FINAL_1H_2H_3H.fasta
+seqkit fx2tab --length --name ${FASTA_FIN_OUT}/morex3_split_FINAL_1H_2H.fasta
 
 1H-0-206486643  206486643
 1H-206486643-516505932  310019289
 2H-0-301293086  301293086
 2H-301293086-665585731  364292645
-3H-0-267852507  267852507
-3H-267852507-621516506  353663999
 ```
 
 <details>
@@ -371,7 +398,7 @@ seqkit fx2tab --length --name ${FASTA_FIN_OUT}/morex3_split_FINAL_1H_2H_3H.fasta
 <summary><b>What does the generated FASTA file look like?</b></summary>
 
 ```         
-# morex3_split_FINAL_1H_2H_3H.fasta
+# morex3_split_FINAL_1H_2H.fasta
 
 >1H-0-206486643
 GCATTTGGTTGCTTTTATTCTAAACTA...
@@ -379,13 +406,6 @@ GCATTTGGTTGCTTTTATTCTAAACTA...
 ATCAGTACATGAGCTAGTATTAGAGGCTAGACTAGGGATCAATTGGTGTTTGTA...
 >2H-0-301293086
 GCCCTGAC...
-...
->CAJHDD010000283.1-0-50002
-TATTTGCCACTTCAATCTGAT..
->Mt-0-525599
-TGAGAGAAAAAATAAGACTCTTTTAAGATTGCAAAACGTTTTGCAATGAA..
->Pt-0-115974
-TCCCACTAAACATGT...
 ```
 
 </details>
@@ -403,8 +423,8 @@ cat 03_cellranger_arc_barley.config
 {
     "organism": "barley",
     "genome": ["MOREX3_subset_v3"],
-    "input_fasta": ["/data/morex3_split_FINAL_1H_2H_3H.fasta"],
-    "input_gtf": ["/extdata/B1_FINAL_MODIFIED_GTF_barley_3.gtf"],
+    "input_fasta": ["/data/morex3_split_FINAL_1H_2H.fasta"],
+    "input_gtf": ["/extdata/B1_FINAL_MODIFIED_GTF_subset_1H_2H_morex_3.gtf"],
 }
 ```
 
