@@ -23,43 +23,8 @@ inst/doc
 mkref.log
 
 
-# Large data files
-/vignettes/B1_FINAL_MODIFIED_GTF_barley_3.gtf
-# /inst/extdata/
-/inst/extdata/01_Hordeum_vulgare.Mt_Pt_v49_Barley_v62_COMBINED.gtf
-/inst/extdata/01_Hordeum_vulgare.Mt_Pt_v49_Barley_v62_COMBINED.gtf.gz
-/inst/extdata/01_Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly_COMBINED_Mt_Pt_v49_Barley_v62.fa
-/inst/extdata/01_Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly_COMBINED_Mt_Pt_v49_Barley_v62.fa.fai
-# /inst/outdata/
-/inst/outdata/B1_FINAL_MODIFIED_GTF_barley_3.gtf
-/inst/outdata/B1_FASTA_split.fasta
-/inst/outdata/B1_FASTA_split_FINAL.fasta
-# 
-/inst/documentation
 
 
-# files
-inst/extdata/AlgorithmSynthetic.bed
-inst/extdata/AlgorithmSynthetic.gtf
-inst/extdata/z0_simplified_BED.bed
-inst/extdata/z1_simplified_GTF.gtf
-inst/extdata/z1_test.gtf
-inst/outdata/Algorithm_detected_shards.bed
-inst/outdata/t1_split_regions.bed
-inst/outdata/t2_split_regions.bed
-inst/outdata/t3_split_regions.bed
-inst/outdata/t4_split_regions.bed
-inst/outdata/t5_split_regions.bed
-inst/outdata/t6_split_regions.bed
-vignettes/scShardSplitRefQuickStart.Rmd
-inst/outdata/DetermineSplitReg_AlgorithmSynthetic.gtf
-inst/outdata/B1_FINAL_MODIFIED_GTF_barley_3.gtf
-inst/outdata/B1_FINAL_MODIFIED_GTF_barley_3.gtf.gz
-inst/outdata/B1_FINAL_MODIFIED_GTF_subset_barley_3.gtf
-
-# full Morex genome, thus in ignore
-inst/outdata/B1_Split_regions.bed
-inst/extdata/morex3_subset_1H_2H_3H.gtf
 
 
 
