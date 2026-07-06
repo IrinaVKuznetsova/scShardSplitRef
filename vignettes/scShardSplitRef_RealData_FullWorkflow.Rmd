@@ -48,49 +48,63 @@ library("knitr") # used for a kable table later in the document
 
 
 
+```{bash, eval=FALSE}
+# For the full nuclear genome testing
+# Download FASTA, GTF and BED files
+# FASTA
+wget https://ftp.ensemblgenomes.ebi.ac.uk/pub/plants/release-62/fasta/hordeum_vulgare/dna/Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly.1H.fa.gz
+wget https://ftp.ensemblgenomes.ebi.ac.uk/pub/plants/release-62/fasta/hordeum_vulgare/dna/Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly.2H.fa.gz
+wget https://ftp.ensemblgenomes.ebi.ac.uk/pub/plants/release-62/fasta/hordeum_vulgare/dna/Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly.3H.fa.gz
+wget https://ftp.ensemblgenomes.ebi.ac.uk/pub/plants/release-62/fasta/hordeum_vulgare/dna/Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly.4H.fa.gz
+wget https://ftp.ensemblgenomes.ebi.ac.uk/pub/plants/release-62/fasta/hordeum_vulgare/dna/Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly.5H.fa.gz
+wget https://ftp.ensemblgenomes.ebi.ac.uk/pub/plants/release-62/fasta/hordeum_vulgare/dna/Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly.6H.fa.gz
+wget https://ftp.ensemblgenomes.ebi.ac.uk/pub/plants/release-62/fasta/hordeum_vulgare/dna/Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly.7H.fa.gz
+
+# Decompress
+gunzip Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly.1H.fa.gz
+gunzip Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly.2H.fa.gz
+gunzip Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly.3H.fa.gz
+gunzip Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly.4H.fa.gz
+gunzip Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly.5H.fa.gz
+gunzip Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly.6H.fa.gz
+gunzip Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly.7H.fa.gz
+
+# Concatenate into one file
+cat Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly.1H.fa Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly.2H.fa Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly.3H.fa Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly.4H.fa Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly.5H.fa Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly.6H.fa Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly.7H.fa > morex3_nuclear.fa
+
+# Remove redundant FASAT files
+rm Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.primary_assembly*
+
+# Get chr length from FASTA files
+seqkit fx2tab --length --name morex3_nuclear.fa > morex3_chr_length.txt
+
+######################
+# GTF
+wget https://ftp.ensemblgenomes.ebi.ac.uk/pub/plants/release-62/gtf/hordeum_vulgare/Hordeum_vulgare.MorexV3_pseudomolecules_assembly.62.gtf.gz
+
+# Decompress
+gunzip Hordeum_vulgare.MorexV3_pseudomolecules_assembly.62.gtf.gz
+
+######################
+# Download centromere file from GrainGenes
+https://graingenes.org/GG3/content/morex-v3-files-2021
+
+barley-morex3.zip
+
+MorexV3_centromere_positions.tsv
+
+
+Using the centromere file 'MorexV3_centromere_positions.tsv' and 'morex3_chr_length.txt', manually create a tab delimited BED-like file where the 1st column is the chromosome name (in the same naming convention as Ensembl GTF and FASTA file), the 2nd column is the centromere coordinate, and the 3rd column is the chromosome length.
+
+```
+
+
 ## Step-by-Step Guide
 
-For this tutorial, we will be using a genome sequence (FASTA) and gene annotations (GTF) of the barley genome (*Hordeum Vulgare, Morex V3*). We begin by downloading the FASTA and GTF files from [Ensembl](https://ftp.ensemblgenomes..ebi.ac.uk) and creating a BED-like file with centromere coordinates from [GrainGenes](https://graingenes.org/GG3/content/morex-v3-files-2021). We then assess the formatting of the input GTF and BED files, followed by checking and, if necessary, modifying the split coordinates in the BED file. The GTF file is subsequently updated according to the split position. Finally, the FASTA file is split and formatted for compatibility with Cell Ranger ARC. All files must be decompressed prior to use.
+For this tutorial, we will be using a subset of a genome sequence (FASTA) and gene annotations (GTF) of the barley genome (*Hordeum Vulgare, Morex V3*). We begin by downloading the FASTA and GTF files from [Ensembl](https://ftp.ensemblgenomes..ebi.ac.uk) and creating a BED-like file with centromere coordinates from [GrainGenes](https://graingenes.org/GG3/content/morex-v3-files-2021). We then assess the formatting of the input GTF and BED files, followed by checking and, if necessary, modifying the split coordinates in the BED file. The GTF file is subsequently updated according to the split position. Finally, the FASTA file is split and formatted for compatibility with Cell Ranger ARC. All files must be decompressed prior to use.
 
 
 
-``` r
-# Here are the steps for downloading the files required for the package, using the full nuclear barley genome. 
-# Downloading the GTF file from Ensembl
-download.file(url="https://ftp.ensemblgenomes.ebi.ac.uk/pub/plants/release-62/gtf/hordeum_vulgare/Hordeum_vulgare.MorexV3_pseudomolecules_assembly.62.gtf.gz",
-              destfile="B0_Hordeum_vulgare.MorexV3_pseudomolecules_assembly.62.gtf.gz", 
-              method = "auto", 
-              mode = "wb")
-
-# Downloading ZIP folder from GrainGenes
-options(timeout = 600)  # increase download time to 10 minutes instead of default 60 seconds
-
-download.file(url="https://graingenes.org/GG3/sites/default/files/data_downloads/barley-morex3.zip", 
-              destfile="barley-morex3.zip", 
-              method = "auto", 
-              mode = "wb")
-
-## List contents first
-unzip("barley-morex3.zip", list = TRUE)
-
-
-# Extract TSV file with centromere coordinates
-unzip("barley-morex3.zip", exdir = "temp_extract")
-
-# Find the file
-found <- list.files("temp_extract", 
-                    pattern = "centromere_positions.tsv", 
-                    recursive = TRUE, 
-                    full.names = TRUE)
-print(found)
-
-# Copy to current directory
-file.copy(found, "./MorexV3_centromere_positions.tsv")
-
-# Remove 
-unlink("temp_extract", recursive = TRUE, force = TRUE)
-unlink("barley-morex3.zip", force = TRUE)
-```
 
 
 
