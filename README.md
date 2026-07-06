@@ -43,18 +43,18 @@ library("knitr") # used for a kable table later in the document
 ### Input Files
 | File | Format | Description | Comment |
 |------|--------|-------------|-------------|
-| Gene annotations | GTF | Gene features and coordinates | Morex v3, subset to 3 chromosomes |
-| Centromere coordinates | BED-like | Centromere positions per chromosome (x1) | 3 chromosomes |
+| Gene annotations | GTF | Gene features and coordinates | Morex v3, subset to 2 chromosomes |
+| Centromere coordinates | BED-like | Centromere positions per chromosome (x1) | 2 chromosomes |
 | Genome sequence | FASTA | Reference genome sequence | (x2) Not bundled; used for Cell Ranger demo only; download from Ensembl |
 
 
 
 
 
-> (x1) **Note1:** If centromere coordinates are not available for your species, the second column of the BED-like file should be set to `0`. If centromere coordinates are available, the second column should be set to the centromere coordinate. 
+> **(x1) Note1:** If centromere coordinates are not available for your species, the second column of the BED-like file should be set to `0`. If centromere coordinates are available, the second column should be set to the centromere coordinate. 
 > {scShardSplitRef} will then check for any overlaps with genic regions and generate the correct GTF file that is compitable with `cellranger-arc mkref`.
 >
-> (x2) **Note2:** Please note that the FASTA file is not required for the package, but is used to demonstrate FASTA preparation for the Cell Ranger ARC command in the workflow description. It is not included in the repository due to the large file size; download from Ensembl.
+> **(x2) Note2:** Please note that the FASTA file is not required for the package, but is used to demonstrate FASTA preparation for the Cell Ranger ARC command in the workflow description. It is not included in the repository due to the large file size; download from Ensembl.
 <br>
 
 <details>
@@ -63,14 +63,14 @@ library("knitr") # used for a kable table later in the document
 ```r
 # Gene annotations (GTF) file:
 gtf_df <- read.table(
-  file = "01_Hordeum_vulgare.Mt_Pt_v49_Barley_v62_COMBINED.gtf",
+  file = "morex3_subset_1H_2H.gtf",
   header = FALSE,
   sep = "\t"
 )
 dim(gtf_df) ### 524562 x 9
 gtf_df[1:10, ]
 ```
-The format of the GTF file *(01_Hordeum_vulgare.Mt_Pt_v49_Barley_v62_COMBINED.gtf)* is a tab-delimited 9-column file. 
+The format of the GTF file *(morex3_subset_1H_2H.gtf)* is a tab-delimited 9-column file. 
 ```
 #!genome-build MorexV3_pseudomolecules_assembly
 #!genome-version MorexV3_pseudomolecules_assembly
@@ -93,7 +93,7 @@ The format of the GTF file *(01_Hordeum_vulgare.Mt_Pt_v49_Barley_v62_COMBINED.gt
 ```{r}
 # Manually formatted BED-like file:
 centr_bed_df <- read.table(
-  file = "02_MorexV3_centromere_coordinates.bed",
+  file = "morex3_subset_1H_2H.bed",
   header = FALSE,
   sep = "\t"
 )
@@ -104,14 +104,6 @@ The format of the centromere coordinates file is a tab-delimited 3-column file, 
 ```         
 1H      206486643       516505932      # <- The second column is `206486643` - the centromere coordinate obtained from the database
 2H      301293086       665585731
-3H      267852507       621516506
-4H      276149121       610333535
-5H      204878572       588218686
-6H      256319444       561794515
-7H      328847192       632540561
-CAJHDD010000004.1       0       972986    # <- The second column is `0` - the centromere coordinate is not available 
-CAJHDD010000001.1       0       680018
-CAJHDD010000005.1       0       517010
 ```
 
 </details>
@@ -126,8 +118,8 @@ CAJHDD010000005.1       0       517010
 ## Usage Guide
 A step-by-step guide can be found in the vignettes:
 - **Toy example (algorithm):** a quick introduction to understand the **split algorithm**: [vignette toy](vignettes/scShardSplitRefDetailedAlgorithm.Rmd) 
-- **Real-world example: barley** *(diploid, chromosome length exceeds allowed size)* [vignette barley](vignettes/scShardSplitRef_RealData.Rmd) 
-- **Real-world example: XXX** *(hexaploid, chromosome length exceeds allowed size)* [vignette XX](vignettes/)   **<-- TODO: place holder for Luca's testing species --!>**
+- **Real-world example: subset barley** *(diploid, chromosome length exceeds allowed size)* [vignette quickstart](vignettes/scShardSplitRef.Rmd) 
+- **Real-world example: XXX** *(hexaploid, chromosome length exceeds allowed size)* [tutorial XX](inst/)   **<-- TODO: place holder for Luca's testing species --!>**
 
 > Note on parameter selection in *determine_split_regions()*. In real world scenarios users should consider picking  `clearance = 900 (2 x 150 bp reads with up to a 600 bp insert size)`, and `shift_by in the region of 1000 to 4000` to ensure the algorithm can easily walk through a whole gene if needed.
 
