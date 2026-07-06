@@ -8,7 +8,7 @@ process_gtf(
   split_regions_bed,
   gtf,
   genome_name,
-  genome_version,
+  genome_version = NULL,
   keep_attributes = NULL,
   out_path = "."
 )
