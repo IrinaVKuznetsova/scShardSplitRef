@@ -13,13 +13,12 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
-#devtools::load_all() #### delete after publishing
 ```
 
 ## 1. Purpose
 
-This toy dataset provides a minimal example to demonstrate [the logic of the algorithm](#algorithm-walk-through) that prepares compatible reference files (GTF and FASTA) for `cellranger-arc mkref`. It allows users to test the workflow using toy data and explains the algorithm logic in detail.
-
+This toy dataset provides a minimal example to demonstrate [the logic of the algorithm](#algorithm-walk-through) that prepares compatible reference files (GTF and FASTA) for `cellranger-arc mkref`.
+It allows users to test the workflow using toy data and explains the algorithm logic in detail.
 
 ## 2. {scShardSplitRef} Guided Walkthrough Using a Toy Example
 
@@ -27,7 +26,6 @@ This toy dataset provides a minimal example to demonstrate [the logic of the alg
 
 ```{r setup}
 library("scShardSplitRef")
-library("knitr") # used for a kable table later in the document
 ```
 
 ### Prerequisites
@@ -43,13 +41,12 @@ library("knitr") # used for a kable table later in the document
 | Gene annotations | GTF | Gene features and coordinates | extdata/AlgorithmToy.gtf |
 | Centromere coordinates | BED-like | Centromere positions per chromosome | extdata/AlgorithmToy.bed |
 
-
-
-
 ### Workflow
+
 #### 1. Determine Split Regions
 
-The next function called ```determine_split_regions()``` prepares split coordinates in appropriate BED-like format. This function ensures that chromosomes are not split in the middle of a gene region.
+The next function called `determine_split_regions()` prepares split coordinates in appropriate BED-like format.
+This function ensures that chromosomes are not split in the middle of a gene region.
 
 ##### The Help Page for `determine_split_regions()`
 
@@ -57,34 +54,28 @@ The next function called ```determine_split_regions()``` prepares split coordina
 ?determine_split_regions
 ```
 
+**Input Data** This function takes a BED file and a GTF file as input.
 
-**Input Data** 
-This function takes a BED file and a GTF file as input. 
- 
-- `BED`: 3 columns, tab-delimited, no header, no comments format (this centromere coordinates/`0` file is created manually) 
- 
-- `GTF`: 9 columns, tab-delimited, lines beginning with `#` at the top of the file are treated as comments and allowed 
- 
+- `BED`: 3 columns, tab-delimited, no header, no comments format (this centromere coordinates/`0` file is created manually)
+
+- `GTF`: 9 columns, tab-delimited, lines beginning with `#` at the top of the file are treated as comments and allowed
+
 - All files need to be decompressed
- 
 
-**Parameters:** 
+**Parameters:**
 
-- `limit`: can be left as the default, which is the Cell Ranger ARC limit 
-of `2^²⁹ (536,870,912 bp)`. For the purpose of this tutorial, to better 
-understand the algorithm, we set `limit=540` 
+- `limit`: can be left as the default, which is the Cell Ranger ARC limit of `2^²⁹ (536,870,912 bp)`.
+  For the purpose of this tutorial, to better understand the algorithm, we set `limit=540`
 
-- `shift_by`: the step size used to move the split coordinate to the right 
-when searching for a safe location outside a genic region 
+- `shift_by`: the step size used to move the split coordinate to the right when searching for a safe location outside a genic region
 
-- `clearance`: a buffer that checks whether there is a clear region free of 
-genes on both sides of the proposed split coordinate
-
+- `clearance`: a buffer that checks whether there is a clear region free of genes on both sides of the proposed split coordinate
 
 ##### Usage Example: `determine_split_regions()`
 
 In this example we use:
-```
+
+``` r
 limit = 540L 
 shift_by = 30L 
 clearance = 40L
@@ -94,20 +85,21 @@ clearance = 40L
 # Read GTF file
 gtf_path <- system.file(
   "extdata/AlgorithmToy.gtf",
-  package = "scShardSplitRef" )
-# Read BED file 
+  package = "scShardSplitRef"
+)
+# Read BED file
 bed_path <- system.file(
   "extdata/AlgorithmToy.bed",
-  package = "scShardSplitRef")
-  
+  package = "scShardSplitRef"
+)
+
 # Define output path
-output_file <- file.path(tempdir(), 
-                         "extdata")
-dir.create(output_file, 
-           recursive = TRUE, 
-           showWarnings = FALSE)
-output_file_name_dir <- file.path(output_file, 
-                                  "AlgorithmToy_DetermineSplitReg.bed")
+output_file <- file.path(tempdir(), "extdata")
+dir.create(output_file, recursive = TRUE, showWarnings = FALSE)
+output_file_name_dir <- file.path(
+  output_file,
+  "AlgorithmToy_DetermineSplitReg.bed"
+)
 
 # Determine split regions
 get_split_reg <- determine_split_regions(
@@ -124,28 +116,30 @@ get_split_reg
 
 <br>
 
-##### Algorithm Explanation: How `determine_split_regions()` works {#algorithm-walk-through} 
-  
-#### No Overlap with Gene Coordinates  
+##### Algorithm Explanation: How `determine_split_regions()` works {#algorithm-walk-through}
+
+#### No Overlap with Gene Coordinates
+
 The chromosome is split at that coordinate, producing two regions:
 
 - Left arm: from the beginning of the chromosome to the split coordinate
 - Right arm: from the split coordinate to the end of the chromosome
 
-> Note: If centromere locations are not provided (i.e., BED start position or 2nd column is `0`), the algorithm first creates provisional *even shards* based on `limit`. It then applies the same gene-clearance logic to each proposed split boundary, shifting boundaries as needed to avoid splitting through genic regions. 
-
+> Note: If centromere locations are not provided (i.e., BED start position or 2nd column is `0`), the algorithm first creates provisional *even shards* based on `limit`.
+> It then applies the same gene-clearance logic to each proposed split boundary, shifting boundaries as needed to avoid splitting through genic regions.
 
 <details>
+
 <summary><b>Algorithm Visual (Chr0): Centromere in BED File Defined</b></summary>
-```
-chr0:	450-800
+
+``` text
+chr0:   450-800
 Note, that each chromosome is defined by a coordinate range starting at 0. If a feature's start position is not 0, it indicates a split coordinate (centromere). In this example, 450 is the split coordinate (centromere), dividing the chromosome into two segments: 0–450 and 450–800.
 limit = 540 
 shift_by = 30 
 clearance = 40
 
-gene[G0]:	100-200
-```
+gene[G0]:   100-200
 
       chr0: 0    100  200                       800
             |-----|====|---------|--------------|
@@ -159,22 +153,22 @@ gene[G0]:	100-200
             Split coordinate 450 is below the `limit` and does not overlap with any gene coordinates 
             Note: splitting first tries to use the centromere coordinate, not the `limit`!!!
             Final: split at centromere coordinate 450 -> 1 split coordinate (2 shards)   
+```
 
 </details>
 
-
-
 <details>
+
 <summary><b>Algorithm Visual (Chr1): Centromere in BED File Undefined</b></summary>
-```
-chr1:	0-820
+
+``` text
+chr1:   0-820
 Note: If centromere locations are NOT provided (i.e., BED start position is `0` for a chromosome), the algorithm first creates provisional even shards based on `limit`. It then applies the same gene-clearance logic to each proposed split boundary, shifting boundaries as needed to avoid splitting through genic regions.
 limit = 540 
 shift_by = 30 
 clearance = 40
 
-gene[G1]:	100-200
-```
+gene[G1]:   100-200
 
       chr1: 0    100  200       410             820
             |-----|====|---------|--------------|
@@ -190,27 +184,30 @@ gene[G1]:	100-200
                 ceiling(820/540) = 2 (shards) -> 820/2 = 410 
             Split coordinate 410 -> outside of G1[100-200], PASSING clearance = 40
             Final: split at 410 -> 1 split coordinate (2 shards)   
+```
 
 </details>
 
-
-
-
 <br>
 
-### Overlap with Gene Coordinates  
-In case of overlapping split coordinate with genic region, the split coordinate needs to be moved to a safe location that does not overlap any genes. The algorithm proceeds as follows:
+### Overlap with Gene Coordinates
 
-The split position is calculated from the limit parameter. It looks to see if there is sufficient clearance between the split point and any neighbouring genes left or right. If the clearance test does not pass the function uses ```shift_by```, which essentially defines the size of the steps to iteratively take as it tries to walk away from any genes that are too close.  
+In case of overlapping split coordinate with genic region, the split coordinate needs to be moved to a safe location that does not overlap any genes.
+The algorithm proceeds as follows:
 
-> Note: ```clearance``` and ```shift_by``` operate independently. ```clearance``` determines whether a position is acceptable; ```shift_by``` determines how far to move when it is not.
+The split position is calculated from the limit parameter.
+It looks to see if there is sufficient clearance between the split point and any neighbouring genes left or right.
+If the clearance test does not pass the function uses `shift_by`, which essentially defines the size of the steps to iteratively take as it tries to walk away from any genes that are too close.
+
+> Note: `clearancep` and `shift_by` operate independently.
+> `clearance` determines whether a position is acceptable; `shift_by` determines how far to move when it is not.
 
 <details>
 
 <summary><b>Algorithm Visual (Chr2): the initial split coordinate is inside of a genic region</b></summary>
 
-```
-chr2:	0-1000
+``` text
+chr2:   0-1000
 Note, that If centromere locations are not provided (i.e., BED start position is `0` for a chromosome), the algorithm first creates provisional *even shards* based on `limit`. It then applies the same gene-clearance logic to each proposed split boundary, shifting boundaries as needed to avoid splitting through genic regions
 
 limit = 540 
@@ -218,7 +215,6 @@ shift_by = 30
 clearance = 40
 
 gene[G2]: 450-550
-```
 
       chr2: 0              450       550            1000
             |----------------|=======|--------------|
@@ -252,7 +248,6 @@ gene[G2]: 450-550
                 ceiling(590/540) = 2 —> 590/2 = 295
             Split coordinate = 295
 
-
       chr2: 0               450      550            1000
             |----------------|=======|--------------|
                     ^           [G2]      ^
@@ -260,27 +255,23 @@ gene[G2]: 450-550
                 split (295)            split (590)    
                 
             Final: split at 295 and 590 -> 2 split coordinates (3 shards)    
-                
+```
 
 </details>
-
-
-
-
 
 <details>
 
 <summary><b>Algorithm Visual (Chr3): the initial split coordinate is inside of two overlapping genes</b></summary>
-```
-chr3:	0-1000
+
+``` text
+chr3:   0-1000
 Note, that If centromere locations are not provided (i.e., BED start position is `0` for a chromosome), the algorithm first creates provisional *even shards* based on `limit`. It then applies the same gene-clearance logic to each proposed split boundary, shifting boundaries as needed to avoid splitting through genic regions
 limit = 540 
 shift_by = 30 
 clearance = 40
 
-gene[G3L]:	460-545
-gene[G3R]:	490-560
-```
+gene[G3L]:  460-545
+gene[G3R]:  490-560
 
       chr3: 0              460  490     545   560              1000
             |----------------|===|overlap|======|--------------|
@@ -321,19 +312,16 @@ gene[G3R]:	490-560
                  split (310)                       split (620)    
             
             Final: split at 620 and 310 -> 2 split coordinates (3 shards)
+```
 
 </details>
-
-
-
-
 
 <details>
 
 <summary><b> Algorithm Visual (Chr4): one gene in each arm (no collision)</b></summary>
 
-```
-chr4:	300-1500 
+``` text
+chr4:   300-1500 
 Note, that each chromosome is defined by a coordinate range starting at 0. If a feature's start position is not 0, it indicates a split coordinate (centromere). In this example, 300 is the split coordinate (centromere), dividing the chromosome into two segments: 0–300 and 300–500.
 limit = 540 
 shift_by = 30 
@@ -341,7 +329,6 @@ clearance = 40
 
 gene[G4L]: 50-100
 gene[G4R]: 800-900
-```
 
       chr4: 0     50  100                        800   900     1500
             |-----|===|--------------------------|======|------|
@@ -365,27 +352,24 @@ gene[G4R]: 800-900
                             split (300)    split (700)    split (1100)
            
       Final: split at 300, 700 and 1100 -> 3 split coordinates (4 shards)
+```
 
 </details>
-
-
-
-
 
 <details>
 
 <summary><b> Algorithm Visual (Chr5): a split coordinate cuts through a gene</b></summary>
-```
-chr5:	600-1500
+
+``` text
+chr5:   600-1500
 # Note, that each chromosome is defined by a coordinate range starting at 0. If a feature's start position is not 0, it indicates a split coordinate. In this example, 600 is the split coordinate, dividing the chromosome into two segments: 0–600 and 600–1500.
 
 limit = 540 
 shift_by = 30 
 clearance = 40
 
-gene[G5BS]:	550-650
-```
-            
+gene[G5BS]: 550-650
+
             The centromere coordinate is defined in the BED file (chr5:600-1500)
                 Left arm: `[0, 600)`
                 Right arm: `[600, 1500)`
@@ -435,15 +419,16 @@ gene[G5BS]:	550-650
               split (300)         split (690)     split (1050)
             
             Final: split at 300, 690 and 1050 -> 3 split coordinates  (4 shards)
+```
+
 </details>
-
-
 
 <details>
 
 <summary><b>Algorithm Visual (Chr6): gene structure with exons, CDS, and transcript: gene overlaps with cutting coordinate</b></summary>
-```
-chr6:	0-1000
+
+``` text
+chr6:   0-1000
 limit = 540 
 shift_by = 30 
 clearance = 40
@@ -451,9 +436,9 @@ clearance = 40
 gene[G6R]:        400-500
 transcript[G6R]:  400-500
 exon[G6R]:        400-450
-exon[G6R]:	      460-480
+exon[G6R]:        460-480
 exon[G6R]:        490–500
-CDS[G6R]:	        410-495
+CDS[G6R]:           410-495
 five_prime_utr[G6R]:  400-409
 
       chr6: 0                400     500                              1000
@@ -487,24 +472,17 @@ five_prime_utr[G6R]:  400-409
                       |                 |
                    split (280)        split (560)
             
-            Final: split at 280, 560 -> 2 split coordinates (3 shards)   
-                                                                    
-                                                       
-
+            Final: split at 280, 560 -> 2 split coordinates (3 shards)
 ```
+
 </details>
-
-
 
 > Note: in real world scenarios users should consider picking `clearance = 900 (2 x 150 bp reads with up to a 600 bp insert size)`, and `shift_by in the region of 1000 to 4000` to ensure the algorithm can easily walk through a whole gene if needed.
 
-
-
-
-
 #### 2. Process a GTF file by assigning split-region sequence names
 
-Reads BED-like "split regions" and GTF files. Assigns each GTF feature to exactly one split-region interval, and replaces the GTF Chr field with a split-region name of the form `Chr-RegionStart-RegionEnd`.
+Reads BED-like "split regions" and GTF files.
+Assigns each GTF feature to exactly one split-region interval, and replaces the GTF Chr field with a split-region name of the form `Chr-RegionStart-RegionEnd`.
 
 ##### The Help Page for `process_gtf()`
 
@@ -512,16 +490,16 @@ Reads BED-like "split regions" and GTF files. Assigns each GTF feature to exactl
 ?process_gtf
 ```
 
-
-**Input Data** 
-This function takes a BED-like file containing split intervals as produced by `process_gtf()`  and a GTF file as the input.
+**Input Data** This function takes a BED-like file containing split intervals as produced by `process_gtf()` and a GTF file as the input.
 
 ##### Usage Example: `process_gtf()`
-```{r, eval=FALSE}
+
+```{r, eval=TRUE}
 # BED
 bed_modif <- system.file(
   "extdata/AlgorithmToy_DetermineSplitReg.bed",
-  package = "scShardSplitRef")
+  package = "scShardSplitRef"
+)
 
 # Function
 gtf_processed <- process_gtf(
@@ -534,15 +512,7 @@ gtf_processed <- process_gtf(
 )
 ```
 
-
-
-## 3. Session Info
-
-```{r session-info}
-sessionInfo()
-```
-
-## 4. Acknowledgements
+## 3. Acknowledgements
 
 This work was supported by resources provided by the Pawsey Supercomputing Research Centres Nimbus Research Cloud (<https://doi.org/10.48569/v0j3-qd51>), with funding from the Australian Government and the Government of Western Australia.
 
