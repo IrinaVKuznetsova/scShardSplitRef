@@ -67,16 +67,11 @@ gtf_df <- read.table(
   header = FALSE,
   sep = "\t"
 )
-dim(gtf_df) ### 524562 x 9
+dim(gtf_df) ### 150638 x 9
 gtf_df[1:10, ]
 ```
 The format of the GTF file *(morex3_subset_1H_2H.gtf)* is a tab-delimited 9-column file. 
 ```
-#!genome-build MorexV3_pseudomolecules_assembly
-#!genome-version MorexV3_pseudomolecules_assembly
-#!genome-date 2021-04
-#!genome-build-accession GCA_904849725.1
-#!genebuild-last-updated 2021-04       
 2H      IPK     gene    601169528       601171444       .       -       .       gene_id "HORVU.MOREX.r3.2HG0191020"; gene_source "IPK"; gene_biotype "protein_coding";
 2H      IPK     transcript      601169528       601171444       .       -       .       gene_id "HORVU.MOREX.r3.2HG0191020"; transcript_id "HORVU.MOREX.r3.2HG0191020.1"; gene_source "IPK"; gene_biotype "protein_coding"; transcript_source "IPK"; transcript_biotype "protein_coding"; tag "Ensembl_canonical";
 2H      IPK     exon    601169754       601171444       .       -       .       gene_id "HORVU.MOREX.r3.2HG0191020"; transcript_id "HORVU.MOREX.r3.2HG0191020.1"; exon_number "1"; gene_source "IPK"; gene_biotype "protein_coding"; transcript_source "IPK"; transcript_biotype "protein_coding"; exon_id "HORVU.MOREX.r3.2HG0191020.1-E1"; tag "Ensembl_canonical";
@@ -97,8 +92,8 @@ centr_bed_df <- read.table(
   header = FALSE,
   sep = "\t"
 )
-dim(centr_bed_df) ## 292 x 3
-centr_bed_df[1:10, ]
+dim(centr_bed_df) ## 2 x 3
+centr_bed_df[1:2, ]
 ```
 The format of the centromere coordinates file is a tab-delimited 3-column file, where the 1st column contains chromosome/contig names, the 2nd column contains the centromere coordinate or if not available '0', and the 3rd column contains chromosome/contig region end coordinates.
 ```         
