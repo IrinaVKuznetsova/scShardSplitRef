@@ -35,8 +35,8 @@ library("knitr") # used for a kable table later in the document
 
 | File | Format | Description | Comment |
 |------|--------|-------------|-------------|
-| Gene annotations | GTF | Gene features and coordinates | Morex v3, subset to 3 chromosomes |
-| Centromere coordinates | BED-like | Centromere positions per chromosome (x1) | 3 chromosomes |
+| Gene annotations | GTF | Gene features and coordinates | Morex v3, subset to 2 chromosomes |
+| Centromere coordinates | BED-like | Centromere positions per chromosome (x1) | 2 chromosomes |
 | Genome sequence | FASTA | Reference genome sequence | (x2) Not bundled; used for Cell Ranger ARC demo only; download from Ensembl |
 
 > **(x1) Note1:** If centromere coordinates are not available for your species, the second column of the BED-like file should be set to `0`. If centromere coordinates are available, the second column should be set to the centromere coordinate. 
