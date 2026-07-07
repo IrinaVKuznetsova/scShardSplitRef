@@ -4,16 +4,15 @@ output: github_document
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-
-
-
 ## **scShardSplitRef**  
+
 *scShardSplitRef* designed for researchers working with multiome single-cell data from species that require building a custom reference genome, particularly when one or more chromosomes/contigs in the reference FASTA exceed the Cell Ranger ARC limit of 536.8Mb (2\^29 bases). *scShardSplitRef* enables splitting of long chromosomes/contigs generating shorter fragments that are compitable with Cell Ranger ARC requirements. The *scShardSplitRef* package outputs GTF file containing the split chromosomes/contigs, which can be directly processed by `cellranger-arc mkref`. We also provide guidance on how to split a FASTA file used by `cellranger-arc mkref` using bedtools.
 
 To familiarise yourself with the package and the workflow for preparing reference genome sequence (FASTA) and gene annotation (GTF) files for Cell Ranger ARC, we suggest starting with the algorithm [description](vignettes/scShardSplitRefDetailedAlgorithm.Rmd) and [a guided walk through](vignettes/scShardSplitRef.Rmd).   
 
 
 ## **Problem Overview**  
+
 *Cell Ranger* provides pre-built reference genomes for common species such as human and mouse. For less common species, users must build a custom reference. For example, for multiome ATAC + Gene Expression sequencing data, the command is `cellranger-arc mkref` that requires a genome sequence (FASTA) and gene annotation (GTF) files. When working with species that have very large chromosomes or scaffolds, users may encounter the following error:  
 >*Due to limitations of the BAM index format, a contig in the reference FASTA file cannot exceed *536.8 Mb (2^29 bases)*. If a contig exceeds that size you will have to split it into smaller contigs and make corresponding modifications to the GTF file.* 
 [Source: 10x Genomics Documentation](https://www.10xgenomics.com/support/software/cell-ranger-arc/latest/analysis/inputs/mkref)   
@@ -24,10 +23,8 @@ To familiarise yourself with the package and the workflow for preparing referenc
 
 For example, the barley genome has several chromosomes (*2H = 665.59 Mb, 3H = 621.52 Mb, 4H = 610.33 Mb, 5H = 588.22 Mb, 6H = 561.79 Mb, 7H = 632.54 Mb*) that exceed this size limit. As a result, `cellranger-arc mkref` cannot build a reference unless the oversized chromosomes are divided into smaller fragments.  
 
-
-
-
 ## scShardSplitRef 
+
 ### Prerequisites
 
 | Software | Version | Purpose |
@@ -35,12 +32,16 @@ For example, the barley genome has several chromosomes (*2H = 665.59 Mb, 3H = 62
 | bedtools | ≥ 2.30 | BED file operations |
 | Cell Ranger ARC | ≥ 2.0 | Single-cell multiome processing |
 
+
 ### Installation  
+
 ```r
 library("scShardSplitRef")
 library("knitr") # used for a kable table later in the document
 ```
+
 ### Input Files
+
 | File | Format | Description | Comment |
 |------|--------|-------------|-------------|
 | Gene annotations | GTF | Gene features and coordinates | Morex v3, subset to 2 chromosomes |
@@ -104,13 +105,14 @@ The format of the centromere coordinates file is a tab-delimited 3-column file, 
 </details>
 
 ### Key Functions
-```
+
+``` r
 ?determine_split_regions
 ?process_gtf
 ```
 
-
 ## Usage Guide
+
 A step-by-step guide can be found in the vignettes:
 - **Toy example (algorithm):** a quick introduction to understand the **split algorithm**: [vignette toy](vignettes/scShardSplitRefDetailedAlgorithm.Rmd) 
 - **Real-world example: subset barley** *(diploid, chromosome length exceeds allowed size)* [vignette quickstart](vignettes/scShardSplitRef.Rmd) 
@@ -120,7 +122,9 @@ A step-by-step guide can be found in the vignettes:
 
 
 ## Citation
+
 Please cite this tool if you use it
+
 ```r
 library("scShardSplitRef")
 citation("scShardSplitRef")
@@ -143,26 +147,22 @@ citation("scShardSplitRef")
 #>   }
 ```
 
-
 ## License
+
 This project is licensed under the [GPL-3.0 license](LICENSE.md).  
 
+## Contributing
 
-
-## Contributing  
-## Code of Conduct
+### Code of Conduct
 
 Please note that the scShardSplitRef project is released with a [Contributor Code of Conduct](https://contributor-covenant.org/version/2/1/CODE_OF_CONDUCT.html). By contributing to this project, you agree to abide by its terms.
 If you'd like to help improve this tool, please send your suggestions via email.
-Please clearly outline the feature(s) you think should be added. As the tool develops, new features can be added as separate package functions and contributed back to the project.\
+Please clearly outline the feature(s) you think should be added. As the tool develops, new features can be added as separate package functions and contributed back to the project.
 Remember that improving tools is important, but keeping them neat and not over-complicated is just as essential.
-
 
 ## Acknowledgements  
 GRDC funded this project through the Analytics for the Australian Grains Industry (AAGI) investment, CUR2210-005OPX (AAGI-CU).
 
-This work was supported by resources provided by the [Pawsey Supercomputing Research Centres](https://pawsey.org.au/) Nimbus Research Cloud (https://doi.org/10.48569/v0j3-qd51), with funding from the Australian Government and the Government of Western Australia.
+This work was supported by resources provided by the [Pawsey Supercomputing Research Centres](https://pawsey.org.au/) Nimbus Research Cloud (<https://doi.org/10.48569/v0j3-qd51>), with funding from the Australian Government and the Government of Western Australia.
 
 This research used the Australian Research Data Commons (ARDC) ARDC Nectar Research Cloud Service [ARDC Nectar Research Cloud | Australian Research Data Commons](https://ardc.edu.au/services/ardc-nectar-research-cloud/). The ARDC is enabled by the Australian Government’s National Collaborative Research Infrastructure Strategy (NCRIS).
-
-
