@@ -80,7 +80,7 @@ process_gtf <- function(
       c(x = "Parameter {.arg genome_version} is required.")
     )
   }
-  validated <- validate_inputs(
+  validated <- .validate_inputs(
     bed = split_regions_bed,
     gtf = gtf
   )

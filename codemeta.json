@@ -184,7 +184,8 @@
     },
     "SystemRequirements": null
   },
-  "fileSize": "4229.274KB",
+  "fileSize": "4230.042KB",
   "codeRepository": "https://github.com/IrinaVKuznetsova/scShardSplitRef",
+  "releaseNotes": "https://github.com/IrinaVKuznetsova/scShardSplitRef/blob/main/NEWS.md",
   "readme": "https://github.com/IrinaVKuznetsova/scShardSplitRef/blob/main/README.md"
 }

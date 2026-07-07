@@ -37,7 +37,8 @@
 #'   bed
 #'
 #' @dev
-validate_inputs <- function(bed, gtf) {
+
+.validate_inputs <- function(bed, gtf) {
   .check_files_exist(bed, gtf)
 
   # check ends with to use .bed or .gtf
