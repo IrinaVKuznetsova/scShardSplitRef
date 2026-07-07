@@ -104,3 +104,4 @@
 ^man/dot-scs_emit_info\.Rd$
 ^man/dot-scs_emit_success\.Rd$
 ^man/scs_cli_alert_info\.Rd$
+^CODE_OF_CONDUCT\.md$

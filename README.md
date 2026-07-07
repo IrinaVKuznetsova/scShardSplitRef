@@ -150,7 +150,9 @@ This project is licensed under the [GPL-3.0 license](LICENSE.md).
 
 
 ## Contributing  
-Please refer to the [CONTRIBUTING.md](CONTRIBUTING.md) **<-- TODO: Provide link once this is public ---!>**
+## Code of Conduct
+
+Please note that the scShardSplitRef project is released with a [Contributor Code of Conduct](https://contributor-covenant.org/version/2/1/CODE_OF_CONDUCT.html). By contributing to this project, you agree to abide by its terms.
 If you'd like to help improve this tool, please send your suggestions via email.
 Please clearly outline the feature(s) you think should be added. As the tool develops, new features can be added as separate package functions and contributed back to the project.\
 Remember that improving tools is important, but keeping them neat and not over-complicated is just as essential.
