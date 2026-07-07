@@ -236,7 +236,6 @@ gtf_modified <- list.files(
 processed_gtf <- read.table(file = gtf_modified, header = FALSE, sep = "\t")
 print(gtf_modified)
 dim(processed_gtf)
-#> [1] 232942 9
 
 sep <- as.data.frame(matrix("...", nrow = 1, ncol = 5))
 colnames(sep) <- colnames(processed_gtf)[1:5]
@@ -345,14 +344,6 @@ cellranger-arc mkref \
   --nthreads=24 \
   >mkref.log 2>&1
 ```
-
-## R package Session Information
-
-<details>
-
-<summary><b>sessionInfo()</b></summary>
-
-</details>
 
 ## Citation
 
