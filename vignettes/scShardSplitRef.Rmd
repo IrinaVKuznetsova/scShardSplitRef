@@ -62,8 +62,7 @@ Finally, the FASTA file is split and formatted for compatibility with Cell Range
 
 <details>
 
-<summary><b>What does a GTF file for MOREX V3 look like?`<`{=html}
-`/b></summary>`{=html}
+<summary>**What does a GTF file for MOREX V3 look like?**</summary>
 
 ```{r, eval=TRUE}
 # Gene annotations (GTF) file. The format of the GTF file is a tab-delimited 9-column file.
@@ -84,8 +83,7 @@ gtf_df[1:10, ]
 
 <details>
 
-<summary><b>What does a BED-like centromere file for MOREX V3 look like?`<`{=html}
-`/b></summary>`{=html}
+<summary><b>What does a BED-like centromere file for MOREX V3 look like?</b></summary>
 
 ```{r, eval=TRUE}
 # The format of the centromere coordinates file is a tab-delimited 3-column file, where
@@ -173,8 +171,7 @@ get_split_reg
 
 <details>
 
-<summary><b>What does the generated BED file look like?`<`{=html}
-`/b></summary>`{=html}
+<summary><b>What does the generated BED file look like?`</b></summary>
 
 ```{r, eval=TRUE}
 bed_f <- system.file(
@@ -223,8 +220,7 @@ process_gtf(
 
 <details>
 
-<summary><b>What does the generated GTF file look like?`<`{=html}
-`/b></summary>`{=html}
+<summary><b>What does the generated GTF file look like?`</b></summary>
 
 ```{r, eval=TRUE}
 gtf_modified <- list.files(
@@ -296,8 +292,7 @@ seqkit fx2tab --length --name ${FASTA_FIN_OUT}/morex3_split_FINAL_1H_2H.fasta
 
 <details>
 
-<summary><b>What does the generated FASTA file look like?`<`{=html}
-`/b></summary>`{=html}
+<summary><b>What does the generated FASTA file look like?`</b></summary>
 
 ```         
 # morex3_split_FINAL_1H_2H.fasta
