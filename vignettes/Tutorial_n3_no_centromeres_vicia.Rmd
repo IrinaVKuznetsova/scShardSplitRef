@@ -1,0 +1,498 @@
+---
+title: "Preparing a Cell Ranger ARC-Compatible Reference Genome"
+author: "Irina Kuznetsova"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    number_sections: true
+editor_options:
+  chunk_output_type: console
+---
+
+# Overview
+
+This vignette shows how to prepare a triticum aestivum reference genome compatible with
+Cell Ranger ARC using `scShardSplitRef`.
+
+Cell Ranger ARC cannot handle FASTA sequences longer than `2^29` bp
+(536,870,912 bp). Large chromosomes must therefore be split before running
+`cellranger-arc mkref`.
+
+This vignette is written as a complete case study because reference preparation
+is often species- and repository-specific. In this example:
+
+- nuclear FASTA and GTF files were obtained from Ensembl Plants release 62;
+- mitochondrial and plastid reference sequences were obtained from the NCBI Nucleotide database:
+  - mitochondrial genome: NC_036024.1
+  - plastid genome: NC_002762.1
+- centromere coordinates are currently unavailable for this assembly. Therefore, a dummy BED file containing chromosome lengths and placeholder centromere positions is generated for demonstration purposes.
+
+The generic `scShardSplitRef` workflow starts once we have prepared:
+
+1. a combined FASTA;
+2. a combined GTF;
+3. a BED-like table with chromosome name, centromere position, and chromosome size.
+
+Note: In this tutorial we use local user-provided files instead 
+of package example data. Therefore, paths are constructed with the `here` package,
+which generates project-relative file paths and makes the workflow
+portable across different operating systems and directory structures.
+Using `here()` avoids hard-coded paths such as `"/home/user/project/data/genome.fa"` 
+and instead uses: `here("data", "genome.fa")`
+
+Reference preparation workflow
+```text
+Ensembl Plants
+    ├── nuclear FASTA
+    └── nuclear GTF
+
+NCBI
+    ├── mitochondrial FASTA
+    ├── mitochondrial GFF3
+    ├── plastid FASTA
+    └── plastid GFF3
+
+          │
+          ▼
+
+Prepare organellar reference
+
+          │
+          ▼
+
+Build combined reference
+
+          │
+          ▼
+
+Prepare dummy centromere BED
+
+          │
+          ▼
+
+Generic scShardSplitRef workflow
+```
+
+# Setup
+
+```{r setup, message=FALSE, warning=FALSE}
+
+# remotes::install_github("IrinaVKuznetsova/scShardSplitRef")
+
+library(scShardSplitRef)
+library(here)
+library(Rsamtools)
+library(dplyr)
+library(readr)
+library(ggplot2)
+
+data_dir <- here("data")
+output_dir <- here("products")
+
+dir.create(data_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+```
+
+Check required command-line tools.
+
+```{r check-tools}
+tools <- c("wget", "unzip", "zcat", "awk", "sed", "bedtools", "gffread")
+missing_tools <- tools[!nzchar(Sys.which(tools))]
+
+if (length(missing_tools) > 0) {
+  stop("Missing tools: ", paste(missing_tools, collapse = ", "))
+}
+```
+
+# Case study-specific preprocessing
+
+## Download files
+
+```{r download-data, eval = FALSE}
+vf_nucl_ep_rel_63 <- "https://ftp.ebi.ac.uk/ensemblgenomes/pub/release-63/plants/fasta/vicia_faba/dna/Vicia_faba.Hedin2_genome_v1.dna.toplevel.fa.gz"
+
+vf_ep_rel_63_gtf <- "https://ftp.ebi.ac.uk/ensemblgenomes/pub/release-63/plants/gtf/vicia_faba/Vicia_faba.Hedin2_genome_v1.63.gtf.gz"
+
+# download manually gff3 for mt and pt genomes
+cmd <- paste(
+  "wget -P", shQuote(data_dir),
+  shQuote(vf_nucl_ep_rel_63),
+  shQuote(vf_ep_rel_63_gtf)
+)
+
+system(cmd)
+```
+
+Define local file paths.
+
+```{r local-paths}
+
+nuclear_fa <- file.path(data_dir, "Vicia_faba.Hedin2_genome_v1.dna.toplevel.fa.gz")
+mt_fa <- file.path(data_dir, "vf_mt.fa")
+pt_fa <- file.path(data_dir, "vf_pt.fa")
+
+```
+
+Organellar genomes are distributed separately from the nuclear reference and use different sequence identifiers. Before combining them with the nuclear assembly we standardize the identifiers (Mt, Pt) and convert the NCBI GFF3 annotations into GTF format.
+
+## Prepare organellar FASTA
+
+```{r prepare-organellar-fasta}
+## Create a single organellar FASTA with renamed headers
+organellar_fa <- file.path(data_dir, "organellar.fa")
+
+cmd <- sprintf(
+  "cat %s %s | sed -E 's/^>KC189947\\.1.*/>Mt/; s/^>KF042344\\.1.*/>Pt/' > %s",
+  shQuote(mt_fa),
+  shQuote(pt_fa),
+  shQuote(organellar_fa)
+)
+
+system(cmd)
+
+stopifnot(file.exists(organellar_fa))
+
+# Build combined reference
+# combined FASTA
+genome_fasta <- file.path(data_dir, "vf_combined.fa")
+
+cmd <- sprintf(
+  "zcat %s > %s && cat %s >> %s",
+  shQuote(nuclear_fa),
+  shQuote(genome_fasta),
+  shQuote(organellar_fa),
+  shQuote(genome_fasta)
+)
+
+system(cmd)
+
+stopifnot(file.exists(genome_fasta))
+```
+
+## Prepare organellar GTF
+To ensure consistency between FASTA and GTF files, mitochondrial and plastid sequence identifiers are standardized to Mt and Pt before they are merged with the nuclear reference.
+
+```{r prepare-organellar-gtf}
+# combined GTF
+nuclear_gtf <- file.path(
+  data_dir,
+  "Vicia_faba.Hedin2_genome_v1.63.gtf.gz"
+)
+
+mt_gff3 <- file.path(data_dir, "mt.gff3")
+pt_gff3 <- file.path(data_dir, "pt.gff3")
+
+mt_gtf <- file.path(data_dir, "mt.gtf")
+pt_gtf <- file.path(data_dir, "pt.gtf")
+
+organellar_gtf <- file.path(data_dir, "organellar.gtf")
+combined_gtf   <- file.path(data_dir, "vf_combined.gtf")
+
+## Convert GFF3 -> GTF
+
+cmd <- sprintf(
+  "gffread %s -T -o %s && gffread %s -T -o %s",
+  shQuote(mt_gff3),
+  shQuote(mt_gtf),
+  shQuote(pt_gff3),
+  shQuote(pt_gtf)
+)
+
+system(cmd)
+
+## Merge MT/PT and rename seqnames
+
+cmd <- sprintf(
+  "cat %s %s | sed -E 's/^KC189947\\.1/Mt/; s/^KF042344\\.1/Pt/' > %s",
+  shQuote(mt_gtf),
+  shQuote(pt_gtf),
+  shQuote(organellar_gtf)
+)
+
+system(cmd)
+```
+
+## Build combined reference
+
+```{r build-combined-reference}
+## Merge nuclear + organellar
+
+cmd <- sprintf(
+  "zcat %s > %s && cat %s >> %s",
+  shQuote(nuclear_gtf),
+  shQuote(combined_gtf),
+  shQuote(organellar_gtf),
+  shQuote(combined_gtf)
+)
+
+system(cmd)
+
+stopifnot(file.exists(combined_gtf))
+
+```
+
+# Generic scShardSplitRef workflow
+
+At this point we have assembled a combined FASTA, a combined GTF, and a BED-like table containing chromosome names, centromere positions (dummy in this example), and chromosome sizes. From this point onward, the workflow is generic and can be reused for other
+species, provided that equivalent FASTA, GTF, and centromere files are
+available.
+
+Index the combined FASTA and extract sequence sizes.
+
+```{r fasta-index}
+fa <- Rsamtools::FaFile(genome_fasta)
+
+if (!file.exists(paste0(genome_fasta, ".fai"))) {
+  Rsamtools::indexFa(fa)
+}
+
+idx <- Rsamtools::scanFaIndex(fa)
+
+chr_sizes <- data.frame(
+  chr = as.character(seqnames(idx)),
+  size_bp = width(idx)
+)
+
+head(chr_sizes)
+```
+
+## Prepare dummy centromere coordinates
+Since no centromere annotation is currently available for this assembly, we create a dummy BED file using chromosome lengths extracted from the FASTA index. This allows the workflow to run while still demonstrating chromosome splitting.
+
+```{r paths}
+
+# we have no centromere coordinates so we create a dummy file
+
+read_delim(here("data", "vf_combined.fa.fai"), 
+           col_names = FALSE) %>%
+  dplyr::select(X1, X2) %>%
+  mutate(X3 = 0) %>% 
+  relocate(X1, X3, X2) %>%
+  write_delim(file = here("data", "sequence_length.bed"), col_names = FALSE, delim = "\t")
+
+bed_path <- here("data", 
+                 "sequence_length.bed")
+
+split_bed_path <- here("products", "B1_Split_regions_vf.bed")
+out_fasta <- here("products", "B1_FASTA_split_FINAL_vf.fasta")
+
+stopifnot(
+  file.exists(bed_path),
+  file.exists(combined_gtf),
+  file.exists(genome_fasta)
+)
+
+```
+
+# Generate split regions
+
+```{r split-regions}
+
+determine_split_regions(
+  bed = bed_path,
+  gtf = combined_gtf,
+  output_bed = split_bed_path,
+  limit = 2L^29L,
+  shift_by = 20L
+)
+
+stopifnot(file.exists(split_bed_path))
+
+```
+
+# Generate modified GTF
+
+```{r process-gtf}
+process_gtf(
+  split_regions_bed = split_bed_path,
+  gtf = combined_gtf,
+  genome_name = "vicia_faba",
+  genome_version = "Hedin2_v1",
+  out_path = output_dir
+)
+```
+
+# Visualize chromosome sizes before splitting
+
+Before applying any modification, we can inspect the original FASTA file and visualize chromosome/contig sizes. The Cell Ranger ARC limit is `2^29` bases, equal to 536,870,912 bp.
+
+```{r visualize-original-chromosome-sizes, message=FALSE, warning=FALSE}
+
+library(ggplot2)
+
+fa <- FaFile(genome_fasta)
+
+if (!file.exists(paste0(genome_fasta, ".fai"))) {
+  indexFa(fa)
+}
+
+cellranger_arc_limit <- 2^29
+
+ggplot(chr_sizes %>% filter(size_bp >= cellranger_arc_limit), aes(x = reorder(chr, size_bp), y = size_bp)) +
+  geom_col() +
+  geom_hline(
+    yintercept = cellranger_arc_limit,
+    linetype = "dashed", colour = "red"
+  ) +
+  coord_flip() +
+  labs(
+    title = "Original chromosome/contig sizes",
+    subtitle = "Dashed line indicates the Cell Ranger ARC limit: 2^29 bp",
+    x = "Chromosome/contig",
+    y = "Size (bp)"
+  ) +
+  theme_bw()
+
+```
+
+```{r modified-gtf-path}
+
+modified_gtf <- file.path(
+  output_dir,
+  "B1_FINAL_MODIFIED_GTF_vicia_faba_Hedin2_v1.gtf"
+)
+
+stopifnot(file.exists(modified_gtf))
+```
+
+# Split using bedtools
+
+```{r split-fasta-bedtools}
+
+cmd <- paste(
+  "bedtools getfasta",
+  "-fi",
+  shQuote(genome_fasta),
+  "-bed",
+  shQuote(split_bed_path),
+  "| sed '/^>/s/:/-/g'",
+  ">",
+  shQuote(out_fasta)
+)
+
+system(cmd)
+
+stopifnot(file.exists(out_fasta))
+
+# same replacement in the gtf
+modified_gtf_2 <- file.path(output_dir, "B1_FINAL_MODIFIED_GTF_vicia_faba_Hedin2_v1_replaced.gtf")
+
+cmd <- paste(
+  "sed 's/:/-/g'",
+  shQuote(modified_gtf),
+  ">",
+  shQuote(modified_gtf_2)
+)
+
+system(cmd)
+
+stopifnot(file.exists(modified_gtf_2))
+
+```
+
+# Validate final FASTA
+
+```{r validate-final-fasta}
+fa_split <- Rsamtools::FaFile(out_fasta)
+
+if (!file.exists(paste0(out_fasta, ".fai"))) {
+  Rsamtools::indexFa(fa_split)
+}
+
+idx_split <- Rsamtools::scanFaIndex(fa_split)
+
+split_chr_sizes <- data.frame(
+  chr = as.character(seqnames(idx_split)),
+  size_bp = width(idx_split)
+)
+
+split_chr_sizes |>
+  arrange(desc(size_bp)) |>
+  head()
+```
+
+Check that no sequence remains above the Cell Ranger ARC limit.
+
+```{r check-final-limit}
+split_chr_sizes |>
+  filter(size_bp >= cellranger_arc_limit)
+```
+
+# Output files
+
+The main output files are:
+
+```{r output-files}
+c(
+  split_regions_bed = split_bed_path,
+  split_fasta = out_fasta,
+  modified_gtf_2 = modified_gtf_2
+)
+
+```
+
+These files can be used to build a Cell Ranger ARC reference.
+
+# Cell Ranger ARC config example
+
+```{r write-config}
+
+config_path <- file.path(output_dir, "03_cellranger_arc_vicia.config")
+
+config <- paste0(
+  "{\n",
+  '  "organism": "vicia",\n',
+  '  "genome": ["Hedin2_v1"],\n',
+  '  "input_fasta": ["', out_fasta, '"],\n',
+  '  "input_gtf": ["', modified_gtf_2, '"],\n',
+  '  "non_nuclear_contigs": ["Mt-0-588000", "Pt-0-123722"]\n',
+  "}\n"
+)
+
+writeLines(config, config_path)
+
+config_path
+```
+
+# Build the reference with cellranger
+
+```{r, eval = FALSE}
+
+cellranger_arc <- "/home/luca/Programs/cellranger-arc-2.2.0/cellranger-arc"
+
+mkref_log <- file.path(output_dir, "cellranger_arc_mkref.log")
+
+exit_status <- system2(
+  cellranger_arc,
+  args = c(
+    "mkref",
+    paste0("--config=", config_path),
+    "--nthreads=24"
+  ),
+  stdout = mkref_log,
+  stderr = mkref_log
+)
+
+if (exit_status != 0) {
+  stop("cellranger-arc mkref failed. Check log: ", mkref_log)
+}
+
+```
+
+# Optional cleanup
+
+```{r cleanup, eval=FALSE}
+file.remove(
+  nuclear_fa,
+  mt_fa,
+  pt_fa
+)
+```
+
+# Session info
+
+```{r session-info}
+sessionInfo()
+```
