@@ -136,7 +136,7 @@ process_gtf <- function(
 #' Prepare split regions by adding `NEW` region names
 #'
 #' Adds a `NEW` column to the split-regions data frame, formatted as
-#' `Chr:RegionStart-RegionEnd`.
+#' `Chr-RegionStart-RegionEnd`.
 #'
 #' @param regions Data frame with columns `Chr`, `RegionStart`, `RegionEnd`.
 #'
@@ -144,7 +144,7 @@ process_gtf <- function(
 #' @dev
 .prepare_split_regions <- function(regions) {
   regions$NEW <- sprintf(
-    "%s:%s-%s",
+    "%s-%s-%s",
     regions$Chr,
     regions$RegionStart,
     regions$RegionEnd
