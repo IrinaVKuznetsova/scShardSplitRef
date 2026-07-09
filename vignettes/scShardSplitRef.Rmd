@@ -327,7 +327,7 @@ cat 03_cellranger_arc_barley.config
 }
 ```
 
-> **Note:** In the full genome (not the subset), you need to add infomation about mitochondrial and chloroplast to the "non_nuclear_contigs" field in the config file: `"non_nuclear_contigs": ["Mt-0-525599", "Pt-0-115974"]` in the config file
+> **Note:** In the full genome (not the subset), you need to add information about mitochondrial and chloroplast to the "non_nuclear_contigs" field in the config file: `"non_nuclear_contigs": ["Mt-0-525599", "Pt-0-115974"]` in the config file
 
 #### Run Cell Ranger ARC
 
