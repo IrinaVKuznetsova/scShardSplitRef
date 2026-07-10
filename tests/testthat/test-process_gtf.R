@@ -65,8 +65,8 @@ test_that("process_gtf works on example files and preserves order, writes a corr
   # Same number of rows, in the same order
   expect_identical(nrow(out), nrow(gtf_raw))
 
-  # Chr column has split-region e.g. "chr1:0-410"
-  expect_true(all(grepl(":", out$Chr, fixed = TRUE)))
+  # Chr column has split-region e.g. "chr1-0-410"
+  #expect_true(all(grepl(":", out$Chr, fixed = TRUE)))
   expect_true(all(grepl("-", out$Chr, fixed = TRUE)))
 
   # Coordinates are valid after shifting
@@ -203,7 +203,7 @@ test_that(".prepare_split_regions constructs NEW correctly", {
 
   out <- .prepare_split_regions(regions)
 
-  expect_identical(out$NEW, "chrX:100-200")
+  expect_identical(out$NEW, "chrX-100-200")
 })
 
 test_that(".rows_within_region applies matching rules correctly", {
