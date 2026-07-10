@@ -79,6 +79,9 @@ cellranger-arc mkref
 # Setup
 
 ```{r setup, message=FALSE, warning=FALSE}
+
+# remotes::install_github("IrinaVKuznetsova/scShardSplitRef")
+# install.packages( c("dplyr", "tidyr") )
 library(scShardSplitRef)
 library(here)
 library(Rsamtools)
@@ -88,8 +91,8 @@ library(stringr)
 library(tidyr)
 library(ggplot2)
 
-data_dir <- here("data")
-output_dir <- here("products")
+data_dir <- here("LUCA/data")
+output_dir <- here("LUCA/products")
 
 dir.create(data_dir, recursive = TRUE, showWarnings = FALSE)
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
@@ -362,19 +365,23 @@ system(cmd)
 
 stopifnot(file.exists(out_fasta))
 
-# same replacement in the gtf
-modified_gtf_2 <- file.path(output_dir, "B1_FINAL_MODIFIED_GTF_barley_MorexV3_replaced.gtf")
+# Note,
+# This part is not needed, as the package function generates the appropriate format (Chr-RegionStart-RegionEnd)
+#   compatible with Cell Ranger requirements. 
 
-cmd <- paste(
-  "sed 's/:/-/g'",
-  shQuote(modified_gtf),
-  ">",
-  shQuote(modified_gtf_2)
-)
+# same replacement in the gtf
+# modified_gtf_2 <- file.path(output_dir, "B1_FINAL_MODIFIED_GTF_barley_MorexV3_replaced.gtf")
+
+# cmd <- paste(
+#   "sed 's/:/-/g'",
+#   shQuote(modified_gtf),
+#   ">",
+#   shQuote(modified_gtf_2)
+# )
 
 system(cmd)
 
-stopifnot(file.exists(modified_gtf_2))
+#stopifnot(file.exists(modified_gtf_2))
 ```
 
 # Validate final FASTA
@@ -413,7 +420,7 @@ The main output files are:
 c(
   split_regions_bed = split_bed_path,
   split_fasta = out_fasta,
-  modified_gtf_2 = modified_gtf_2
+  modified_gtf_2 = modified_gtf
 )
 
 ```
