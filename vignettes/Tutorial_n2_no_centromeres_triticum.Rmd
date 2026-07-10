@@ -1,6 +1,6 @@
 ---
 title: "Preparing a Cell Ranger ARC-Compatible Reference Genome"
-author: "Irina Kuznetsova"
+author: "PASQUALE LUCA CURCI"
 date: "`r Sys.Date()`"
 output:
   html_document:
