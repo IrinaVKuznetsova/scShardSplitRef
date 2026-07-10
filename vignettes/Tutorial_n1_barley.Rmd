@@ -9,35 +9,40 @@ output:
     number_sections: true
 editor_options:
   chunk_output_type: console
+  markdown: 
+    wrap: 72
 ---
-##### Tutorial is written by PASQUALE LUCA CURCI
 
+##### Tutorial is written by PASQUALE LUCA CURCI
 
 # Overview
 
-This vignette shows how to prepare a barley reference genome compatible with
-Cell Ranger ARC using `scShardSplitRef`.
+This vignette shows how to prepare a barley reference genome compatible
+with Cell Ranger ARC using `scShardSplitRef`.
 
 Cell Ranger ARC cannot handle FASTA sequences longer than `2^29` bp
-(536,870,912 bp). Large chromosomes must therefore be split before running
-`cellranger-arc mkref`.
+(536,870,912 bp). Large chromosomes must therefore be split before
+running `cellranger-arc mkref`.
 
-This vignette is written as a complete case study because reference preparation
-is often species- and repository-specific. In this example:
+This vignette is written as a complete case study because reference
+preparation is often species- and repository-specific. In this example:
 
-- nuclear FASTA and GTF files are taken from Ensembl Plants release 63;
-- mitochondrial and plastid FASTA/GTF records are taken from Ensembl Plants
-  release 48;
-- centromere coordinates are taken from GrainGenes.
+-   nuclear FASTA and GTF files are taken from Ensembl Plants release
+    63;
+-   mitochondrial and plastid FASTA/GTF records are taken from Ensembl
+    Plants release 48;
+-   centromere coordinates are taken from GrainGenes.
 
 The generic `scShardSplitRef` workflow starts once we have prepared:
 
-1. a combined FASTA;
-2. a combined GTF;
-3. a BED-like table with chromosome name, centromere position, and chromosome size.
+1.  a combined FASTA;
+2.  a combined GTF;
+3.  a BED-like table with chromosome name, centromere position, and
+    chromosome size.
 
 Reference preparation workflow
-```text
+
+``` text
 Ensembl Plants (rel. 63)
     ├── nuclear FASTA
     └── nuclear GTF
@@ -93,8 +98,8 @@ library(stringr)
 library(tidyr)
 library(ggplot2)
 
-data_dir <- here("LUCA/data")
-output_dir <- here("LUCA/products")
+data_dir <- here("data")
+output_dir <- here("products")
 
 dir.create(data_dir, recursive = TRUE, showWarnings = FALSE)
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
@@ -157,8 +162,8 @@ centromere_zip <- file.path(data_dir, "barley-morex3.zip")
 
 ## Combine FASTA files
 
-The nuclear genome is written first, followed by mitochondrial and plastid
-sequences.
+The nuclear genome is written first, followed by mitochondrial and
+plastid sequences.
 
 ```{r combine-fasta}
 
@@ -237,8 +242,8 @@ stopifnot(file.exists(centromere_bed))
 
 ## Combine GTF files
 
-The MorexV3 release 63 GTF is used as the main annotation. Mitochondrial and
-plastid records are appended from release 48.
+The MorexV3 release 63 GTF is used as the main annotation. Mitochondrial
+and plastid records are appended from release 48.
 
 ```{r combine-gtf}
 gtf_path <- file.path(data_dir, "hv_combined.gtf")
@@ -269,9 +274,9 @@ system(cmd)
 
 # Generic scShardSplitRef workflow
 
-From this point onward, the workflow is generic and can be reused for other
-species, provided that equivalent FASTA, GTF, and centromere files are
-available.
+From this point onward, the workflow is generic and can be reused for
+other species, provided that equivalent FASTA, GTF, and centromere files
+are available.
 
 ```{r define-final-paths}
 bed_path <- centromere_bed
