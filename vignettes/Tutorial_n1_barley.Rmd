@@ -1,0 +1,481 @@
+---
+title: "Preparing a Cell Ranger ARC-Compatible Reference Genome"
+author: "Irina Kuznetsova"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    number_sections: true
+editor_options:
+  chunk_output_type: console
+  markdown: 
+    wrap: 72
+---
+
+##### Tutorial is written by PASQUALE LUCA CURCI
+
+# Overview
+
+This vignette shows how to prepare a barley reference genome compatible
+with Cell Ranger ARC using `scShardSplitRef`.
+
+Cell Ranger ARC cannot handle FASTA sequences longer than `2^29` bp
+(536,870,912 bp). Large chromosomes must therefore be split before
+running `cellranger-arc mkref`.
+
+This vignette is written as a complete case study because reference
+preparation is often species- and repository-specific. In this example:
+
+-   nuclear FASTA and GTF files are taken from Ensembl Plants release
+    63;
+-   mitochondrial and plastid FASTA/GTF records are taken from Ensembl
+    Plants release 48;
+-   centromere coordinates are taken from GrainGenes.
+
+The generic `scShardSplitRef` workflow starts once we have prepared:
+
+1.  a combined FASTA;
+2.  a combined GTF;
+3.  a BED-like table with chromosome name, centromere position, and
+    chromosome size.
+
+Reference preparation workflow
+
+``` text
+Ensembl Plants (rel. 63)
+    ├── nuclear FASTA
+    └── nuclear GTF
+
+Ensembl Plants (rel. 48)
+    ├── Mt FASTA
+    ├── Pt FASTA
+    └── GTF
+
+GrainGenes
+    └── centromere positions
+
+            │
+            ▼
+
+combined FASTA
+combined GTF
+centromere BED
+
+            │
+            ▼
+
+determine_split_regions()
+
+            │
+            ▼
+
+process_gtf()
+
+            │
+            ▼
+
+bedtools getfasta
+
+            │
+            ▼
+
+cellranger-arc mkref
+```
+
+# Setup
+
+```{r setup, message=FALSE, warning=FALSE}
+
+# remotes::install_github("IrinaVKuznetsova/scShardSplitRef")
+# install.packages( c("dplyr", "tidyr") )
+library(scShardSplitRef)
+library(here)
+library(Rsamtools)
+library(dplyr)
+library(readr)
+library(stringr)
+library(tidyr)
+library(ggplot2)
+
+data_dir <- here("data")
+output_dir <- here("products")
+
+dir.create(data_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+```
+
+Check required command-line tools.
+
+```{r check-tools}
+tools <- c("wget", "unzip", "zcat", "awk", "sed", "bedtools", "gzip")
+missing_tools <- tools[!nzchar(Sys.which(tools))]
+
+if (length(missing_tools) > 0) {
+  stop("Missing tools: ", paste(missing_tools, collapse = ", "))
+}
+```
+
+# Case study-specific preprocessing
+
+## Download files
+
+```{r download-data}
+hv_nucl_ep_rel_63 <- "https://ftp.ensemblgenomes.ebi.ac.uk/pub/plants/release-63/fasta/hordeum_vulgare/dna/Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.toplevel.fa.gz"
+
+hv_ep_rel_63_gtf <- "https://ftp.ensemblgenomes.ebi.ac.uk/pub/plants/release-63/gtf/hordeum_vulgare/Hordeum_vulgare.MorexV3_pseudomolecules_assembly.63.gtf.gz"
+
+hv_mt_ep_rel_48 <- "https://ftp.ensemblgenomes.ebi.ac.uk/pub/plants/release-48/fasta/hordeum_vulgare/dna/Hordeum_vulgare.IBSC_v2.dna.chromosome.Mt.fa.gz"
+
+hv_pt_ep_rel_48 <- "https://ftp.ensemblgenomes.ebi.ac.uk/pub/plants/release-48/fasta/hordeum_vulgare/dna/Hordeum_vulgare.IBSC_v2.dna.chromosome.Pt.fa.gz"
+
+hv_ep_rel_48_gtf <- "https://ftp.ensemblgenomes.ebi.ac.uk/pub/plants/release-48/gtf/hordeum_vulgare/Hordeum_vulgare.IBSC_v2.48.gtf.gz"
+
+hv_grain_genes_centromere_data <- "https://graingenes.org/GG3/sites/default/files/data_downloads/barley-morex3.zip"
+
+cmd <- paste(
+  "wget -P", shQuote(data_dir),
+  shQuote(hv_nucl_ep_rel_63),
+  shQuote(hv_ep_rel_63_gtf),
+  shQuote(hv_mt_ep_rel_48),
+  shQuote(hv_pt_ep_rel_48),
+  shQuote(hv_ep_rel_48_gtf),
+  shQuote(hv_grain_genes_centromere_data)
+)
+
+system(cmd)
+```
+
+Define local file paths.
+
+```{r local-paths}
+nuclear_fa <- file.path(data_dir, "Hordeum_vulgare.MorexV3_pseudomolecules_assembly.dna.toplevel.fa.gz")
+mt_fa <- file.path(data_dir, "Hordeum_vulgare.IBSC_v2.dna.chromosome.Mt.fa.gz")
+pt_fa <- file.path(data_dir, "Hordeum_vulgare.IBSC_v2.dna.chromosome.Pt.fa.gz")
+
+morex_gtf <- file.path(data_dir, "Hordeum_vulgare.MorexV3_pseudomolecules_assembly.63.gtf.gz")
+organelle_gtf <- file.path(data_dir, "Hordeum_vulgare.IBSC_v2.48.gtf.gz")
+
+centromere_zip <- file.path(data_dir, "barley-morex3.zip")
+
+```
+
+## Combine FASTA files
+
+The nuclear genome is written first, followed by mitochondrial and
+plastid sequences.
+
+```{r combine-fasta}
+
+genome_fasta <- file.path(data_dir, "hv_combined.fa")
+
+cmd <- paste(
+  "zcat",
+  shQuote(nuclear_fa),
+  shQuote(mt_fa),
+  shQuote(pt_fa),
+  ">",
+  shQuote(genome_fasta)
+)
+
+system(cmd)
+
+stopifnot(file.exists(genome_fasta))
+```
+
+Index the combined FASTA and extract sequence sizes.
+
+```{r fasta-index}
+fa <- Rsamtools::FaFile(genome_fasta)
+
+if (!file.exists(paste0(genome_fasta, ".fai"))) {
+  Rsamtools::indexFa(fa)
+}
+
+idx <- Rsamtools::scanFaIndex(fa)
+
+chr_sizes <- data.frame(
+  chr = as.character(seqnames(idx)),
+  size_bp = width(idx)
+)
+
+head(chr_sizes)
+```
+
+## Prepare centromere coordinates
+
+```{r prepare-centromeres}
+cmd <- paste(
+  "unzip -o",
+  shQuote(centromere_zip),
+  "-d",
+  shQuote(data_dir)
+)
+
+system(cmd)
+
+hv_centromere <- Sys.glob(
+  file.path(data_dir, "*", "*", "*", "MorexV3_centromere_positions.tsv")
+)
+
+stopifnot(length(hv_centromere) == 1)
+
+centromere_bed <- file.path(data_dir, "hv_combined_centromeres.bed")
+
+readr::read_delim(
+  hv_centromere,
+  col_names = c("chr", "centromere_pos"),
+  show_col_types = FALSE
+) |>
+  mutate(chr = stringr::str_remove(chr, "^chr")) |>
+  right_join(chr_sizes, by = "chr") |>
+  mutate(centromere_pos = tidyr::replace_na(centromere_pos, 0L)) |>
+  select(chr, centromere_pos, size_bp) |>
+  readr::write_delim(
+    file = centromere_bed,
+    delim = "\t",
+    col_names = FALSE
+  )
+
+stopifnot(file.exists(centromere_bed))
+```
+
+## Combine GTF files
+
+The MorexV3 release 63 GTF is used as the main annotation. Mitochondrial
+and plastid records are appended from release 48.
+
+```{r combine-gtf}
+gtf_path <- file.path(data_dir, "hv_combined.gtf")
+
+# The release 48 GTF contains annotations for both nuclear and organellar sequences. Only mitochondrial and plastid annotations are retained and appended to the release 63 nuclear annotation.
+cmd <- sprintf(
+  "(zcat %s; zcat %s | awk '$1==\"Mt\" || $1==\"Pt\"') > %s",
+  shQuote(morex_gtf),
+  shQuote(organelle_gtf),
+  shQuote(gtf_path)
+)
+
+system(cmd)
+
+stopifnot(file.exists(gtf_path))
+```
+
+Check that `Mt` and `Pt` records are present.
+
+```{r check-gtf}
+cmd <- sprintf(
+  "awk '$1==\"Mt\" || $1==\"Pt\" {print $1}' %s | sort -u",
+  shQuote(gtf_path)
+)
+
+system(cmd)
+```
+
+# Generic scShardSplitRef workflow
+
+From this point onward, the workflow is generic and can be reused for
+other species, provided that equivalent FASTA, GTF, and centromere files
+are available.
+
+```{r define-final-paths}
+bed_path <- centromere_bed
+
+split_bed_path <- file.path(output_dir, "B1_Split_regions.bed")
+out_fasta <- file.path(output_dir, "B1_FASTA_split_FINAL.fasta")
+
+stopifnot(
+  file.exists(bed_path),
+  file.exists(gtf_path),
+  file.exists(genome_fasta)
+)
+```
+
+# Visualize chromosome sizes before splitting
+
+```{r plot-original-sizes}
+cellranger_arc_limit <- 2^29
+
+ggplot(chr_sizes |> filter(size_bp > 2^29), 
+       aes(x = reorder(chr, size_bp), y = size_bp)) +
+  geom_col() +
+  geom_hline(
+    yintercept = cellranger_arc_limit,
+    linetype = "dashed",
+    colour = "red"
+  ) +
+  coord_flip() +
+  labs(
+    title = "Original chromosome/contig sizes",
+    subtitle = "Dashed line indicates the Cell Ranger ARC limit: 2^29 bp",
+    x = "Chromosome/contig",
+    y = "Size (bp)"
+  ) +
+  theme_bw()
+```
+
+```{r chromosomes-above-limit}
+chr_sizes |>
+  filter(size_bp >= cellranger_arc_limit)
+```
+
+# Generate split regions
+
+```{r split-regions}
+determine_split_regions(
+  bed = bed_path,
+  gtf = gtf_path,
+  output_bed = split_bed_path,
+  limit = 2L^29L,
+  shift_by = 20L
+)
+
+stopifnot(file.exists(split_bed_path))
+```
+
+# Generate modified GTF
+
+```{r process-gtf}
+process_gtf(
+  split_regions_bed = split_bed_path,
+  gtf = gtf_path,
+  genome_name = "barley",
+  genome_version = "MorexV3",
+  out_path = output_dir
+)
+```
+
+```{r modified-gtf-path}
+modified_gtf <- file.path(
+  output_dir,
+  "B1_FINAL_MODIFIED_GTF_barley_MorexV3.gtf"
+)
+
+stopifnot(file.exists(modified_gtf))
+```
+
+# Split FASTA using bedtools
+
+```{r split-fasta}
+cmd <- paste(
+  "bedtools getfasta",
+  "-fi",
+  shQuote(genome_fasta),
+  "-bed",
+  shQuote(split_bed_path),
+  "| sed '/^>/s/:/-/g'",
+  ">",
+  shQuote(out_fasta)
+)
+
+system(cmd)
+
+stopifnot(file.exists(out_fasta))
+
+```
+
+# Validate final FASTA
+
+```{r validate-final-fasta}
+fa_split <- Rsamtools::FaFile(out_fasta)
+
+if (!file.exists(paste0(out_fasta, ".fai"))) {
+  Rsamtools::indexFa(fa_split)
+}
+
+idx_split <- Rsamtools::scanFaIndex(fa_split)
+
+split_chr_sizes <- data.frame(
+  chr = as.character(seqnames(idx_split)),
+  size_bp = width(idx_split)
+)
+
+split_chr_sizes |>
+  arrange(desc(size_bp)) |>
+  head()
+```
+
+Check that no sequence remains above the Cell Ranger ARC limit.
+
+```{r check-final-limit}
+split_chr_sizes |>
+  filter(size_bp >= cellranger_arc_limit)
+```
+
+# Output files
+
+The main output files are:
+
+```{r output-files}
+c(
+  split_regions_bed = split_bed_path,
+  split_fasta = out_fasta,
+  modified_gtf = modified_gtf
+)
+
+```
+
+These files can be used to build a Cell Ranger ARC reference.
+
+# Cell Ranger ARC config example
+
+```{r write-config}
+config_path <- file.path(output_dir, "03_cellranger_arc_barley.config")
+
+config <- paste0(
+  "{\n",
+  '  "organism": "barley",\n',
+  '  "genome": ["MOREX3_split"],\n',
+  '  "input_fasta": ["', out_fasta, '"],\n',
+  '  "input_gtf": ["', modified_gtf, '"],\n',
+  '  "non_nuclear_contigs": ["Mt-0-525599", "Pt-0-115974"]\n',
+  "}\n"
+)
+
+writeLines(config, config_path)
+
+config_path
+```
+
+# Build the reference with cellranger
+
+```{r cellranger}
+
+# Build the reference
+cellranger_arc <- "/usr/local/bin/cellranger-arc"
+
+mkref_log <- file.path(output_dir, "mkref.log")
+
+exit_status <- system2(
+   cellranger_arc,
+  args = c(
+    "mkref",
+    paste0("--config=", config_path),
+    "--nthreads=12"
+  ),
+  stdout = mkref_log,
+  stderr = mkref_log
+)
+
+if (exit_status != 0) {
+  stop("cellranger-arc mkref failed. Check log: ", mkref_log)
+}
+```
+
+# Optional cleanup
+
+```{r cleanup, eval=FALSE}
+file.remove(
+  nuclear_fa,
+  mt_fa,
+  pt_fa,
+  morex_gtf,
+  organelle_gtf
+)
+```
+
+# Session info
+
+```{r session-info}
+sessionInfo()
+```
