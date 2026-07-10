@@ -254,7 +254,7 @@ test_that("validate_inputs returns list with bed and gtf", {
     gtf_tmp
   )
 
-  result <- validate_inputs(bed_tmp, gtf_tmp)
+  result <- .validate_inputs(bed_tmp, gtf_tmp)
 
   expect_named(result, c("bed", "gtf"))
   expect_s3_class(result$bed, "data.frame")
@@ -268,7 +268,7 @@ test_that("validate_inputs assigns correct BED column names", {
   writeLines("chr1\t100\t200", bed_tmp)
   writeLines("chr1\tsource\tgene\t1\t100\t.\t+\t.\tattribute", gtf_tmp)
 
-  result <- validate_inputs(bed_tmp, gtf_tmp)
+  result <- .validate_inputs(bed_tmp, gtf_tmp)
 
   expect_named(result$bed[1:3], c("Chr", "RegionStart", "RegionEnd"))
 })
@@ -280,7 +280,7 @@ test_that("validate_inputs assigns correct GTF column names", {
   writeLines("chr1\t100\t200", bed_tmp)
   writeLines("chr1\tsource\tgene\t1\t100\t.\t+\t.\tattribute", gtf_tmp)
 
-  result <- validate_inputs(bed_tmp, gtf_tmp)
+  result <- .validate_inputs(bed_tmp, gtf_tmp)
 
   expect_named(
     result$gtf,
@@ -305,5 +305,5 @@ test_that("validate_inputs errors on invalid BED ranges", {
   writeLines("chr1\t500\t100", bed_tmp) # start > end
   writeLines("chr1\tsource\tgene\t1\t100\t.\t+\t.\tattribute", gtf_tmp)
 
-  expect_error(validate_inputs(bed_tmp, gtf_tmp), "Invalid BED coordinates")
+  expect_error(.validate_inputs(bed_tmp, gtf_tmp), "Invalid BED coordinates")
 })
