@@ -6,7 +6,7 @@ Authors@R: c(
     person("Irina", "Kuznetsova", , "irina.kuznetsova@curtin.edu.au", role = c("aut", "cre"),
            comment = c(ORCID = "0009-0001-5411-6063")),
     person("Luke", "Pembleton", , "lpembleton@barenbrug.com.au", role = "aut",
-           comment = c(ORCID = "0000-0002-3555-4586")),
+           comment = c(ORCID = "0000-0001-8131-8210")),
     person("Luca", "Curci", , "pasqualeluca.curci@cnr.it", role = "aut",
            comment = c(ORCID = "0000-0002-5780-3029")),
     person("Adam H.", "Sparks", , "adamhsparks@gmail.com", role = "aut",
