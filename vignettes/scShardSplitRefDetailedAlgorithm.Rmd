@@ -288,24 +288,24 @@ gene[G3R]:  490-560
                                      |
                                split (500)
             
-            Split coordinate 500 -> falls inside of G3L[460-510] and G3R[490-560]
+            Split coordinate 500 -> falls inside of G3L[460-545] and G3R[490-560]
                 Shift to the right by 30bp -> 530 - inside of the G3R[490-560]
                 Shift to the right by 30bp -> 560 - still inside of the G3R[490-560]
                 Shift to the right by 30bp -> 590 - outside of the G3R[490-560], not passing clearance
                 Shift to the right by 30bp -> 620 - outside of the G3R[490-560] -> PASSING clearance
                   Split coordinate = 620
             
-      chr3: 0              460  490     510   560             1000
+      chr3: 0              460  490     545   560             1000
             |----------------|===|overlap|======|--------------|
                              [G3L]        [G3R]       ^ 
                                                       |
                                                 split (620)
             
             The distance between 0 and 620 exceeds the `limit` of 540, find the next split coordinate: 
-                ceiling(620/540) = 2 —> 620/2 = 310 —> outside G3L[460-510] and G3R[490-560], PASSING clearance = 40
+                ceiling(620/540) = 2 —> 620/2 = 310 —> outside G3L[460-545] and G3R[490-560], PASSING clearance = 40
             Split coordinate = 310
             
-      chr3: 0              460  490     510   560             1000
+      chr3: 0              460  490     545   560             1000
             |----------------|===|overlap|======|--------------|
                       ^      [G3L]        [G3R]       ^ 
                       |                               |
@@ -322,7 +322,7 @@ gene[G3R]:  490-560
 
 ``` text
 chr4:   300-1500 
-Note, that each chromosome is defined by a coordinate range starting at 0. If a feature's start position is not 0, it indicates a split coordinate (centromere). In this example, 300 is the split coordinate (centromere), dividing the chromosome into two segments: 0–300 and 300–500.
+Note, that each chromosome is defined by a coordinate range starting at 0. If a feature's start position is not 0, it indicates a split coordinate (centromere). In this example, 300 is the split coordinate (centromere), dividing the chromosome into two segments: 0–300 and 300–1500.
 limit = 540 
 shift_by = 30 
 clearance = 40
@@ -443,7 +443,7 @@ five_prime_utr[G6R]:  400-409
 
       chr6: 0                400     500                              1000
             |-----------------|======|---------------------------------|
-                                [G5R]^
+                                [G6R]^
                                      |
                                    split (500)       
             
@@ -452,23 +452,23 @@ five_prime_utr[G6R]:  400-409
             The algorithm first creates provisional even shards based on `limit`:
                 ceiling(1000/540) = 2 -> 1000/2 = 500 
             
-            Split coordinate 500 -> falls on edge of G5R[400-500]
-                  Shift to the right by 30bp -> 530 - outside of the G5R[400-500], not passing clearance
-                  Shift to the right by 30bp -> 560 - outside of the G5R[400-500] -> PASSING clearance
+            Split coordinate 500 -> falls on edge of G6R[400-500]
+                  Shift to the right by 30bp -> 530 - outside of the G6R[400-500], not passing clearance
+                  Shift to the right by 30bp -> 560 - outside of the G6R[400-500] -> PASSING clearance
                   
       chr6: 0                400     500                              1000
             |-----------------|======|---------------------------------|
-                                [G5R]    ^
+                                [G6R]    ^
                                          |
                                       split (560)
             
             The distance between 0 and 560 exceeds the `limit` of 540, find the next split coordinate: 
-                ceiling(560/540) = 2 —> 560/2 = 280 —> outside G5R[400-500], PASSING clearance = 40
+                ceiling(560/540) = 2 —> 560/2 = 280 —> outside G6R[400-500], PASSING clearance = 40
             Split coordinate = 280
             
       chr6: 0                400     500                              1000
             |-----------------|======|---------------------------------|
-                      ^        [G5R]    ^
+                      ^        [G6R]    ^
                       |                 |
                    split (280)        split (560)
             
@@ -490,7 +490,7 @@ Assigns each GTF feature to exactly one split-region interval, and replaces the 
 ?process_gtf
 ```
 
-**Input Data** This function takes a BED-like file containing split intervals as produced by `process_gtf()` and a GTF file as the input.
+**Input Data** This function takes a BED-like file containing split intervals as produced by `determine_split_regions()` and a GTF file as the input.
 
 ##### Usage Example: `process_gtf()`
 
