@@ -88,7 +88,11 @@ cellranger-arc mkref
 ```{r setup, message=FALSE, warning=FALSE}
 
 # remotes::install_github("IrinaVKuznetsova/scShardSplitRef")
-# install.packages( c("dplyr", "tidyr") )
+#if (!requireNamespace("BiocManager", quietly = TRUE))
+#    install.packages("BiocManager")
+#BiocManager::install("Rsamtools")
+# install.packages("vroom")
+# install.packages( c("dplyr", "tidyr", "here", "ggplot2", "Rsamtools", "readr", "stringr") )
 library(scShardSplitRef)
 library(here)
 library(Rsamtools)
@@ -98,8 +102,8 @@ library(stringr)
 library(tidyr)
 library(ggplot2)
 
-data_dir <- here("data")
-output_dir <- here("products")
+data_dir <- here("/AAGI_data/00_nectars_data/A_PROJECTS/sc_ShardSplitRef/06_TEST_MAIN_JUNE26/LUCA/data_Mon")
+output_dir <- here("/AAGI_data/00_nectars_data/A_PROJECTS/sc_ShardSplitRef/06_TEST_MAIN_JUNE26/LUCA/products_Mon")
 
 dir.create(data_dir, recursive = TRUE, showWarnings = FALSE)
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
