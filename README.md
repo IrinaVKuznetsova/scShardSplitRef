@@ -116,7 +116,7 @@ The format of the centromere coordinates file is a tab-delimited 3-column file, 
 A step-by-step guide can be found in the vignettes:
 - **Toy example (algorithm):** a quick introduction to understand the **split algorithm**: [vignette toy](vignettes/scShardSplitRefDetailedAlgorithm.Rmd) 
 - **Real-world example: subset barley** *(diploid, chromosome length exceeds allowed size)* [vignette quickstart](vignettes/scShardSplitRef.Rmd) 
-- **Real-world example: XXX** *(hexaploid, chromosome length exceeds allowed size)* [tutorial XX](inst/)   **<-- TODO: place holder for Luca's testing species --!>**
+
 
 > Note on parameter selection in *determine_split_regions()*. In real world scenarios users should consider picking  `clearance = 900 (2 x 150 bp reads with up to a 600 bp insert size)`, and `shift_by in the region of 1000 to 4000` to ensure the algorithm can easily walk through a whole gene if needed.
 
