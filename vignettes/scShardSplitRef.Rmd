@@ -356,7 +356,7 @@ This project is licensed under the GPL-3 license
 
 ## Contributing
 
-Please refer to the [CONTRIBUTING.md]() \<-- TODO: Provide link once this is public ---!\>
+Please refer to the CONTRIBUTING.md
 If you'd like to help improve this tool, please send your suggestions via email.
 Please clearly outline the feature(s) you think should be added.
 As the tool develops, new features can be added as separate package functions and contributed back to the project.\
@@ -366,6 +366,6 @@ Remember that improving tools is important, but keeping them neat and not over-c
 
 GRDC funded this project through the Analytics for the Australian Grains Industry (AAGI) investment, CUR2210-005OPX (AAGI-CU).
 
-This work was supported by resources provided by the [Pawsey Supercomputing Research Centres](https://pawsey.org.au/) Nimbus Research Cloud (https://doi.org/10.48569/v0j3-qd51), with funding from the Australian Government and the Government of Western Australia.
+This work was supported by resources provided by the [Pawsey Supercomputing Research Centres](https://pawsey.org.au/) [Nimbus Research Cloud](https://doi.org/10.48569/v0j3-qd51), with funding from the Australian Government and the Government of Western Australia.
 
 This research used the Australian Research Data Commons (ARDC) ARDC Nectar Research Cloud Service [ARDC Nectar Research Cloud | Australian Research Data Commons](https://ardc.edu.au/services/ardc-nectar-research-cloud/). The ARDC is enabled by the Australian Government’s National Collaborative Research Infrastructure Strategy (NCRIS).

@@ -1,7 +1,7 @@
 Package: scShardSplitRef
 Title: Build Custom Reference Genome for Single-Cell Multiome ATAC and
     Gene Expression Data of Large-genome Species
-Version: 0.0.0.9000
+Version: 0.1.0
 Authors@R: c(
     person("Irina", "Kuznetsova", , "irina.kuznetsova@curtin.edu.au", role = c("aut", "cre"),
            comment = c(ORCID = "0009-0001-5411-6063")),

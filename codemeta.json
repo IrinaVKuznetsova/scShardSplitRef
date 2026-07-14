@@ -5,7 +5,7 @@
   "description": "Provides utilities that enable researchers to build custom references for the Multiome ATAC Gene Expression sequencing data for large-genome species without manual intervention.",
   "name": "scShardSplitRef: Build Custom Reference Genome for Single-Cell Multiome ATAC and\n    Gene Expression Data of Large-genome Species",
   "license": "https://spdx.org/licenses/GPL-3.0",
-  "version": "0.0.0.9000",
+  "version": "0.1.0",
   "programmingLanguage": {
     "@type": "ComputerLanguage",
     "name": "R",
