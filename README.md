@@ -149,7 +149,7 @@ citation("scShardSplitRef")
 
 ## License
 
-This project is licensed under the [GPL-3.0 license](LICENSE.md).  
+This project is licensed under the GPL-3 license.  
 
 ## Contributing
 
