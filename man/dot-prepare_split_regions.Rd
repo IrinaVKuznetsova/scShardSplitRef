@@ -14,6 +14,6 @@ The input data frame with an added \code{NEW} column.
 }
 \description{
 Adds a \code{NEW} column to the split-regions data frame, formatted as
-\code{Chr:RegionStart-RegionEnd}.
+\code{Chr-RegionStart-RegionEnd}.
 }
 \keyword{internal}
