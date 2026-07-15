@@ -135,13 +135,13 @@ citation("scShardSplitRef")
 #>
 #>   Kuznetsova I, Pembleton L, Curci L, Sparks A (????). _scShardSplitRef: Build
 #>   Custom Reference Genome for Single-Cell Multiome ATAC and Gene Expression Data
-#>   of Large-genome Species._. R package version 0.1.0
+#>   of Large-Genome Species._. R package version 0.1.0
 #>
 #> A BibTeX entry for LaTeX users is
 #>
 #>   @Manual{,
 #>     title = {scShardSplitRef: Build Custom Reference Genome for Single-Cell Multiome ATAC and
-#> Gene Expression Data of Large-genome Species.},
+#> Gene Expression Data of Large-Genome Species.},
 #>     author = {Irina Kuznetsova and Luke Pembleton and Luca Curci and Adam H. Sparks},
 #>     note = {R package version 0.1.0},
 #>   }
