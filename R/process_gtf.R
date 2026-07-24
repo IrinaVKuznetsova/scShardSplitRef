@@ -109,6 +109,12 @@ process_gtf <- function(
   matched <- .restore_gtf_order(matched, gtf$unique_ID)
 
   out <- .build_gtf_output(matched)
+  
+    # fix scientific notation before writing to the file
+  out[[4]] <- sprintf("%.0f", out[[4]])
+  out[[5]] <- sprintf("%.0f", out[[5]])
+  #out[grepl("[eE][+-]?[0-9]+", as.character(out[[4]])), ]# NA, To verify whether scientific notation is still appearing.
+  #out[grepl("[eE][+-]?[0-9]+", as.character(out[[5]])), ]# NA, To verify whether scientific notation is still appearing.
 
   # Handle attribute filtering if parameters are provided
   if (!is.null(keep_attributes)) {
