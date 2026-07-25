@@ -103,18 +103,18 @@ process_gtf <- function(
   .abort_if_ambiguous_matches(matched)
   .abort_if_unmatched_features(matched, gtf)
 
-  matched$start <- matched$start - matched$RegionStart + 1
-  matched$end <- matched$end - matched$RegionStart + 1
+  matched$start <- matched$start - matched$RegionStart + 1L
+  matched$end <- matched$end - matched$RegionStart + 1L
 
   matched <- .restore_gtf_order(matched, gtf$unique_ID)
 
   out <- .build_gtf_output(matched)
-  
-    # fix scientific notation before writing to the file
-  out[[4]] <- sprintf("%.0f", out[[4]])
-  out[[5]] <- sprintf("%.0f", out[[5]])
-  #out[grepl("[eE][+-]?[0-9]+", as.character(out[[4]])), ]# NA, To verify whether scientific notation is still appearing.
-  #out[grepl("[eE][+-]?[0-9]+", as.character(out[[5]])), ]# NA, To verify whether scientific notation is still appearing.
+
+  # Guard against scientific notation: `start`/`end` are numeric (possibly
+  # double, after the RegionStart-relative shift arithmetic) and must always
+  # render as plain fixed-point integers in the written GTF.
+  out[[4]] <- .format_coord(out[[4]])
+  out[[5]] <- .format_coord(out[[5]])
 
   # Handle attribute filtering if parameters are provided
   if (!is.null(keep_attributes)) {
@@ -149,13 +149,72 @@ process_gtf <- function(
 #' @return The input data frame with an added `NEW` column.
 #' @dev
 .prepare_split_regions <- function(regions) {
+  # Contract: RegionStart/RegionEnd must already be integer by the time they
+  # reach here (enforced by .coerce_integer_coord() at read time in
+  # .read_and_format_bed()). Assert it explicitly so a future regression
+  # upstream fails loudly here in tests/CI, rather than silently reformatting
+  # a double back into a fixed-point string.
+  if (!is.integer(regions$RegionStart) || !is.integer(regions$RegionEnd)) {
+    cli::cli_abort(
+      call = rlang::caller_env(),
+      c(
+        "{.arg regions$RegionStart}/{.arg regions$RegionEnd} must be \\
+         integer, not {.cls {class(regions$RegionStart)}}/\\
+         {.cls {class(regions$RegionEnd)}}.",
+        i = "This indicates an upstream read/arithmetic step promoted a \\
+             coordinate column to double."
+      )
+    )
+  }
+
   regions$NEW <- sprintf(
     "%s-%s-%s",
     regions$Chr,
-    regions$RegionStart,
-    regions$RegionEnd
+    .format_coord(regions$RegionStart),
+    .format_coord(regions$RegionEnd)
   )
   regions
+}
+
+#' Format a coordinate value as a plain fixed-point integer string
+#'
+#' `sprintf("%s", x)` and other implicit string coercions of a *numeric*
+#' (double) vector go through `as.character()`, which follows
+#' `getOption("scipen")`/`getOption("digits")` and will happily render large,
+#' round genomic coordinates in scientific notation (e.g. `1e+08` instead of
+#' `100000000`). Integers never do this, but `read.table()`-derived or
+#' arithmetic-derived coordinate columns are not guaranteed to stay integer
+#' (e.g. `matched$start - matched$RegionStart + 1` promotes to double).
+#'
+#' This helper forces fixed-point, non-scientific formatting regardless of
+#' whether `x` is integer or double, and is safe for coordinates well within
+#' double's exact-integer range (+/- 2^53), which comfortably covers any
+#' genomic coordinate.
+#'
+#' @param x Numeric (integer or double) vector of coordinates. `NA` values
+#'   are passed through as `NA` (not the string `"NA"`).
+#'
+#' @return Character vector, same length as `x`, with each value rendered as
+#'   a plain integer string (no scientific notation, no decimal point).
+#'
+#' @examples
+#' \dontrun{
+#'   .format_coord(1e8)      # "100000000", not "1e+08"
+#'   .format_coord(100000000L) # "100000000"
+#' }
+#'
+#' @dev
+.format_coord <- function(x) {
+  if (!is.numeric(x)) {
+    cli::cli_abort(
+      call = rlang::caller_env(),
+      "{.arg x} must be numeric (integer or double), not {.cls {class(x)}}."
+    )
+  }
+
+  out <- sprintf("%.0f", x)
+  out[is.na(x)] <- NA_character_
+  out
 }
 
 #' Identify rows where a feature lies fully within a split region

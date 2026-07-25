@@ -1,3 +1,65 @@
+#' Coerce a coordinate column to integer, safely
+#'
+#' Genomic coordinates must always be whole-number `integer`, never
+#' `double`. Plain `as.integer()` is not safe to use directly on trusted
+#' input because it silently returns `NA` (with only a warning) for values
+#' outside R's 32-bit integer range, and silently truncates fractional
+#' values. This helper fails loudly instead in both cases so a type problem
+#' is caught immediately at the point of reading, rather than surfacing much
+#' later as a scientific-notation string or a mysteriously missing row.
+#'
+#' @param x Numeric vector (integer, double, or character coercible to
+#'   numeric) of coordinate values.
+#' @param label Character scalar used in error messages to identify which
+#'   column failed (e.g. `"RegionStart"`).
+#'
+#' @return Integer vector, same length as `x`.
+#'
+#' @examples
+#' \dontrun{
+#'   .coerce_integer_coord(c(0, 100000000), "RegionStart")
+#'   .coerce_integer_coord(3.5, "RegionStart") # errors: not whole numbers
+#' }
+#'
+#' @dev
+.coerce_integer_coord <- function(x, label = "coordinate") {
+  if (is.integer(x)) {
+    return(x)
+  }
+
+  if (!is.numeric(x)) {
+    x <- suppressWarnings(as.numeric(x))
+  }
+
+  non_integer <- x != trunc(x)
+  if (any(non_integer, na.rm = TRUE)) {
+    cli::cli_abort(
+      call = rlang::caller_env(),
+      c(
+        "{.arg {label}} must contain whole-number coordinates.",
+        x = "Found {sum(non_integer, na.rm = TRUE)} non-integer value{?s}."
+      )
+    )
+  }
+
+  out <- suppressWarnings(as.integer(x))
+  overflowed <- is.na(out) & !is.na(x)
+
+  if (any(overflowed)) {
+    cli::cli_abort(
+      call = rlang::caller_env(),
+      c(
+        "{.arg {label}} contains {sum(overflowed)} value{?s} outside R's \\
+         32-bit integer range (+/-{.val {.Machine$integer.max}}).",
+        i = "This usually means a coordinate is larger than a single \\
+             chromosome/scaffold should be \u2014 check the input file."
+      )
+    )
+  }
+
+  out
+}
+
 #' Validate BED and GTF files
 #'
 #' Reads and validates BED and GTF files, checking for:
@@ -270,6 +332,9 @@
     "attribute"
   )
 
+  gtf$start <- .coerce_integer_coord(gtf$start, "start")
+  gtf$end <- .coerce_integer_coord(gtf$end, "end")
+
   return(gtf)
 }
 
@@ -300,6 +365,8 @@
   )
 
   colnames(bed)[seq_len(3L)] <- c("Chr", "RegionStart", "RegionEnd")
+  bed$RegionStart <- .coerce_integer_coord(bed$RegionStart, "RegionStart")
+  bed$RegionEnd <- .coerce_integer_coord(bed$RegionEnd, "RegionEnd")
   return(bed)
 }
 

@@ -88,6 +88,7 @@
 ^man/dot-scs_emit_success\.Rd$
 ^man/scs_cli_alert_info\.Rd$
 ^man/dot-prepare_split_regions\.Rd$
+^man/dot-format_coord\.Rd$
 ^man/dot-rows_within_region\.Rd$
 ^man/dot-abort_if_ambiguous_matches\.Rd$
 ^man/dot-abort_if_unmatched_features\.Rd$
@@ -97,6 +98,7 @@
 ^man/dot-check_filtered_completeness\.Rd$
 ^man/dot-build_output_filename\.Rd$
 ^man/dot-write_filtered_gtf\.Rd$
+^man/dot-coerce_integer_coord\.Rd$
 ^man/dot-validate_inputs\.Rd$
 ^man/dot-check_tab_file\.Rd$
 ^man/dot-find_invalid_field_counts\.Rd$

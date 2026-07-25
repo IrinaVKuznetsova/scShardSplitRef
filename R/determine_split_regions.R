@@ -22,7 +22,7 @@
 #' @param clearance Minimum required clearance (bp) between split boundaries
 #'   and gene intervals on both sides. Defaults to 1 bp.
 #'
-#' @return Invisible character: path to the written BED file.
+#' @returns Invisible character: path to the written BED file.
 #'
 #' @details
 #' The function performs the following steps:
@@ -177,6 +177,8 @@ determine_split_regions <- function(
   }
 
   colnames(d)[seq_len(3L)] <- c("chr", "start", "end")
+  d$start <- .coerce_integer_coord(d$start, "start")
+  d$end <- .coerce_integer_coord(d$end, "end")
   return(d)
 }
 
@@ -238,6 +240,8 @@ determine_split_regions <- function(
     "frame",
     "attribute"
   )
+  d$start <- .coerce_integer_coord(d$start, "start")
+  d$end <- .coerce_integer_coord(d$end, "end")
   return(d)
 }
 
