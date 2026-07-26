@@ -20,7 +20,8 @@ Description: Provides utilities that enable researchers to build custom
     references for the Multiome ATAC Gene Expression sequencing data for
     large-genome species without manual intervention.
 License: GPL (>= 3)
-Depends: R (>= 4.3.0)
+Depends: 
+    R (>= 4.3.0)
 Imports: 
     cli,
     rlang,
@@ -30,14 +31,14 @@ Imports:
 Suggests: 
     knitr,
     rmarkdown,
-    roxyglobals,
     testthat (>= 3.0.0)
 VignetteBuilder: 
     knitr
-Config/testthat/edition: 3
-Encoding: UTF-8
-Roxygen: list(markdown = TRUE, roclets = c("collate", "namespace", "roxyglobals::global_roclet", "rd", "devtag::dev_roclet"))
+Config/Needs/build: moodymudskipper/devtag
+Config/roxygen2/version: 8.0.0
 Config/roxyglobals/filename: globals.R
 Config/roxyglobals/unique: FALSE
-Config/roxygen2/version: 8.0.0
-Config/Needs/build: moodymudskipper/devtag
+Config/testthat/edition: 3
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE, roclets = c("collate", "namespace",
+    "roxyglobals::global_roclet", "rd", "devtag::dev_roclet"))
