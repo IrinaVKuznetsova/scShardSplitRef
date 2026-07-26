@@ -649,8 +649,14 @@ determine_split_regions <- function(
     }
   }
 
-  # Max iterations exceeded
-  return(boundaries)
+  ## Max iterations exceeded
+  stop(
+    sprintf(
+      ".refine_boundaries() failed to converge after %d iterations",
+      max_iter
+    ),
+    call. = FALSE
+  )
 }
 
 #' Validate final split intervals
