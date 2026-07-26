@@ -81,14 +81,15 @@
 ^man/dot-subdivide_oversized\.Rd$
 ^man/dot-shift_boundaries_past_genes\.Rd$
 ^man/dot-shift_single_boundary\.Rd$
+^man/dot-merge_all_gene_ranges\.Rd$
 ^man/dot-assert_feasible_limit\.Rd$
 ^man/dot-merge_overlapping_gene_ranges\.Rd$
 ^man/dot-scs_get_verbosity\.Rd$
 ^man/dot-scs_emit_info\.Rd$
-^man/dot-scs_emit_success\.Rd$
-^man/scs_cli_alert_info\.Rd$
 ^man/dot-prepare_split_regions\.Rd$
 ^man/dot-format_coord\.Rd$
+^man/dot-regions_overlap\.Rd$
+^man/dot-match_features_to_regions\.Rd$
 ^man/dot-rows_within_region\.Rd$
 ^man/dot-abort_if_ambiguous_matches\.Rd$
 ^man/dot-abort_if_unmatched_features\.Rd$
