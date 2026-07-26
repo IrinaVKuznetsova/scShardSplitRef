@@ -6,7 +6,7 @@
 \usage{
 .fix_split_boundaries(
   split_df,
-  chr_genes,
+  gene_ranges,
   limit,
   shift_by = 1L,
   clearance = 1L
@@ -16,8 +16,10 @@
 \item{split_df}{Data frame with columns 'chr', 'start', 'end' representing
 initial split intervals.}
 
-\item{chr_genes}{Data frame with gene annotations for the same chromosome,
-including columns 'start', 'end'.}
+\item{gene_ranges}{Data frame with already-merged, non-overlapping gene
+ranges for the same chromosome (columns 'start', 'end'), as produced by
+\code{\link[=.merge_all_gene_ranges]{.merge_all_gene_ranges()}}. Passed in pre-merged so this function does
+not redo the sort-and-merge work for every region on the chromosome.}
 
 \item{limit}{Integer: maximum allowed interval width in base pairs.}
 
@@ -51,7 +53,7 @@ Raises an error if constraints cannot be satisfied.
 \examples{
 \dontrun{
   fixed_df <- fix_split_boundaries(
-    split_df, chr_genes, limit = 50000, shift_by = 1, clearance = 1
+    split_df, gene_ranges, limit = 50000, shift_by = 1, clearance = 1
   )
 }
 

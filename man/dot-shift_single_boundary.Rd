@@ -25,8 +25,12 @@ the shift would exceed chr_end.
 }
 \description{
 Adjusts one boundary position that falls inside or too close to gene
-intervals by iteratively shifting it rightward until it satisfies the
-requested clearance around genes.
+intervals by shifting it rightward until it satisfies the requested
+clearance around genes. Each shift jumps directly to the nearest
+shift_by-reachable position that clears the currently-violating range(s),
+rather than walking forward one shift_by step at a time, so the result is
+identical to a naive per-step walk but computed in O(number of blocking
+gene clusters) instead of O(distance / shift_by).
 }
 \examples{
 \dontrun{

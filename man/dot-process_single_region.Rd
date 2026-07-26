@@ -4,13 +4,22 @@
 \alias{.process_single_region}
 \title{Process a single genomic region}
 \usage{
-.process_single_region(region, genes, limit, shift_by, clearance = 1L)
+.process_single_region(
+  region,
+  merged_gene_ranges,
+  limit,
+  shift_by,
+  clearance = 1L
+)
 }
 \arguments{
 \item{region}{Data frame row with columns 'chr', 'start', 'end'.}
 
-\item{genes}{Data frame with gene annotations including 'chr', 'start',
-'end'.}
+\item{merged_gene_ranges}{Named list, keyed by chromosome, of data frames
+with columns 'start', 'end' \u2014 gene ranges already merged via
+\code{\link[=.merge_all_gene_ranges]{.merge_all_gene_ranges()}}. Passed in rather than recomputed here so the
+merge work happens once per chromosome regardless of how many regions
+share it.}
 
 \item{limit}{Integer: maximum allowed interval width in base pairs.}
 

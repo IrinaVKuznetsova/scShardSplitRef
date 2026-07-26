@@ -19,4 +19,8 @@ should be fully inside a region:
 \code{start >= RegionStart}
 \code{end <= RegionEnd}
 }
+\details{
+Retained for reference/tests; the main pipeline now enforces this rule
+directly inside \code{\link[=.match_features_to_regions]{.match_features_to_regions()}} without a full cross join.
+}
 \keyword{internal}
