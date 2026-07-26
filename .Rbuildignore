@@ -100,7 +100,6 @@
 ^man/dot-rows_within_region\.Rd$
 ^man/dot-abort_if_ambiguous_matches\.Rd$
 ^man/dot-abort_if_unmatched_features\.Rd$
-^man/dot-restore_gtf_order\.Rd$
 ^man/dot-build_gtf_output\.Rd$
 ^man/dot-filter_attributes\.Rd$
 ^man/dot-check_filtered_completeness\.Rd$
