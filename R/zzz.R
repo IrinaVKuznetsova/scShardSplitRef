@@ -2,7 +2,7 @@
 #'
 #' @param verbosity Character scalar: "quiet", "minimal", or "verbose".
 #'
-#' @return Named list of options to be set.
+#' @returns Named list of options to be set.
 #' @keywords internal
 .map_verbosity <- function(verbosity) {
   v <- as.character(verbosity %||% "verbose")
@@ -42,7 +42,7 @@
 #'
 #' Extracted from `.onLoad()` to allow direct testing.
 #'
-#' @return Invisibly NULL.
+#' @returns Invisibly NULL.
 #' @keywords internal
 .init_package_options <- function() {
   op <- options()
