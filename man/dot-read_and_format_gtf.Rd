@@ -17,6 +17,13 @@ end, score, strand, frame, attribute.
 Reads a GTF file and assigns standard column names. Comment lines are
 skipped. Assumes TAB-delimited format with no header.
 }
+\details{
+Kept unchanged, with its original path-based signature, for any direct
+callers/tests. \code{\link[=.validate_inputs]{.validate_inputs()}} no longer calls this directly --
+it uses \code{\link[=.read_and_validate_gtf]{.read_and_validate_gtf()}} instead, which validates and parses
+the file from a single \code{readLines()} pass rather than reading the file
+from disk once here and again in \code{\link[=.check_tab_file]{.check_tab_file()}}.
+}
 \examples{
 \dontrun{
   gtf_df <- .read_and_format_gtf("annotations.gtf")
