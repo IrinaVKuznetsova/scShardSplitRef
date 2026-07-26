@@ -174,7 +174,7 @@ test_that(".write_bed_file writes BED file and returns invisibly", {
   result <- .write_bed_file(df, tmpfile)
 
   expect_true(file.exists(tmpfile))
-  expect_true(result)
+  expect_null(result)
 
   # Verify file contents
   content <- readLines(tmpfile)
