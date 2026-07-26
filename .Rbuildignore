@@ -67,6 +67,13 @@
 ^[.]?air[.]toml$
 ^\.vscode$
 ^CODE_OF_CONDUCT\.md$
+^man/dot-validate_split_region_args\.Rd$
+^man/dot-validate_scalar_integerish\.Rd$
+^man/dot-inform_split_region_start\.Rd$
+^man/dot-read_split_region_inputs\.Rd$
+^man/dot-read_gene_annotations\.Rd$
+^man/dot-build_split_region_output\.Rd$
+^man/dot-inform_split_region_done\.Rd$
 ^man/dot-read_bed_file\.Rd$
 ^man/dot-read_gtf_file\.Rd$
 ^man/dot-write_bed_file\.Rd$
