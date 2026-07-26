@@ -171,14 +171,7 @@ determine_split_regions <- function(
     )
   }
 
-  d <- utils::read.table(
-    path,
-    sep = "\t",
-    header = FALSE,
-    quote = "",
-    stringsAsFactors = FALSE,
-    fill = TRUE
-  )
+  d <- .read_tab_delimited(file = path, fill = TRUE)
 
   ncol_d <- ncol(d)
   if (ncol_d < min_cols) {
@@ -222,15 +215,7 @@ determine_split_regions <- function(
     )
   }
 
-  d <- utils::read.table(
-    path,
-    sep = "\t",
-    header = FALSE,
-    quote = "",
-    comment.char = "#",
-    stringsAsFactors = FALSE,
-    fill = TRUE
-  )
+  d <- .read_tab_delimited(file = path, comment_char = "#", fill = TRUE)
 
   ncol_d <- ncol(d)
 
@@ -814,8 +799,18 @@ determine_split_regions <- function(
 #' identical to a naive per-step walk but computed in O(number of blocking
 #' gene clusters) instead of O(distance / shift_by).
 #'
+#' Candidate gene ranges are also found via two binary searches
+#' (`findInterval()` against `gene_ranges$start` and `gene_ranges$end`,
+#' both sorted ascending since `gene_ranges` is pre-merged and
+#' non-overlapping) rather than a linear scan of every range on the
+#' chromosome, turning an O(n_genes) check into O(log n_genes + k), where
+#' k is the (typically small) number of ranges actually within `clearance`
+#' of `boundary`.
+#'
 #' @param boundary Integer: initial boundary position.
-#' @param gene_ranges Data frame with gene ranges (columns 'start', 'end').
+#' @param gene_ranges Data frame with gene ranges (columns 'start', 'end'),
+#'   already merged and sorted ascending by start (and therefore also by
+#'   end, since ranges are non-overlapping).
 #' @param chr_end Integer: chromosome end coordinate (upper bound).
 #' @param shift_by Integer: step size (bp) for rightward boundary updates.
 #' @param clearance Integer: minimum required clearance (bp) from nearby genes
@@ -847,11 +842,27 @@ determine_split_regions <- function(
 
   step <- as.integer(shift_by)
   clearance <- as.integer(clearance)
+  n_ranges <- nrow(gene_ranges)
 
   repeat {
+    # Ranges that could have `boundary` within their clearance zone are
+    # exactly those with start < boundary + clearance AND end > boundary -
+    # clearance. Both bounds are found via binary search instead of
+    # scanning every range:
+    #  - hi: last range index with start < boundary + clearance
+    #  - lo: first range index with end > boundary - clearance
+    hi <- findInterval(boundary + clearance - 1L, gene_ranges$start)
+    lo <- findInterval(boundary - clearance, gene_ranges$end) + 1L
+
+    if (lo > hi || hi < 1L) {
+      break
+    }
+
+    candidates <- lo:min(hi, n_ranges)
+
     inside_clearance <-
-      boundary > (gene_ranges$start - clearance) &
-      boundary < (gene_ranges$end + clearance)
+      boundary > (gene_ranges$start[candidates] - clearance) &
+      boundary < (gene_ranges$end[candidates] + clearance)
 
     if (!any(inside_clearance)) {
       break
@@ -865,7 +876,8 @@ determine_split_regions <- function(
     # to clear it; this reaches the same final position in O(1), and the
     # outer repeat loop still runs again in case the new position lands
     # inside a different gene's clearance zone.
-    threshold <- max(gene_ranges$end[inside_clearance]) + clearance
+    threshold <- max(gene_ranges$end[candidates[inside_clearance]]) +
+      clearance
     n_steps <- max(1L, as.integer(ceiling((threshold - boundary) / step)))
     updated <- boundary + n_steps * step
 

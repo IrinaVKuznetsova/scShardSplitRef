@@ -3,7 +3,7 @@
 #' Genomic coordinates must always be whole-number `integer`, never
 #' `double`. Plain `as.integer()` is not safe to use directly on trusted
 #' input because it silently returns `NA` (with only a warning) for values
-#' outside \R's 32-bit integer range, and silently truncates fractional
+#' outside R's 32-bit integer range, and silently truncates fractional
 #' values. This helper fails loudly instead in both cases so a type problem
 #' is caught immediately at the point of reading, rather than surfacing much
 #' later as a scientific-notation string or a mysteriously missing row.
@@ -13,7 +13,7 @@
 #' @param label Character scalar used in error messages to identify which
 #'   column failed (e.g. `"RegionStart"`).
 #'
-#' @returns Integer vector, same length as `x`.
+#' @return Integer vector, same length as `x`.
 #'
 #' @examples
 #' \dontrun{
@@ -60,6 +60,68 @@
   out
 }
 
+#' Shared `read.table()` wrapper for TAB-delimited genomic files
+#'
+#' All of the package's BED/GTF readers ([.read_bed_file()],
+#' [.read_gtf_file()] in `determine_split_regions.R`;
+#' [.read_and_format_bed()], [.read_and_format_gtf()],
+#' [.read_and_validate_bed()], [.read_and_validate_gtf()] here) call
+#' `utils::read.table()` with the same core options
+#' (`sep = "\t"`, `header = FALSE`, `quote = ""`, `stringsAsFactors =
+#' FALSE`), differing only in whether they read from a file path or
+#' already-read lines, whether comments are stripped, and whether ragged
+#' rows are padded. This factors out just that repeated call.
+#'
+#' Deliberately narrow in scope: each caller keeps its own file-exists
+#' check, column-count check, column naming, and error messages exactly as
+#' before, so this changes no external behavior, message, or signature --
+#' only the duplicated `read.table()` invocation itself.
+#'
+#' @param file Character: path to read from. Exactly one of `file`/`text`
+#'   must be supplied.
+#' @param text Character vector of already-read lines to parse via a text
+#'   connection. Exactly one of `file`/`text` must be supplied.
+#' @param comment_char Character: comment-line prefix, passed to
+#'   `read.table()`'s `comment.char`. Defaults to `"#"`, matching
+#'   `read.table()`'s own built-in default (several callers below rely on
+#'   this default implicitly, exactly as they relied on `read.table()`'s
+#'   default before this refactor). Use `""` to disable comment stripping.
+#' @param fill Logical: passed to `read.table()`'s `fill`. `TRUE` pads
+#'   ragged (short) rows with `NA` instead of erroring. Defaults to `FALSE`.
+#'
+#' @return Data frame, exactly as returned by [utils::read.table()].
+#'
+#' @dev
+.read_tab_delimited <- function(
+  file = NULL,
+  text = NULL,
+  comment_char = "#",
+  fill = FALSE
+) {
+  if (is.null(file) == is.null(text)) {
+    cli::cli_abort(
+      call = rlang::caller_env(),
+      "Exactly one of {.arg file} or {.arg text} must be supplied."
+    )
+  }
+
+  args <- list(
+    sep = "\t",
+    header = FALSE,
+    quote = "",
+    comment.char = comment_char,
+    stringsAsFactors = FALSE,
+    fill = fill
+  )
+  args[[if (!is.null(file)) "file" else "text"]] <- if (!is.null(file)) {
+    file
+  } else {
+    text
+  }
+
+  do.call(utils::read.table, args)
+}
+
 #' Validate BED and GTF files
 #'
 #' Reads and validates BED and GTF files, checking for:
@@ -69,7 +131,7 @@
 #'
 #' @inheritParams determine_split_regions
 #'
-#' @returns List with named elements:
+#' @return List with named elements:
 #'   - `bed`: Data frame with at least 3 BED columns plus any
 #'      additional columns from the input file.
 #'   - `gtf`: Data frame with 9 GTF columns
@@ -129,7 +191,7 @@
 #'   for error messages.
 #' @param max_fields Integer or `NA`: maximum number of allowed fields.
 #'   If `NA` (default), no upper limit is enforced.
-#' @returns Invisible NULL. Raises an error if validation fails.
+#' @return Invisible NULL. Raises an error if validation fails.
 #'
 #' @details
 #' Reads all lines from the file, skips comments, then checks that each
@@ -173,7 +235,7 @@
 #'
 #' @inheritParams .check_tab_file
 #'
-#' @returns Character vector of validated data lines (comments and blank
+#' @return Character vector of validated data lines (comments and blank
 #'   lines removed). Empty character vector if the file has no data lines.
 #'
 #' @dev
@@ -235,7 +297,7 @@
 #' @param min_fields Integer: minimum required fields.
 #' @param max_fields Integer or NA: maximum allowed fields.
 #'
-#' @returns Integer vector: indices of lines with invalid field counts,
+#' @return Integer vector: indices of lines with invalid field counts,
 #'   sorted and deduplicated. Empty vector if all lines are valid.
 #'
 #' @examples
@@ -265,7 +327,7 @@
 #' @param min_fields Integer: minimum fields.
 #' @param max_fields Integer or NA: maximum fields. If NA, no upper limit.
 #'
-#' @returns Character: description such as "3-9 TAB-separated fields" or
+#' @return Character: description such as "3-9 TAB-separated fields" or
 #'   "at least 9 TAB-separated fields".
 #'
 #' @examples
@@ -292,7 +354,7 @@
 #' @param bed_path Character: BED file path.
 #' @param gtf_path Character: GTF file path.
 #'
-#' @returns Invisible TRUE if both files exist. Raises error otherwise.
+#' @return Invisible TRUE if both files exist. Raises error otherwise.
 #'
 #' @examples
 #' \dontrun{
@@ -329,7 +391,7 @@
 #'
 #' @param path Character: path to GTF file.
 #'
-#' @returns Data frame with 9 columns named: Chr, source, feature, start,
+#' @return Data frame with 9 columns named: Chr, source, feature, start,
 #'   end, score, strand, frame, attribute.
 #'
 #' @examples
@@ -339,14 +401,7 @@
 #'
 #' @dev
 .read_and_format_gtf <- function(path) {
-  gtf <- utils::read.table(
-    file = path,
-    sep = "\t",
-    header = FALSE,
-    quote = "",
-    comment.char = "#",
-    stringsAsFactors = FALSE
-  )
+  gtf <- .read_tab_delimited(file = path, comment_char = "#")
 
   colnames(gtf) <- c(
     "Chr",
@@ -371,9 +426,15 @@
 #' Reads a BED file and assigns standard column names to the first three
 #' columns. Assumes TAB-delimited format with no header.
 #'
+#' Kept unchanged, with its original path-based signature, for any direct
+#' callers/tests. [.validate_inputs()] no longer calls this directly --
+#' it uses [.read_and_validate_bed()] instead, which validates and parses
+#' the file from a single `readLines()` pass rather than reading the file
+#' from disk once here and again in [.check_tab_file()].
+#'
 #' @param path Character: path to BED file.
 #'
-#' @returns Data frame with first 3 columns named Chr, RegionStart, RegionEnd,
+#' @return Data frame with first 3 columns named Chr, RegionStart, RegionEnd,
 #'   plus any additional columns from the input file.
 #'
 #' @examples
@@ -383,14 +444,7 @@
 #'
 #' @dev
 .read_and_format_bed <- function(path) {
-  bed <- utils::read.table(
-    file = path,
-    sep = "\t",
-    header = FALSE,
-    quote = "",
-    comment.char = "#",
-    stringsAsFactors = FALSE
-  )
+  bed <- .read_tab_delimited(file = path, comment_char = "#")
 
   colnames(bed)[seq_len(3L)] <- c("Chr", "RegionStart", "RegionEnd")
   bed$RegionStart <- .coerce_integer_coord(bed$RegionStart, "RegionStart")
@@ -408,7 +462,7 @@
 #'
 #' @param path Character: path to BED file.
 #'
-#' @returns Data frame with first 3 columns named Chr, RegionStart, RegionEnd
+#' @return Data frame with first 3 columns named Chr, RegionStart, RegionEnd
 #'   (integer), plus any additional columns from the input file.
 #'
 #' @examples
@@ -420,13 +474,7 @@
 .read_and_validate_bed <- function(path) {
   lines <- .validate_tab_file_lines(path, min_fields = 3L, label = "BED")
 
-  bed <- utils::read.table(
-    text = lines,
-    sep = "\t",
-    header = FALSE,
-    quote = "",
-    stringsAsFactors = FALSE
-  )
+  bed <- .read_tab_delimited(text = lines)
 
   colnames(bed)[seq_len(3L)] <- c("Chr", "RegionStart", "RegionEnd")
   bed$RegionStart <- .coerce_integer_coord(bed$RegionStart, "RegionStart")
@@ -444,7 +492,7 @@
 #'
 #' @param path Character: path to GTF file.
 #'
-#' @returns Data frame with 9 columns named: Chr, source, feature, start,
+#' @return Data frame with 9 columns named: Chr, source, feature, start,
 #'   end, score, strand, frame, attribute (start/end coerced to integer).
 #'
 #' @examples
@@ -456,13 +504,7 @@
 .read_and_validate_gtf <- function(path) {
   lines <- .validate_tab_file_lines(path, min_fields = 9L, label = "GTF")
 
-  gtf <- utils::read.table(
-    text = lines,
-    sep = "\t",
-    header = FALSE,
-    quote = "",
-    stringsAsFactors = FALSE
-  )
+  gtf <- .read_tab_delimited(text = lines)
 
   colnames(gtf) <- c(
     "Chr",
@@ -487,7 +529,7 @@
 #'
 #' @param bed Data frame with RegionStart and RegionEnd columns.
 #'
-#' @returns Invisible `TRUE` if all ranges are valid. Raises error with
+#' @return Invisible TRUE if all ranges are valid. Raises error with
 #'   problematic row numbers otherwise.
 #'
 #' @examples
