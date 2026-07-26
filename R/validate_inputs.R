@@ -3,7 +3,7 @@
 #' Genomic coordinates must always be whole-number `integer`, never
 #' `double`. Plain `as.integer()` is not safe to use directly on trusted
 #' input because it silently returns `NA` (with only a warning) for values
-#' outside R's 32-bit integer range, and silently truncates fractional
+#' outside \R's 32-bit integer range, and silently truncates fractional
 #' values. This helper fails loudly instead in both cases so a type problem
 #' is caught immediately at the point of reading, rather than surfacing much
 #' later as a scientific-notation string or a mysteriously missing row.
