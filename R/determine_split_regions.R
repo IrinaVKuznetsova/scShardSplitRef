@@ -111,10 +111,22 @@ determine_split_regions <- function(
 
   .assert_feasible_limit(genes, limit, clearance)
 
+  # Merge overlapping gene ranges exactly once per chromosome for the
+  # per-region boundary fixing below. Previously this was recomputed from
+  # scratch inside .fix_split_boundaries() for every region on a
+  # chromosome; now it's shared across all regions on that chromosome.
+  merged_gene_ranges <- .merge_all_gene_ranges(genes)
+
   split_regions <- lapply(
     seq_len(nrow(regions)),
     function(i) {
-      .process_single_region(regions[i, ], genes, limit, shift_by, clearance)
+      .process_single_region(
+        regions[i, ],
+        merged_gene_ranges,
+        limit,
+        shift_by,
+        clearance
+      )
     }
   )
 
@@ -282,8 +294,11 @@ determine_split_regions <- function(
 #' it is split into two parts: before and after the centromere.
 #'
 #' @param region Data frame row with columns 'chr', 'start', 'end'.
-#' @param genes Data frame with gene annotations including 'chr', 'start',
-#'  'end'.
+#' @param merged_gene_ranges Named list, keyed by chromosome, of data frames
+#'   with columns 'start', 'end' \u2014 gene ranges already merged via
+#'   [.merge_all_gene_ranges()]. Passed in rather than recomputed here so the
+#'   merge work happens once per chromosome regardless of how many regions
+#'   share it.
 #' @param limit Integer: maximum allowed interval width in base pairs.
 #' @param shift_by Integer: step size (bp) used to walk boundaries rightward
 #'  when clearance is violated.
@@ -312,7 +327,7 @@ determine_split_regions <- function(
 #' @dev
 .process_single_region <- function(
   region,
-  genes,
+  merged_gene_ranges,
   limit,
   shift_by,
   clearance = 1L
@@ -332,9 +347,13 @@ determine_split_regions <- function(
     split_df <- .split_region_core(chr, 0L, region_end, limit)
   }
 
-  # Fix boundaries that fall inside genes
-  chr_genes <- genes[genes$chr == chr, , drop = FALSE]
-  .fix_split_boundaries(split_df, chr_genes, limit, shift_by, clearance)
+  # Fix boundaries that fall inside genes, using the already-merged ranges
+  # for this chromosome (empty data frame if this chromosome has no genes).
+  chr_gene_ranges <- merged_gene_ranges[[chr]]
+  if (is.null(chr_gene_ranges)) {
+    chr_gene_ranges <- data.frame(start = integer(0L), end = integer(0L))
+  }
+  .fix_split_boundaries(split_df, chr_gene_ranges, limit, shift_by, clearance)
 }
 
 #' Validate BED coordinate format
@@ -510,8 +529,10 @@ determine_split_regions <- function(
 #'
 #' @param split_df Data frame with columns 'chr', 'start', 'end' representing
 #'   initial split intervals.
-#' @param chr_genes Data frame with gene annotations for the same chromosome,
-#'   including columns 'start', 'end'.
+#' @param gene_ranges Data frame with already-merged, non-overlapping gene
+#'   ranges for the same chromosome (columns 'start', 'end'), as produced by
+#'   [.merge_all_gene_ranges()]. Passed in pre-merged so this function does
+#'   not redo the sort-and-merge work for every region on the chromosome.
 #' @param limit Integer: maximum allowed interval width in base pairs.
 #' @param shift_by Integer: step size (bp) used to walk boundaries rightward
 #'   when clearance is violated. Defaults to 1L.
@@ -534,25 +555,24 @@ determine_split_regions <- function(
 #' @examples
 #' \dontrun{
 #'   fixed_df <- fix_split_boundaries(
-#'     split_df, chr_genes, limit = 50000, shift_by = 1, clearance = 1
+#'     split_df, gene_ranges, limit = 50000, shift_by = 1, clearance = 1
 #'   )
 #' }
 #'
 #' @dev
 .fix_split_boundaries <- function(
   split_df,
-  chr_genes,
+  gene_ranges,
   limit,
   shift_by = 1L,
   clearance = 1L
 ) {
-  if (nrow(split_df) <= 1L || nrow(chr_genes) == 0L) {
+  if (nrow(split_df) <= 1L || nrow(gene_ranges) == 0L) {
     return(split_df)
   }
 
   chr <- split_df$chr[1L]
   chr_end <- as.integer(max(split_df$end))
-  gene_ranges <- .merge_overlapping_gene_ranges(chr_genes)
   boundaries <- as.integer(split_df$end[-nrow(split_df)])
 
   boundaries <- .refine_boundaries(
@@ -787,8 +807,12 @@ determine_split_regions <- function(
 #' Shift a single boundary past genes
 #'
 #' Adjusts one boundary position that falls inside or too close to gene
-#' intervals by iteratively shifting it rightward until it satisfies the
-#' requested clearance around genes.
+#' intervals by shifting it rightward until it satisfies the requested
+#' clearance around genes. Each shift jumps directly to the nearest
+#' shift_by-reachable position that clears the currently-violating range(s),
+#' rather than walking forward one shift_by step at a time, so the result is
+#' identical to a naive per-step walk but computed in O(number of blocking
+#' gene clusters) instead of O(distance / shift_by).
 #'
 #' @param boundary Integer: initial boundary position.
 #' @param gene_ranges Data frame with gene ranges (columns 'start', 'end').
@@ -833,7 +857,17 @@ determine_split_regions <- function(
       break
     }
 
-    updated <- boundary + step
+    # Jump directly to the first shift_by-reachable position that clears
+    # every currently-violating gene range, instead of walking forward one
+    # shift_by step at a time. With the default shift_by = 1L, a boundary
+    # landing inside e.g. a megabase-scale gene previously required on the
+    # order of a million single-bp iterations (each rescanning gene_ranges)
+    # to clear it; this reaches the same final position in O(1), and the
+    # outer repeat loop still runs again in case the new position lands
+    # inside a different gene's clearance zone.
+    threshold <- max(gene_ranges$end[inside_clearance]) + clearance
+    n_steps <- max(1L, as.integer(ceiling((threshold - boundary) / step)))
+    updated <- boundary + n_steps * step
 
     if (updated >= chr_end || updated <= boundary) {
       break
@@ -848,6 +882,39 @@ determine_split_regions <- function(
 # ============================================================================
 # Gene Range Processing
 # ============================================================================
+
+#' Merge gene ranges for every chromosome, once
+#'
+#' Groups gene annotations by chromosome and merges overlapping ranges
+#' within each group, producing a lookup used by both the upfront
+#' feasibility check and per-region boundary fixing \u2014 so the merge work
+#' happens exactly once per chromosome, rather than being recomputed by
+#' every downstream consumer.
+#'
+#' @param genes Data frame with gene annotations (columns 'chr', 'start',
+#'  'end').
+#'
+#' @return Named list, keyed by chromosome, of data frames with columns
+#'   'start', 'end' representing merged, non-overlapping gene ranges. Empty
+#'   list if `genes` has 0 rows.
+#'
+#' @examples
+#' \dontrun{
+#'   merged_gene_ranges <- .merge_all_gene_ranges(genes)
+#'   merged_gene_ranges[["chr1"]]
+#' }
+#'
+#' @dev
+.merge_all_gene_ranges <- function(genes) {
+  if (nrow(genes) == 0L) {
+    return(list())
+  }
+
+  lapply(
+    split(genes[, c("start", "end")], genes$chr),
+    .merge_overlapping_gene_ranges
+  )
+}
 
 #' Assert that the size limit is feasible
 #'
@@ -865,10 +932,10 @@ determine_split_regions <- function(
 #'   if not.
 #'
 #' @details
-#' First merges overlapping genes per chromosome, then checks if any merged
-#' range plus two-sided clearance (2 * `clearance`) exceeds the limit. Reports
-#' the worst (largest) blocking interval and suggests an appropriate minimum
-#' limit value.
+#' Merges overlapping genes per chromosome via [.merge_all_gene_ranges()],
+#' then checks if any merged range plus two-sided clearance (2 * `clearance`)
+#' exceeds the limit. Reports the worst (largest) blocking interval and
+#' suggests an appropriate minimum limit value.
 #'
 #' @examples
 #' \dontrun{
@@ -881,13 +948,18 @@ determine_split_regions <- function(
     return(invisible(TRUE))
   }
 
+  merged_gene_ranges <- .merge_all_gene_ranges(genes)
+
   merged <- do.call(
     rbind,
-    lapply(split(genes, genes$chr), function(chr_genes) {
-      m <- .merge_overlapping_gene_ranges(chr_genes)
-      m$chr <- unique(chr_genes$chr)[1L]
-      m
-    })
+    Map(
+      function(chr, m) {
+        m$chr <- chr
+        m
+      },
+      names(merged_gene_ranges),
+      merged_gene_ranges
+    )
   )
 
   blocked_width <- merged$end - merged$start + (2L * as.integer(clearance))
