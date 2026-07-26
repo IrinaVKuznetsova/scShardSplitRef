@@ -4,9 +4,9 @@
 \name{scShardSplitRef-package}
 \alias{scShardSplitRef}
 \alias{scShardSplitRef-package}
-\title{scShardSplitRef: Build Custom Reference Genome for Single-Cell Multiome ATAC and Gene Expression Data of Large-Genome Species}
+\title{scShardSplitRef: Reference Genome Splitting for Single-Cell Multiome Data}
 \description{
-Provides utilities that enable researchers to build custom references for the Multiome ATAC Gene Expression sequencing data for large-genome species without manual intervention.
+Splits chromosomes of large-genome species into smaller shards that respect the maximum contig size supported by 10x Genomics' 'Cell Ranger ARC' reference builder, avoiding breaks inside gene bodies, and rewrites the corresponding 'GTF' annotation coordinates to match. This enables researchers to build custom 'Cell Ranger ARC' references for Multiome 'ATAC' and Gene Expression data from genomes that would otherwise exceed the tool's chromosome size limits.
 }
 \author{
 \strong{Maintainer}: Irina Kuznetsova \email{irina.kuznetsova@curtin.edu.au} (\href{https://orcid.org/0009-0001-5411-6063}{ORCID})
@@ -21,6 +21,7 @@ Authors:
 
 Other contributors:
 \itemize{
+  \item Curtin University (\href{https://ror.org/02n415q13}{ROR}) [funder, copyright holder]
   \item Grains Research and Development Corporation (\href{https://ror.org/02xwr1996}{ROR}) (GRDC Project CUR2210-005OPX (AAGI-CU)) [funder, copyright holder]
 }
 
