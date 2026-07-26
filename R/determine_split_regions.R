@@ -29,27 +29,28 @@
 #' 1. Reads genomic regions and gene annotations from input files.
 #' 2. Checks that the provided `limit` is feasible given gene positions and
 #'    requested two-sided boundary clearance.
-#' 3. For each region, splits it at the centromere (if start > 0) and applies
+#' 3. For each region, splits it at the centromere if required and applies
 #'    the size limit.
 #' 4. Adjusts boundaries so each is at least `clearance` bp away from genes on
 #'    both sides, moving by `shift_by` bp per iteration when needed.
 #' 5. Iteratively subdivides intervals exceeding the limit until all intervals
 #'    satisfy the constraint.
-#' 6. Writes final split regions to BED file in the active \R session's
-#'  `tempdir()`.
+#' 6. Writes final split regions to BED file.
 #'
 #' @examples
-#'   # load example files from this package and write the output bed file to
-#'   # R's tempdir()
+#'   chromosomes <- system.file(
+#'     "extdata",
+#'     "AlgorithmToy.bed",
+#'     package = "scShardSplitRef",
+#'     mustWork = TRUE
+#'   )
 #'
-#'   chromosomes <- system.file("extdata",
-#'                    "AlgorithmToy.bed",
-#'                    package = "scShardSplitRef",
-#'                    mustWork = TRUE)
-#'   genes <- system.file("extdata",
-#'              "AlgorithmToy.gtf",
-#'              package = "scShardSplitRef",
-#'              mustWork = TRUE)
+#'   genes <- system.file(
+#'     "extdata",
+#'     "AlgorithmToy.gtf",
+#'     package = "scShardSplitRef",
+#'     mustWork = TRUE
+#'   )
 #'
 #'   determine_split_regions(
 #'     bed = chromosomes,
@@ -69,78 +70,213 @@ determine_split_regions <- function(
   shift_by = 1L,
   clearance = 1L
 ) {
-  if (
-    !is.numeric(shift_by) ||
-      length(shift_by) != 1L ||
-      is.na(shift_by) ||
-      shift_by < 1L
-  ) {
-    cli::cli_abort(
-      call = rlang::caller_env(),
-      "{.arg shift_by} must be a single numeric value >= 1."
-    )
-  }
-
-  if (
-    !is.numeric(clearance) ||
-      length(clearance) != 1L ||
-      is.na(clearance) ||
-      clearance < 0L
-  ) {
-    cli::cli_abort(
-      call = rlang::caller_env(),
-      "{.arg clearance} must be a single numeric value >= 0."
-    )
-  }
-
-  shift_by <- as.integer(shift_by)
-  clearance <- as.integer(clearance)
-
-  cli::cli_inform(
-    "Preparing split regions from {.file bed} and \\
-     {.file gtf} into {.file output_bed} \\
-     ({.var limit} = {limit}, {.var shift_by} = {shift_by}, \
-     {.var clearance} = {clearance}). 
-    \n
-    \n"
+  args <- .validate_split_region_args(
+    shift_by = shift_by,
+    clearance = clearance
   )
 
+  shift_by <- args$shift_by
+  clearance <- args$clearance
+
+  .inform_split_region_start(
+    bed = bed,
+    gtf = gtf,
+    output_bed = output_bed,
+    limit = limit,
+    shift_by = shift_by,
+    clearance = clearance
+  )
+
+  inputs <- .read_split_region_inputs(
+    bed = bed,
+    gtf = gtf,
+    limit = limit,
+    clearance = clearance
+  )
+
+  out <- .build_split_region_output(
+    regions = inputs$regions,
+    merged_gene_ranges = inputs$merged_gene_ranges,
+    limit = limit,
+    shift_by = shift_by,
+    clearance = clearance
+  )
+
+  .write_bed_file(out, output_bed)
+
+  .inform_split_region_done(
+    out = out,
+    output_bed = output_bed
+  )
+
+  invisible(output_bed)
+}
+
+#' Validate scalar arguments for split-region generation
+#'
+#' @param shift_by Step size for boundary shifting.
+#' @param clearance Minimum required boundary clearance around genes.
+#'
+#' @returns Named list containing integer `shift_by` and `clearance`.
+#'
+#' @dev
+.validate_split_region_args <- function(shift_by, clearance) {
+  list(
+    shift_by = .validate_scalar_integerish(
+      x = shift_by,
+      arg = "shift_by",
+      min_value = 1L
+    ),
+    clearance = .validate_scalar_integerish(
+      x = clearance,
+      arg = "clearance",
+      min_value = 0L
+    )
+  )
+}
+
+#' Validate and coerce a scalar integer-like numeric argument
+#'
+#' @param x Value to validate.
+#' @param arg Argument name used in error messages.
+#' @param min_value Minimum permitted value.
+#'
+#' @returns Integer scalar.
+#'
+#' @dev
+.validate_scalar_integerish <- function(x, arg, min_value) {
+  valid <- is.numeric(x) &&
+    length(x) == 1L &&
+    !is.na(x) &&
+    x >= min_value
+
+  if (!valid) {
+    cli::cli_abort(
+      call = rlang::caller_env(),
+      "{.arg {arg}} must be a single numeric value >= {min_value}."
+    )
+  }
+
+  as.integer(x)
+}
+
+#' Inform user that split-region generation has started
+#'
+#' @param bed BED input path.
+#' @param gtf GTF input path.
+#' @param output_bed Output BED path.
+#' @param limit Maximum interval width.
+#' @param shift_by Boundary shift step size.
+#' @param clearance Boundary clearance distance.
+#'
+#' @returns Invisible `TRUE`.
+#'
+#' @dev
+.inform_split_region_start <- function(
+  bed,
+  gtf,
+  output_bed,
+  limit,
+  shift_by,
+  clearance
+) {
+  cli::cli_inform(
+    paste(
+      "Preparing split regions from {.file {bed}} and {.file {gtf}}",
+      "into {.file {output_bed}}",
+      "({.var limit} = {limit},",
+      "{.var shift_by} = {shift_by},",
+      "{.var clearance} = {clearance})."
+    )
+  )
+
+  invisible(TRUE)
+}
+
+#' Read and prepare split-region inputs
+#'
+#' @param bed BED input path.
+#' @param gtf GTF input path.
+#' @param limit Maximum interval width.
+#' @param clearance Boundary clearance distance.
+#'
+#' @returns Named list containing `regions` and `merged_gene_ranges`.
+#'
+#' @dev
+.read_split_region_inputs <- function(bed, gtf, limit, clearance) {
   regions <- .read_bed_file(bed, 3L)
-  genes <- .read_gtf_file(gtf)
-  genes <- genes[genes$feature == "gene", , drop = FALSE]
+  genes <- .read_gene_annotations(gtf)
 
   .assert_feasible_limit(genes, limit, clearance)
 
-  # Merge overlapping gene ranges exactly once per chromosome for the
-  # per-region boundary fixing below. Previously this was recomputed from
-  # scratch inside .fix_split_boundaries() for every region on a
-  # chromosome; now it's shared across all regions on that chromosome.
-  merged_gene_ranges <- .merge_all_gene_ranges(genes)
+  list(
+    regions = regions,
+    merged_gene_ranges = .merge_all_gene_ranges(genes)
+  )
+}
 
+#' Read gene annotations from a GTF file
+#'
+#' @param gtf GTF input path.
+#'
+#' @returns Data frame containing gene feature rows only.
+#'
+#' @dev
+.read_gene_annotations <- function(gtf) {
+  genes <- .read_gtf_file(gtf)
+  genes[genes$feature == "gene", , drop = FALSE]
+}
+
+#' Build final split-region output data frame
+#'
+#' @param regions BED-like regions data frame.
+#' @param merged_gene_ranges Named list of merged gene ranges by chromosome.
+#' @param limit Maximum interval width.
+#' @param shift_by Boundary shift step size.
+#' @param clearance Boundary clearance distance.
+#'
+#' @returns Data frame of final split intervals.
+#'
+#' @dev
+.build_split_region_output <- function(
+  regions,
+  merged_gene_ranges,
+  limit,
+  shift_by,
+  clearance
+) {
   split_regions <- lapply(
     seq_len(nrow(regions)),
     function(i) {
       .process_single_region(
-        regions[i, ],
-        merged_gene_ranges,
-        limit,
-        shift_by,
-        clearance
+        region = regions[i, ],
+        merged_gene_ranges = merged_gene_ranges,
+        limit = limit,
+        shift_by = shift_by,
+        clearance = clearance
       )
     }
   )
 
-  out <- do.call(rbind, split_regions)
-  .write_bed_file(out, output_bed)
+  do.call(rbind, split_regions)
+}
 
+#' Inform user that split-region generation has finished
+#'
+#' @param out Final split-region data frame.
+#' @param output_bed Output BED path.
+#'
+#' @returns Invisible `TRUE`.
+#'
+#' @dev
+.inform_split_region_done <- function(out, output_bed) {
   cli::cli_inform(
-    "{.strong Built {nrow(out)} split intervals across \\
-     {length(unique(out$chr))} chromosome{?s} and wrote them to \\
-     {.file output_bed}}."
+    "{.strong Built {nrow(out)} split intervals across {length(unique(out$chr))} chromosome{?s} and wrote them to {.file {output_bed}}.}"
   )
 
-  return(invisible(output_bed))
+  invisible(TRUE)
 }
+
 
 #' Read BED file with validation
 #'
@@ -250,7 +386,7 @@ determine_split_regions <- function(
 #' @param df Data frame with 'chr', 'start', 'end' columns.
 #' @param path Character: output file path.
 #'
-#' @return Invisible TRUE.
+#' @returns Called for its side effects, writes a file to local disk.
 #'
 #' @examples
 #' \dontrun{
@@ -269,7 +405,6 @@ determine_split_regions <- function(
       sep = "\t"
     )
   )
-  invisible(TRUE)
 }
 
 #' Process a single genomic region
@@ -280,7 +415,7 @@ determine_split_regions <- function(
 #'
 #' @param region Data frame row with columns 'chr', 'start', 'end'.
 #' @param merged_gene_ranges Named list, keyed by chromosome, of data frames
-#'   with columns 'start', 'end' \u2014 gene ranges already merged via
+#'   with columns 'start', 'end' -- gene ranges already merged via
 #'   [.merge_all_gene_ranges()]. Passed in rather than recomputed here so the
 #'   merge work happens once per chromosome regardless of how many regions
 #'   share it.
@@ -905,7 +1040,7 @@ determine_split_regions <- function(
 #'
 #' Groups gene annotations by chromosome and merges overlapping ranges
 #' within each group, producing a lookup used by both the upfront
-#' feasibility check and per-region boundary fixing \u2014 so the merge work
+#' feasibility check and per-region boundary fixing -- so the merge work
 #' happens exactly once per chromosome, rather than being recomputed by
 #' every downstream consumer.
 #'

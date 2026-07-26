@@ -52,7 +52,7 @@
         "{.arg {label}} contains {sum(overflowed)} value{?s} outside R's \\
          32-bit integer range (+/-{.val {.Machine$integer.max}}).",
         i = "This usually means a coordinate is larger than a single \\
-             chromosome/scaffold should be \u2014 check the input file."
+             chromosome/scaffold should be -- check the input file."
       )
     )
   }
