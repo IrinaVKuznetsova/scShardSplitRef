@@ -100,6 +100,7 @@
 ^man/dot-build_output_filename\.Rd$
 ^man/dot-write_filtered_gtf\.Rd$
 ^man/dot-coerce_integer_coord\.Rd$
+^man/dot-read_tab_delimited\.Rd$
 ^man/dot-validate_inputs\.Rd$
 ^man/dot-check_tab_file\.Rd$
 ^man/dot-validate_tab_file_lines\.Rd$
