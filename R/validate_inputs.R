@@ -13,7 +13,7 @@
 #' @param label Character scalar used in error messages to identify which
 #'   column failed (e.g. `"RegionStart"`).
 #'
-#' @return Integer vector, same length as `x`.
+#' @returns Integer vector, same length as `x`.
 #'
 #' @examples
 #' \dontrun{
@@ -69,7 +69,7 @@
 #'
 #' @inheritParams determine_split_regions
 #'
-#' @return List with named elements:
+#' @returns List with named elements:
 #'   - `bed`: Data frame with at least 3 BED columns plus any
 #'      additional columns from the input file.
 #'   - `gtf`: Data frame with 9 GTF columns
@@ -103,22 +103,13 @@
 .validate_inputs <- function(bed, gtf) {
   .check_files_exist(bed, gtf)
 
-  # check ends with to use .bed or .gtf
-  #
-  # check end of line encoding
-  # check that files are tab delimited
-
-  # mapply() is used here rather than Map since we just need a check, no return list
-  mapply(
-    .check_tab_file,
-    path = list(bed, gtf),
-    min_fields = c(3L, 9L),
-    label = c("BED", "GTF"),
-    SIMPLIFY = FALSE
-  )
-
-  bed <- .read_and_format_bed(bed)
-  gtf <- .read_and_format_gtf(gtf)
+  # .read_and_validate_bed()/.read_and_validate_gtf() validate and parse
+  # each file from a single readLines() pass (see their docs below) --
+  # this replaces a separate .check_tab_file() structural-validation pass
+  # followed by a second, independent read.table(file = path, ...) call,
+  # which read every file from disk twice.
+  bed <- .read_and_validate_bed(bed)
+  gtf <- .read_and_validate_gtf(gtf)
 
   .validate_bed_ranges(bed)
 
@@ -138,7 +129,7 @@
 #'   for error messages.
 #' @param max_fields Integer or `NA`: maximum number of allowed fields.
 #'   If `NA` (default), no upper limit is enforced.
-#' @return Invisible NULL. Raises an error if validation fails.
+#' @returns Invisible NULL. Raises an error if validation fails.
 #'
 #' @details
 #' Reads all lines from the file, skips comments, then checks that each
@@ -161,6 +152,37 @@
   label,
   max_fields = NA_integer_
 ) {
+  .validate_tab_file_lines(path, min_fields, label, max_fields)
+  invisible(TRUE)
+}
+
+#' Validate a TAB-delimited file and return its data lines
+#'
+#' Does the same structural validation as [.check_tab_file()] (extension
+#' check, comment/blank-line filtering, field-count range check), but
+#' returns the validated, filtered lines instead of `invisible(TRUE)`.
+#'
+#' This exists so the combined read-and-validate functions
+#' ([.read_and_validate_bed()], [.read_and_validate_gtf()]) can parse the
+#' file from these already-read, already-filtered lines via
+#' `read.table(text = ...)` instead of reading the file from disk a second
+#' time. [.check_tab_file()] itself is kept as a separate, unchanged
+#' function (rather than refactored to call this and expose its result)
+#' so any existing direct callers/tests relying on its exact signature and
+#' `invisible(TRUE)` return are unaffected.
+#'
+#' @inheritParams .check_tab_file
+#'
+#' @returns Character vector of validated data lines (comments and blank
+#'   lines removed). Empty character vector if the file has no data lines.
+#'
+#' @dev
+.validate_tab_file_lines <- function(
+  path,
+  min_fields,
+  label,
+  max_fields = NA_integer_
+) {
   if (!endsWith(tolower(path), sprintf(".%s", tolower(label)))) {
     cli::cli_abort(c(
       "File extension does not match expected format for {label}.",
@@ -172,7 +194,7 @@
   lines <- readLines(path)
   lines <- lines[!startsWith(lines, "#") & nzchar(trimws(lines))]
   if (length(lines) == 0L) {
-    return(invisible(TRUE))
+    return(lines)
   }
 
   field_counts <- lengths(stringi::stri_split_fixed(lines, "\t"))
@@ -202,7 +224,7 @@
     )
   }
 
-  return(invisible(TRUE))
+  lines
 }
 
 #' Find lines with invalid field counts
@@ -213,7 +235,7 @@
 #' @param min_fields Integer: minimum required fields.
 #' @param max_fields Integer or NA: maximum allowed fields.
 #'
-#' @return Integer vector: indices of lines with invalid field counts,
+#' @returns Integer vector: indices of lines with invalid field counts,
 #'   sorted and deduplicated. Empty vector if all lines are valid.
 #'
 #' @examples
@@ -243,7 +265,7 @@
 #' @param min_fields Integer: minimum fields.
 #' @param max_fields Integer or NA: maximum fields. If NA, no upper limit.
 #'
-#' @return Character: description such as "3-9 TAB-separated fields" or
+#' @returns Character: description such as "3-9 TAB-separated fields" or
 #'   "at least 9 TAB-separated fields".
 #'
 #' @examples
@@ -270,7 +292,7 @@
 #' @param bed_path Character: BED file path.
 #' @param gtf_path Character: GTF file path.
 #'
-#' @return Invisible TRUE if both files exist. Raises error otherwise.
+#' @returns Invisible TRUE if both files exist. Raises error otherwise.
 #'
 #' @examples
 #' \dontrun{
@@ -299,9 +321,15 @@
 #' Reads a GTF file and assigns standard column names. Comment lines are
 #' skipped. Assumes TAB-delimited format with no header.
 #'
+#' Kept unchanged, with its original path-based signature, for any direct
+#' callers/tests. [.validate_inputs()] no longer calls this directly --
+#' it uses [.read_and_validate_gtf()] instead, which validates and parses
+#' the file from a single `readLines()` pass rather than reading the file
+#' from disk once here and again in [.check_tab_file()].
+#'
 #' @param path Character: path to GTF file.
 #'
-#' @return Data frame with 9 columns named: Chr, source, feature, start,
+#' @returns Data frame with 9 columns named: Chr, source, feature, start,
 #'   end, score, strand, frame, attribute.
 #'
 #' @examples
@@ -345,7 +373,7 @@
 #'
 #' @param path Character: path to BED file.
 #'
-#' @return Data frame with first 3 columns named Chr, RegionStart, RegionEnd,
+#' @returns Data frame with first 3 columns named Chr, RegionStart, RegionEnd,
 #'   plus any additional columns from the input file.
 #'
 #' @examples
@@ -370,6 +398,88 @@
   return(bed)
 }
 
+#' Read, validate, and parse a BED file in a single pass
+#'
+#' Combines the structural validation performed by [.check_tab_file()] with
+#' the parsing performed by [.read_and_format_bed()], reading the file from
+#' disk exactly once (via [.validate_tab_file_lines()]) and parsing the
+#' already-read, already-filtered lines with `read.table(text = ...)`,
+#' instead of reading the whole file from disk a second time.
+#'
+#' @param path Character: path to BED file.
+#'
+#' @returns Data frame with first 3 columns named Chr, RegionStart, RegionEnd
+#'   (integer), plus any additional columns from the input file.
+#'
+#' @examples
+#' \dontrun{
+#'   bed_df <- .read_and_validate_bed("regions.bed")
+#' }
+#'
+#' @dev
+.read_and_validate_bed <- function(path) {
+  lines <- .validate_tab_file_lines(path, min_fields = 3L, label = "BED")
+
+  bed <- utils::read.table(
+    text = lines,
+    sep = "\t",
+    header = FALSE,
+    quote = "",
+    stringsAsFactors = FALSE
+  )
+
+  colnames(bed)[seq_len(3L)] <- c("Chr", "RegionStart", "RegionEnd")
+  bed$RegionStart <- .coerce_integer_coord(bed$RegionStart, "RegionStart")
+  bed$RegionEnd <- .coerce_integer_coord(bed$RegionEnd, "RegionEnd")
+  bed
+}
+
+#' Read, validate, and parse a GTF file in a single pass
+#'
+#' Combines the structural validation performed by [.check_tab_file()] with
+#' the parsing performed by [.read_and_format_gtf()], reading the file from
+#' disk exactly once (via [.validate_tab_file_lines()]) and parsing the
+#' already-read, already-filtered lines with `read.table(text = ...)`,
+#' instead of reading the whole file from disk a second time.
+#'
+#' @param path Character: path to GTF file.
+#'
+#' @returns Data frame with 9 columns named: Chr, source, feature, start,
+#'   end, score, strand, frame, attribute (start/end coerced to integer).
+#'
+#' @examples
+#' \dontrun{
+#'   gtf_df <- .read_and_validate_gtf("annotations.gtf")
+#' }
+#'
+#' @dev
+.read_and_validate_gtf <- function(path) {
+  lines <- .validate_tab_file_lines(path, min_fields = 9L, label = "GTF")
+
+  gtf <- utils::read.table(
+    text = lines,
+    sep = "\t",
+    header = FALSE,
+    quote = "",
+    stringsAsFactors = FALSE
+  )
+
+  colnames(gtf) <- c(
+    "Chr",
+    "source",
+    "feature",
+    "start",
+    "end",
+    "score",
+    "strand",
+    "frame",
+    "attribute"
+  )
+  gtf$start <- .coerce_integer_coord(gtf$start, "start")
+  gtf$end <- .coerce_integer_coord(gtf$end, "end")
+  gtf
+}
+
 #' Validate BED coordinate ranges
 #'
 #' Checks that all BED regions satisfy the standard requirement that
@@ -377,7 +487,7 @@
 #'
 #' @param bed Data frame with RegionStart and RegionEnd columns.
 #'
-#' @return Invisible TRUE if all ranges are valid. Raises error with
+#' @returns Invisible `TRUE` if all ranges are valid. Raises error with
 #'   problematic row numbers otherwise.
 #'
 #' @examples
