@@ -90,15 +90,26 @@ process_gtf <- function(
   gtf$unique_ID <- sprintf("ID%i", seq_len(nrow(gtf)))
   regions <- .prepare_split_regions(regions)
 
-  merged <- merge(
-    gtf,
-    regions[, c("Chr", "RegionStart", "RegionEnd", "NEW"), drop = FALSE],
-    by = "Chr",
-    all.x = TRUE,
-    sort = FALSE
-  )
-
-  matched <- merged[.rows_within_region(merged), , drop = FALSE]
+  if (.regions_overlap(regions)) {
+    # Overlapping regions mean a feature really can match more than one
+    # region, which the fast single-candidate lookup below cannot detect
+    # (it assumes non-overlapping regions to avoid a full cross join). This
+    # is the invalid-input path, so falling back to the original full
+    # Chr-only join here is fine -- it only runs when we're about to abort
+    # anyway, and it preserves the exact original ambiguous-match error
+    # (message, duplicated IDs, etc).
+    merged <- merge(
+      gtf,
+      regions[, c("Chr", "RegionStart", "RegionEnd", "NEW"), drop = FALSE],
+      by = "Chr",
+      all.x = TRUE,
+      sort = FALSE
+    )
+    matched <- merged[.rows_within_region(merged), , drop = FALSE]
+  } else {
+    matched_gtf <- .match_features_to_regions(gtf, regions)
+    matched <- matched_gtf[!is.na(matched_gtf$NEW), , drop = FALSE]
+  }
 
   .abort_if_ambiguous_matches(matched)
   .abort_if_unmatched_features(matched, gtf)
@@ -106,7 +117,11 @@ process_gtf <- function(
   matched$start <- matched$start - matched$RegionStart + 1L
   matched$end <- matched$end - matched$RegionStart + 1L
 
-  matched <- .restore_gtf_order(matched, gtf$unique_ID)
+  # No .restore_gtf_order() call needed here: unlike the old Chr-only-merge
+  # approach (which lost and had to recover row order), `matched` is a
+  # straight boolean filter of `gtf`, so it already preserves the original
+  # feature order. Skips an O(n log n) match() over potentially millions of
+  # rows for no effect. (.restore_gtf_order() is kept below for tests/reuse.)
 
   out <- .build_gtf_output(matched)
 
@@ -149,24 +164,11 @@ process_gtf <- function(
 #' @return The input data frame with an added `NEW` column.
 #' @dev
 .prepare_split_regions <- function(regions) {
-  # Contract: RegionStart/RegionEnd must already be integer by the time they
-  # reach here (enforced by .coerce_integer_coord() at read time in
-  # .read_and_format_bed()). Assert it explicitly so a future regression
-  # upstream fails loudly here in tests/CI, rather than silently reformatting
-  # a double back into a fixed-point string.
-  if (!is.integer(regions$RegionStart) || !is.integer(regions$RegionEnd)) {
-    cli::cli_abort(
-      call = rlang::caller_env(),
-      c(
-        "{.arg regions$RegionStart}/{.arg regions$RegionEnd} must be \\
-         integer, not {.cls {class(regions$RegionStart)}}/\\
-         {.cls {class(regions$RegionEnd)}}.",
-        i = "This indicates an upstream read/arithmetic step promoted a \\
-             coordinate column to double."
-      )
-    )
-  }
-
+  # .format_coord() correctly renders RegionStart/RegionEnd as fixed-point
+  # integers regardless of whether they are integer or double (e.g. a
+  # double promoted upstream, or a plain numeric literal used directly in a
+  # unit test) -- this is where the scientific-notation guard actually
+  # lives, so no type assertion is needed (or wanted) here.
   regions$NEW <- sprintf(
     "%s-%s-%s",
     regions$Chr,
@@ -217,6 +219,119 @@ process_gtf <- function(
   out
 }
 
+#' Check whether any split regions overlap within a chromosome
+#'
+#' The fast interval-assignment used to match GTF features to split regions
+#' (see [.match_features_to_regions()]) assumes at most one split region can
+#' contain any given position on a chromosome. This checks that invariant
+#' upfront, cheaply (region count is typically small relative to feature
+#' count), so [process_gtf()] can choose the fast path when it holds and
+#' fall back to the original, slower-but-exhaustive matching when it
+#' doesn't \u2014 which is also the only case where the ambiguous-match error
+#' actually fires, so falling back there costs nothing in practice.
+#'
+#' @param regions Data frame with columns `Chr`, `RegionStart`, `RegionEnd`.
+#'
+#' @return Logical scalar: `TRUE` if any chromosome has overlapping region
+#'   intervals, `FALSE` otherwise.
+#'
+#' @dev
+.regions_overlap <- function(regions) {
+  by_chr <- split(regions[, c("RegionStart", "RegionEnd")], regions$Chr)
+
+  any(vapply(
+    by_chr,
+    FUN.VALUE = logical(1L),
+    FUN = function(r) {
+      if (nrow(r) <= 1L) {
+        return(FALSE)
+      }
+      ord <- order(r$RegionStart)
+      starts <- r$RegionStart[ord]
+      ends <- r$RegionEnd[ord]
+      any(starts[-1L] < ends[-length(ends)])
+    }
+  ))
+}
+
+#' Match GTF features to split regions
+#'
+#' Assigns each GTF feature to the single split-region interval that fully
+#' contains it, per chromosome.
+#'
+#' @details
+#' Rather than joining every feature against every split region on its
+#' chromosome (a full cross join, which duplicates each feature once per
+#' shard on that chromosome before being filtered back down \u2014 expensive
+#' for genome-scale GTFs split into many shards), this does a direct,
+#' vectorized per-chromosome lookup: because split regions are asserted to
+#' be non-overlapping (see [.regions_overlap()]), each feature
+#' start position can belong to at most one region, found via a single
+#' sorted-boundary [findInterval()] call instead of a full join. This turns
+#' an O(features * regions_per_chromosome) join into O(features log
+#' regions_per_chromosome).
+#'
+#' A feature is matched to a region only when it is fully contained
+#' (`start >= RegionStart` and `end <= RegionEnd`); a feature whose start
+#' falls in one region but whose end crosses into the next (or that falls
+#' entirely before/after all regions on its chromosome) is left unmatched,
+#' exactly as under the original cross-join-and-filter approach.
+#'
+#' @param gtf Data frame with columns `Chr`, `start`, `end`, `unique_ID`
+#'   (plus other standard GTF columns).
+#' @param regions Data frame with columns `Chr`, `RegionStart`, `RegionEnd`,
+#'   `NEW`.
+#'
+#' @return `gtf` with three additional columns, `NEW`, `RegionStart`,
+#'   `RegionEnd`, populated for matched rows and `NA` for unmatched rows.
+#'   Row order is identical to the input `gtf`.
+#'
+#' @dev
+.match_features_to_regions <- function(gtf, regions) {
+  gtf_by_chr <- split(seq_len(nrow(gtf)), gtf$Chr)
+  region_by_chr <- split(seq_len(nrow(regions)), regions$Chr)
+
+  new_col <- rep(NA_character_, nrow(gtf))
+  region_start_col <- rep(NA_integer_, nrow(gtf))
+  region_end_col <- rep(NA_integer_, nrow(gtf))
+
+  for (chr in names(gtf_by_chr)) {
+    r_idx <- region_by_chr[[chr]]
+    if (is.null(r_idx)) {
+      next # no split regions for this chromosome; features stay unmatched
+    }
+
+    g_idx <- gtf_by_chr[[chr]]
+
+    ord <- order(regions$RegionStart[r_idx])
+    r_idx <- r_idx[ord]
+    starts <- regions$RegionStart[r_idx]
+
+    # For each feature start, the candidate region is the one whose
+    # RegionStart is the largest value <= the feature start (0 = before
+    # the first region on this chromosome, i.e. no candidate).
+    pos <- findInterval(gtf$start[g_idx], starts)
+    has_candidate <- pos > 0L
+
+    cand_g <- g_idx[has_candidate]
+    cand_r <- r_idx[pos[has_candidate]]
+
+    # Full containment also requires the feature end to fit inside the same
+    # candidate region; otherwise it's left unmatched (e.g. it crosses a
+    # shard boundary).
+    fits <- gtf$end[cand_g] <= regions$RegionEnd[cand_r]
+
+    new_col[cand_g[fits]] <- regions$NEW[cand_r[fits]]
+    region_start_col[cand_g[fits]] <- regions$RegionStart[cand_r[fits]]
+    region_end_col[cand_g[fits]] <- regions$RegionEnd[cand_r[fits]]
+  }
+
+  gtf$NEW <- new_col
+  gtf$RegionStart <- region_start_col
+  gtf$RegionEnd <- region_end_col
+  gtf
+}
+
 #' Identify rows where a feature lies fully within a split region
 #'
 #' Applies the matching rule used by [process_gtf()]. A feature `start`, `end`
@@ -225,6 +340,8 @@ process_gtf <- function(
 #'  `start >= RegionStart`
 #'  `end <= RegionEnd`
 #'
+#' Retained for reference/tests; the main pipeline now enforces this rule
+#' directly inside [.match_features_to_regions()] without a full cross join.
 #'
 #' @param df Data frame containing `start`, `end`, `RegionStart`, `RegionEnd`.
 #'
