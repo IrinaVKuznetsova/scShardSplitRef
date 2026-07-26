@@ -12,8 +12,7 @@
 \item{output_file}{Character: output file path}
 }
 \value{
-Called for its side-effects of writing a file, returns an invisible
-\code{TRUE}.
+Called for its side-effects of writing a file to disk.
 }
 \description{
 Write filtered GTF file

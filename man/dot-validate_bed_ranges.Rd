@@ -10,7 +10,7 @@
 \item{bed}{Data frame with RegionStart and RegionEnd columns.}
 }
 \value{
-Invisible \code{TRUE} if all ranges are valid. Raises error with
+Invisible TRUE if all ranges are valid. Raises error with
 problematic row numbers otherwise.
 }
 \description{

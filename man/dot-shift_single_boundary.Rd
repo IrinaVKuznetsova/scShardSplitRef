@@ -9,7 +9,9 @@
 \arguments{
 \item{boundary}{Integer: initial boundary position.}
 
-\item{gene_ranges}{Data frame with gene ranges (columns 'start', 'end').}
+\item{gene_ranges}{Data frame with gene ranges (columns 'start', 'end'),
+already merged and sorted ascending by start (and therefore also by
+end, since ranges are non-overlapping).}
 
 \item{chr_end}{Integer: chromosome end coordinate (upper bound).}
 
@@ -31,6 +33,15 @@ shift_by-reachable position that clears the currently-violating range(s),
 rather than walking forward one shift_by step at a time, so the result is
 identical to a naive per-step walk but computed in O(number of blocking
 gene clusters) instead of O(distance / shift_by).
+}
+\details{
+Candidate gene ranges are also found via two binary searches
+(\code{findInterval()} against \code{gene_ranges$start} and \code{gene_ranges$end},
+both sorted ascending since \code{gene_ranges} is pre-merged and
+non-overlapping) rather than a linear scan of every range on the
+chromosome, turning an O(n_genes) check into O(log n_genes + k), where
+k is the (typically small) number of ranges actually within \code{clearance}
+of \code{boundary}.
 }
 \examples{
 \dontrun{

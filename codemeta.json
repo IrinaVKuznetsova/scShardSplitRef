@@ -2,8 +2,8 @@
   "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
   "@type": "SoftwareSourceCode",
   "identifier": "scShardSplitRef",
-  "description": "Provides utilities that enable researchers to build custom references for the Multiome ATAC Gene Expression sequencing data for large-genome species without manual intervention.",
-  "name": "scShardSplitRef: Build Custom Reference Genome for Single-Cell Multiome ATAC and\n    Gene Expression Data of Large-Genome Species",
+  "description": "Splits chromosomes of large-genome species into smaller shards that respect the maximum contig size supported by 10x Genomics' 'Cell Ranger ARC' reference builder, avoiding breaks inside gene bodies, and rewrites the corresponding 'GTF' annotation coordinates to match. This enables researchers to build custom 'Cell Ranger ARC' references for Multiome 'ATAC' and Gene Expression data from genomes that would otherwise exceed the tool's chromosome size limits.",
+  "name": "scShardSplitRef: Reference Genome Splitting for Single-Cell Multiome Data",
   "license": "https://spdx.org/licenses/GPL-3.0",
   "version": "0.1.0",
   "programmingLanguage": {
