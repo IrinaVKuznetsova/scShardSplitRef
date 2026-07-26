@@ -1,6 +1,5 @@
 Package: scShardSplitRef
-Title: Build Custom Reference Genome for Single-Cell Multiome ATAC and
-    Gene Expression Data of Large-Genome Species
+Title: Reference Genome Splitting for Single-Cell Multiome Data
 Version: 0.1.0
 Authors@R: c(
     person("Irina", "Kuznetsova", , "irina.kuznetsova@curtin.edu.au", role = c("aut", "cre"),
@@ -16,9 +15,13 @@ Authors@R: c(
     person("Grains Research and Development Corporation", role = c("fnd", "cph"),
            comment = c("GRDC Project CUR2210-005OPX (AAGI-CU)", ROR = "02xwr1996"))
   )
-Description: Provides utilities that enable researchers to build custom
-    references for the Multiome ATAC Gene Expression sequencing data for
-    large-genome species without manual intervention.
+Description: Splits chromosomes of large-genome species into smaller
+    shards that respect the maximum contig size supported by 10x Genomics'
+    'Cell Ranger ARC' reference builder, avoiding breaks inside gene
+    bodies, and rewrites the corresponding 'GTF' annotation coordinates to
+    match. This enables researchers to build custom 'Cell Ranger ARC'
+    references for Multiome 'ATAC' and Gene Expression data from genomes
+    that would otherwise exceed the tool's chromosome size limits.
 License: GPL (>= 3)
 Depends: 
     R (>= 4.3.0)
