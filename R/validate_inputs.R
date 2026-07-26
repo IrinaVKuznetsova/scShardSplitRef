@@ -175,7 +175,9 @@
 
   .validate_bed_ranges(bed)
 
-  cli::cli_inform("{.bold All files loaded and validated successfully.}")
+  if (.scs_emit_info()) {
+    cli::cli_inform("{.bold All files loaded and validated successfully.}")
+  }
 
   return(list(bed = bed, gtf = gtf))
 }

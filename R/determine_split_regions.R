@@ -13,7 +13,8 @@
 #' @param gtf Path to a GTF file containing gene annotations.
 #'   Must contain standard 9 GTF columns. Comments starting with '#' are
 #'   ignored.
-#' @param output_bed Path to the BED file to be written. Directory must exist.
+#' @param output_bed Full file path and filename of the BED file to be written.
+#'   Directory must exist.
 #' @param limit Maximum allowed width (bp) for output intervals.
 #'   Defaults to 2^29 (536,870,912 bp). Must be larger than any single gene
 #'   plus the shift distance.
@@ -179,15 +180,17 @@ determine_split_regions <- function(
   shift_by,
   clearance
 ) {
-  cli::cli_inform(
-    paste(
-      "Preparing split regions from {.file {bed}} and {.file {gtf}}",
-      "into {.file {output_bed}}",
-      "({.var limit} = {limit},",
-      "{.var shift_by} = {shift_by},",
-      "{.var clearance} = {clearance})."
+  if (.scs_emit_info()) {
+    cli::cli_inform(
+      paste(
+        "Preparing split regions from {.file {bed}} and {.file {gtf}}",
+        "into {.file {output_bed}}",
+        "({.var limit} = {limit},",
+        "{.var shift_by} = {shift_by},",
+        "{.var clearance} = {clearance})."
+      )
     )
-  )
+  }
 
   invisible(TRUE)
 }
@@ -269,9 +272,11 @@ determine_split_regions <- function(
 #'
 #' @dev
 .inform_split_region_done <- function(out, output_bed) {
-  cli::cli_inform(
-    "{.strong Built {nrow(out)} split intervals across {length(unique(out$chr))} chromosome{?s} and wrote them to {.file {output_bed}}.}"
-  )
+  if (.scs_emit_info()) {
+    cli::cli_inform(
+      "{.strong Built {nrow(out)} split intervals across {length(unique(out$chr))} chromosome{?s} and wrote them to {.file {output_bed}}.}"
+    )
+  }
 
   invisible(TRUE)
 }

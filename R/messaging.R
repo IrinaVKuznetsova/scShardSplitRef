@@ -1,4 +1,4 @@
-#' Get scShardSplitRef verbosity (internal)
+#' Get scShardSplitRef verbosity
 #'
 #' @return Character scalar: "quiet", "minimal", or "verbose".
 #' @dev
@@ -10,7 +10,7 @@
   v
 }
 
-#' Should scShardSplitRef emit informational chatter? (internal)
+#' Should scShardSplitRef emit informational chatter?
 #'
 #' Policy:
 #' - quiet:   no

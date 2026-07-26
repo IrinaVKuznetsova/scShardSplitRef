@@ -10,8 +10,8 @@
 #' # See currently set options for scShardSplitRef
 #' scShardSplitRef_options()
 #'
-#' # Set verbose to FALSE to suppress info/success messages
-#' scShardSplitRef_options(scShardSplitRef.verbose = FALSE)
+#' # Set verbosity to "quiet" to suppress info/success messages
+#' scShardSplitRef_options(scShardSplitRef.verbosity = "quiet")
 #' scShardSplitRef_options()
 #'
 #' @export

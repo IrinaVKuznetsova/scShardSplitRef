@@ -32,7 +32,8 @@
 #' @param out_path Directory where the output GTF will be written. Defaults to
 #'   the current working directory (`"."`).
 #'
-#' @returns The function writes the filtered GTF file to disk.
+#' @returns The function writes the filtered GTF file to local disk at the
+#'  user-specified location.
 #'
 #' @examples
 #' reg_file <- system.file(
@@ -63,7 +64,9 @@ process_gtf <- function(
   keep_attributes = NULL,
   out_path = "."
 ) {
-  cli::cli_alert_info("Validating inputs and reading files...")
+  if (.scs_emit_info()) {
+    cli::cli_alert_info("Validating inputs and reading files...")
+  }
 
   # Validate that genome_name and genome_version are provided
   if (missing(genome_name) || is.null(genome_name)) {
@@ -140,9 +143,11 @@ process_gtf <- function(
   }
   output_file <- .build_output_filename(out_path, genome_name, genome_version)
   .write_filtered_gtf(out, output_file)
-  cli::cli_alert_info(c(
-    i = "{.bold Finished writing processed GTF: {output_file}}"
-  ))
+  if (.scs_emit_info()) {
+    cli::cli_alert_info(c(
+      i = "{.bold Finished writing processed GTF: {output_file}}"
+    ))
+  }
 
   invisible(NULL)
 }
