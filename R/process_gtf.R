@@ -161,14 +161,9 @@ process_gtf <- function(
 #'
 #' @param regions Data frame with columns `Chr`, `RegionStart`, `RegionEnd`.
 #'
-#' @return The input data frame with an added `NEW` column.
+#' @returns The input data frame with an added `NEW` column.
 #' @dev
 .prepare_split_regions <- function(regions) {
-  # .format_coord() correctly renders RegionStart/RegionEnd as fixed-point
-  # integers regardless of whether they are integer or double (e.g. a
-  # double promoted upstream, or a plain numeric literal used directly in a
-  # unit test) -- this is where the scientific-notation guard actually
-  # lives, so no type assertion is needed (or wanted) here.
   regions$NEW <- sprintf(
     "%s-%s-%s",
     regions$Chr,
@@ -196,7 +191,7 @@ process_gtf <- function(
 #' @param x Numeric (integer or double) vector of coordinates. `NA` values
 #'   are passed through as `NA` (not the string `"NA"`).
 #'
-#' @return Character vector, same length as `x`, with each value rendered as
+#' @returns Character vector, same length as `x`, with each value rendered as
 #'   a plain integer string (no scientific notation, no decimal point).
 #'
 #' @examples
@@ -232,7 +227,7 @@ process_gtf <- function(
 #'
 #' @param regions Data frame with columns `Chr`, `RegionStart`, `RegionEnd`.
 #'
-#' @return Logical scalar: `TRUE` if any chromosome has overlapping region
+#' @returns Logical scalar: `TRUE` if any chromosome has overlapping region
 #'   intervals, `FALSE` otherwise.
 #'
 #' @dev
@@ -282,7 +277,7 @@ process_gtf <- function(
 #' @param regions Data frame with columns `Chr`, `RegionStart`, `RegionEnd`,
 #'   `NEW`.
 #'
-#' @return `gtf` with three additional columns, `NEW`, `RegionStart`,
+#' @returns `gtf` with three additional columns, `NEW`, `RegionStart`,
 #'   `RegionEnd`, populated for matched rows and `NA` for unmatched rows.
 #'   Row order is identical to the input `gtf`.
 #'
@@ -345,7 +340,7 @@ process_gtf <- function(
 #'
 #' @param df Data frame containing `start`, `end`, `RegionStart`, `RegionEnd`.
 #'
-#' @return Logical vector of length `nrow(df)`.
+#' @returns Logical vector of length `nrow(df)`.
 #' @dev
 .rows_within_region <- function(df) {
   df$start >= df$RegionStart & df$end <= df$RegionEnd
@@ -358,7 +353,7 @@ process_gtf <- function(
 #'
 #' @param matched Data frame containing a `unique_ID` column.
 #'
-#' @return Invisibly `TRUE` if ok; otherwise aborts.
+#' @returns Invisibly `TRUE` if ok; otherwise aborts.
 #' @dev
 
 .abort_if_ambiguous_matches <- function(matched) {
@@ -392,7 +387,7 @@ process_gtf <- function(
 #' @param gtf Original GTF data frame containing `unique_ID`, `Chr`, `feature`,
 #'   `start`, and `end`.
 #'
-#' @return Invisibly `TRUE` if ok; otherwise aborts.
+#' @returns Invisibly `TRUE` if ok; otherwise aborts.
 #' @dev
 
 .abort_if_unmatched_features <- function(matched, gtf) {
@@ -438,7 +433,7 @@ process_gtf <- function(
 #' @param gtf_unique_ids Character vector of `unique_ID` values in the original
 #'   GTF order.
 #'
-#' @return `matched` reordered to match the input GTF order.
+#' @returns `matched` reordered to match the input GTF order.
 #' @dev
 .restore_gtf_order <- function(matched, gtf_unique_ids) {
   matched[match(gtf_unique_ids, matched$unique_ID), , drop = FALSE]
@@ -451,7 +446,7 @@ process_gtf <- function(
 #'
 #' @param matched Data frame containing `NEW` and standard GTF columns.
 #'
-#' @return A data frame with GTF columns where the first column is `Chr`.
+#' @returns A data frame with GTF columns where the first column is `Chr`.
 #' @dev
 .build_gtf_output <- function(matched) {
   out <- matched[, c(
@@ -477,7 +472,7 @@ process_gtf <- function(
 #' @param attributes Character vector of GTF attribute strings
 #' @param keep_attributes Character vector of attribute names to keep
 #'
-#' @return Character vector of filtered attribute strings
+#' @returns Character vector of filtered attribute strings
 #'
 #' @details
 #' Extracts key-value pairs from GTF attribute column and keeps only
@@ -494,7 +489,8 @@ process_gtf <- function(
     FUN.VALUE = character(1L),
     FUN = function(pairs) {
       pairs <- pairs[nzchar(pairs)]
-      keep <- stringi::stri_detect_regex(pairs, pattern)
+      key <- sub("\\s.*$", "", pairs)
+      keep <- key %in% keep_attributes
       if (!any(keep)) {
         return("")
       }
@@ -510,7 +506,7 @@ process_gtf <- function(
 #' @param filtered Character vector of filtered attributes
 #' @param original Character vector of original attributes
 #'
-#' @return Invisible TRUE if valid
+#' @returns Invisible TRUE if valid
 #'
 #' @dev
 .check_filtered_completeness <- function(filtered, original) {
@@ -537,7 +533,7 @@ process_gtf <- function(
 #' @param genome_name Character: genome name
 #' @param genome_version Character: genome version
 #'
-#' @return Character: full file path
+#' @returns Character: full file path
 #'
 #' @dev
 .build_output_filename <- function(out_path, genome_name, genome_version) {
@@ -554,8 +550,7 @@ process_gtf <- function(
 #' @param result Data frame with filtered GTF data
 #' @param output_file Character: output file path
 #'
-#' @return Called for its side-effects of writing a file, returns an invisible
-#'  `TRUE`.
+#' @returns Called for its side-effects of writing a file to disk.
 #'
 #' @dev
 .write_filtered_gtf <- function(result, output_file) {
@@ -567,5 +562,4 @@ process_gtf <- function(
     col.names = FALSE,
     sep = "\t"
   ))
-  invisible(TRUE)
 }
