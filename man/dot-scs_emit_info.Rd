@@ -2,7 +2,7 @@
 % Please edit documentation in R/messaging.R
 \name{.scs_emit_info}
 \alias{.scs_emit_info}
-\title{Should scShardSplitRef emit informational chatter? (internal)}
+\title{Should scShardSplitRef emit informational chatter?}
 \usage{
 .scs_emit_info()
 }

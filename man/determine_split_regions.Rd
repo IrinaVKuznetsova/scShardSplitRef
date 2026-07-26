@@ -22,7 +22,8 @@ Columns should be TAB-delimited with chromosome name, region start
 Must contain standard 9 GTF columns. Comments starting with '#' are
 ignored.}
 
-\item{output_bed}{Path to the BED file to be written. Directory must exist.}
+\item{output_bed}{Full file path and filename of the BED file to be written.
+Directory must exist.}
 
 \item{limit}{Maximum allowed width (bp) for output intervals.
 Defaults to 2^29 (536,870,912 bp). Must be larger than any single gene

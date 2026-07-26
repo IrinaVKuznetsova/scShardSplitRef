@@ -2,7 +2,7 @@
 % Please edit documentation in R/messaging.R
 \name{.scs_get_verbosity}
 \alias{.scs_get_verbosity}
-\title{Get scShardSplitRef verbosity (internal)}
+\title{Get scShardSplitRef verbosity}
 \usage{
 .scs_get_verbosity()
 }
@@ -10,6 +10,6 @@
 Character scalar: "quiet", "minimal", or "verbose".
 }
 \description{
-Get scShardSplitRef verbosity (internal)
+Get scShardSplitRef verbosity
 }
 \keyword{internal}

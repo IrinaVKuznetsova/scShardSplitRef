@@ -35,7 +35,8 @@ attribute column will be filtered to keep only these fields. Defaults to
 the current working directory (\code{"."}).}
 }
 \value{
-The function writes the filtered GTF file to disk.
+The function writes the filtered GTF file to local disk at the
+user-specified location.
 }
 \description{
 Reads a BED-like "split regions" file and a GTF, assigns each GTF feature to
