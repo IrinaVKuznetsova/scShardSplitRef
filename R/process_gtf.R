@@ -117,12 +117,6 @@ process_gtf <- function(
   matched$start <- matched$start - matched$RegionStart + 1L
   matched$end <- matched$end - matched$RegionStart + 1L
 
-  # No .restore_gtf_order() call needed here: unlike the old Chr-only-merge
-  # approach (which lost and had to recover row order), `matched` is a
-  # straight boolean filter of `gtf`, so it already preserves the original
-  # feature order. Skips an O(n log n) match() over potentially millions of
-  # rows for no effect. (.restore_gtf_order() is kept below for tests/reuse.)
-
   out <- .build_gtf_output(matched)
 
   # Guard against scientific notation: `start`/`end` are numeric (possibly
@@ -425,18 +419,6 @@ process_gtf <- function(
     ),
     .envir = environment()
   )
-}
-
-#' Restore the original GTF row order
-#'
-#' @param matched Data frame containing `unique_ID`.
-#' @param gtf_unique_ids Character vector of `unique_ID` values in the original
-#'   GTF order.
-#'
-#' @returns `matched` reordered to match the input GTF order.
-#' @dev
-.restore_gtf_order <- function(matched, gtf_unique_ids) {
-  matched[match(gtf_unique_ids, matched$unique_ID), , drop = FALSE]
 }
 
 #' Build the output GTF data frame
