@@ -60,7 +60,6 @@
 #'     shift_by = 1L,
 #'     clearance = 1L
 #'   )
-#' @autoglobal
 #' @export
 determine_split_regions <- function(
   bed,

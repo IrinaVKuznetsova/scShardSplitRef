@@ -54,7 +54,6 @@
 #'   out_path = tempdir()
 #' )
 #'
-#' @autoglobal
 #' @export
 process_gtf <- function(
   split_regions_bed,
