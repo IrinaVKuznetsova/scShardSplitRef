@@ -18,7 +18,7 @@ list if \code{genes} has 0 rows.
 \description{
 Groups gene annotations by chromosome and merges overlapping ranges
 within each group, producing a lookup used by both the upfront
-feasibility check and per-region boundary fixing \u2014 so the merge work
+feasibility check and per-region boundary fixing -- so the merge work
 happens exactly once per chromosome, rather than being recomputed by
 every downstream consumer.
 }

@@ -51,28 +51,29 @@ The function performs the following steps:
 \item Reads genomic regions and gene annotations from input files.
 \item Checks that the provided \code{limit} is feasible given gene positions and
 requested two-sided boundary clearance.
-\item For each region, splits it at the centromere (if start > 0) and applies
+\item For each region, splits it at the centromere if required and applies
 the size limit.
 \item Adjusts boundaries so each is at least \code{clearance} bp away from genes on
 both sides, moving by \code{shift_by} bp per iteration when needed.
 \item Iteratively subdivides intervals exceeding the limit until all intervals
 satisfy the constraint.
-\item Writes final split regions to BED file in the active \R session's
-\code{tempdir()}.
+\item Writes final split regions to BED file.
 }
 }
 \examples{
-  # load example files from this package and write the output bed file to
-  # R's tempdir()
+  chromosomes <- system.file(
+    "extdata",
+    "AlgorithmToy.bed",
+    package = "scShardSplitRef",
+    mustWork = TRUE
+  )
 
-  chromosomes <- system.file("extdata",
-                   "AlgorithmToy.bed",
-                   package = "scShardSplitRef",
-                   mustWork = TRUE)
-  genes <- system.file("extdata",
-             "AlgorithmToy.gtf",
-             package = "scShardSplitRef",
-             mustWork = TRUE)
+  genes <- system.file(
+    "extdata",
+    "AlgorithmToy.gtf",
+    package = "scShardSplitRef",
+    mustWork = TRUE
+  )
 
   determine_split_regions(
     bed = chromosomes,

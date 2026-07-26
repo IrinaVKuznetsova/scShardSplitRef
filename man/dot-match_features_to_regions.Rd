@@ -25,7 +25,7 @@ contains it, per chromosome.
 \details{
 Rather than joining every feature against every split region on its
 chromosome (a full cross join, which duplicates each feature once per
-shard on that chromosome before being filtered back down \u2014 expensive
+shard on that chromosome before being filtered back down -- expensive
 for genome-scale GTFs split into many shards), this does a direct,
 vectorized per-chromosome lookup: because split regions are asserted to
 be non-overlapping (see \code{\link[=.regions_overlap]{.regions_overlap()}}), each feature

@@ -12,7 +12,7 @@
 \item{path}{Character: output file path.}
 }
 \value{
-Invisible TRUE.
+Called for its side effects, writes a file to local disk.
 }
 \description{
 Writes a data frame to a TAB-delimited BED format file without quotes

@@ -16,7 +16,7 @@
 \item{region}{Data frame row with columns 'chr', 'start', 'end'.}
 
 \item{merged_gene_ranges}{Named list, keyed by chromosome, of data frames
-with columns 'start', 'end' \u2014 gene ranges already merged via
+with columns 'start', 'end' -- gene ranges already merged via
 \code{\link[=.merge_all_gene_ranges]{.merge_all_gene_ranges()}}. Passed in rather than recomputed here so the
 merge work happens once per chromosome regardless of how many regions
 share it.}

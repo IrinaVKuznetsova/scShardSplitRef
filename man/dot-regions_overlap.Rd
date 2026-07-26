@@ -20,7 +20,7 @@ contain any given position on a chromosome. This checks that invariant
 upfront, cheaply (region count is typically small relative to feature
 count), so \code{\link[=process_gtf]{process_gtf()}} can choose the fast path when it holds and
 fall back to the original, slower-but-exhaustive matching when it
-doesn't \u2014 which is also the only case where the ambiguous-match error
+doesn't -- which is also the only case where the ambiguous-match error
 actually fires, so falling back there costs nothing in practice.
 }
 \keyword{internal}
