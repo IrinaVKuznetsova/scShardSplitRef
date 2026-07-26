@@ -12,6 +12,12 @@
     "url": "https://r-project.org"
   },
   "runtimePlatform": "R version 4.6.1 (2026-06-24)",
+  "provider": {
+    "@id": "https://cran.r-project.org",
+    "@type": "Organization",
+    "name": "Comprehensive R Archive Network (CRAN)",
+    "url": "https://cran.r-project.org"
+  },
   "author": [
     {
       "@type": "Person",
@@ -25,7 +31,7 @@
       "givenName": "Luke",
       "familyName": "Pembleton",
       "email": "lpembleton@barenbrug.com.au",
-      "@id": "https://orcid.org/0000-0002-3555-4586"
+      "@id": "https://orcid.org/0000-0001-8131-8210"
     },
     {
       "@type": "Person",
@@ -95,18 +101,6 @@
         "url": "https://cran.r-project.org"
       },
       "sameAs": "https://CRAN.R-project.org/package=rmarkdown"
-    },
-    {
-      "@type": "SoftwareApplication",
-      "identifier": "roxyglobals",
-      "name": "roxyglobals",
-      "provider": {
-        "@id": "https://cran.r-project.org",
-        "@type": "Organization",
-        "name": "Comprehensive R Archive Network (CRAN)",
-        "url": "https://cran.r-project.org"
-      },
-      "sameAs": "https://CRAN.R-project.org/package=roxyglobals"
     },
     {
       "@type": "SoftwareApplication",
@@ -184,7 +178,7 @@
     },
     "SystemRequirements": null
   },
-  "fileSize": "4230.028KB",
+  "fileSize": "0KB",
   "codeRepository": "https://github.com/IrinaVKuznetsova/scShardSplitRef",
   "releaseNotes": "https://github.com/IrinaVKuznetsova/scShardSplitRef/blob/main/NEWS.md",
   "readme": "https://github.com/IrinaVKuznetsova/scShardSplitRef/blob/main/README.md"

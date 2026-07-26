@@ -45,38 +45,28 @@
 #' @return Invisibly NULL.
 #' @keywords internal
 .init_package_options <- function() {
-  penv <- parent.env(environment())
-
   op <- options()
-  saved <- op[
-    names(op) %in%
-      c(
-        "rlib_message_verbosity",
-        "rlib_warning_verbosity",
-        "warn"
-      )
-  ]
-
-  pkg_env <- new.env(parent = emptyenv())
-  pkg_env$old_options <- saved
-
-  if (!exists(".pkg_env", envir = penv, inherits = FALSE)) {
-    assign(".pkg_env", pkg_env, envir = penv)
-  }
 
   op.defaults <- list(
     scShardSplitRef.verbosity = "verbose"
   )
 
+  # withr::local_options(.local_envir = topenv()) registers automatic
+  # restoration when the package namespace is unloaded; no explicit
+  # .onUnload()/withr::deferred_run() is needed (or wanted -- calling
+  # deferred_run() manually on top of this double-registers/races with
+  # withr's own automatic restoration and produces a spurious "No deferred
+  # expressions to run." message, notably during repeated
+  # devtools::document()/pkgload::load_all() cycles).
   toset <- !(names(op.defaults) %in% names(op))
   if (any(toset)) {
-    withr::local_options(op.defaults[toset], .local_envir = penv)
+    withr::local_options(op.defaults[toset], .local_envir = topenv())
   }
 
   verbosity <- getOption("scShardSplitRef.verbosity")
   mapped <- .map_verbosity(verbosity)
 
-  withr::local_options(mapped, .local_envir = penv)
+  withr::local_options(mapped, .local_envir = topenv())
 
   invisible(NULL)
 }
@@ -84,11 +74,5 @@
 # nocov start
 .onLoad <- function(libname, pkgname) {
   .init_package_options()
-}
-
-.onUnload <- function(libpath) {
-  penv <- parent.env(environment())
-  withr::deferred_run(penv)
-  invisible()
 }
 # nocov end
