@@ -1130,7 +1130,7 @@ determine_split_regions <- function(
         x = "Limit {limit} is smaller than largest blocked gene+clearance \\
                interval ({max_blocked} bp).",
         i = "Worst interval: {worst$chr}:{worst$start}-{worst$end}",
-        i = "Increase limit to at least {max_blocked} (gene width + 2*clearance)."
+        v = "Increase limit to at least {max_blocked} (gene width + 2*clearance)."
       )
     )
   }
