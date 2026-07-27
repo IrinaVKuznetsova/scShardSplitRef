@@ -6,17 +6,6 @@
 \usage{
 .validate_tab_file_lines(path, min_fields, label, max_fields = NA_integer_)
 }
-\arguments{
-\item{path}{Character: file path to validate.}
-
-\item{min_fields}{Integer: minimum number of required fields per line.}
-
-\item{label}{Character: human-readable file type label (\emph{e.g.}, "GTF", "BED")
-for error messages.}
-
-\item{max_fields}{Integer or \code{NA}: maximum number of allowed fields.
-If \code{NA} (default), no upper limit is enforced.}
-}
 \value{
 Character vector of validated data lines (comments and blank
 lines removed). Empty character vector if the file has no data lines.
