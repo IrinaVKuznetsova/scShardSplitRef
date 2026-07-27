@@ -46,11 +46,17 @@
   overflowed <- is.na(out) & !is.na(x)
 
   if (any(overflowed)) {
+    # NOTE: `.Machine$integer.max` cannot be interpolated directly inside a
+    # cli literal -- a `{...}` expression starting with a dot is parsed by
+    # cli (>= 3.4.0) as an inline style marker, not literal code, and
+    # `cli_abort()` itself throws instead of reporting the overflow. Binding
+    # it to a local variable first avoids the leading dot.
+    max_int <- .Machine$integer.max
     cli::cli_abort(
       call = rlang::caller_env(),
       c(
         "{.arg {label}} contains {sum(overflowed)} value{?s} outside R's \\
-         32-bit integer range (+/-{.val {.Machine$integer.max}}).",
+         32-bit integer range (+/-{.val {max_int}}).",
         i = "This usually means a coordinate is larger than a single \\
              chromosome/scaffold should be -- check the input file."
       )
