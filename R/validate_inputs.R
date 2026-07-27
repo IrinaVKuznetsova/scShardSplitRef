@@ -114,11 +114,7 @@
     stringsAsFactors = FALSE,
     fill = fill
   )
-  args[[if (!is.null(file)) "file" else "text"]] <- if (!is.null(file)) {
-    file
-  } else {
-    text
-  }
+  args[[if (!is.null(file)) "file" else "text"]] <- file %||% text
 
   do.call(utils::read.table, args)
 }
