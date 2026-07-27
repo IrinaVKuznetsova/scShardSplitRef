@@ -145,6 +145,7 @@ process_gtf <- function(
   .write_filtered_gtf(out, output_file)
   if (.scs_emit_info()) {
     cli::cli_alert_info(c(
+      call = rlang::caller_env(),
       i = "{.bold Finished writing processed GTF: {output_file}}"
     ))
   }
@@ -363,16 +364,20 @@ process_gtf <- function(
   n_dup <- length(dup_ids)
 
   if (n_dup > 0L) {
+    dup_bullets <- stats::setNames(
+      sprintf("{.val %s}", dup_ids),
+      rep("*", length(dup_ids))
+    )
+
     cli::cli_abort(
       call = rlang::caller_env(),
       c(
         "{n_dup} ambiguous split-region matches detected.",
         x = "{n_dup} feature IDs matched multiple intervals.",
         i = "Affected IDs:",
-        i = paste0("* {.val ", dup_ids, "}"),
+        dup_bullets,
         i = "Ensure the split-regions BED has no overlapping intervals per chromosome."
-      ),
-      .envir = environment()
+      )
     )
   }
 
@@ -411,13 +416,18 @@ process_gtf <- function(
     missing_rows$end[seq_len(preview_n)]
   )
 
+  preview_bullets <- stats::setNames(
+    preview_items,
+    rep("*", length(preview_items))
+  )
+
   cli::cli_abort(
     call = rlang::caller_env(),
     c(
       "{n_missing} GTF features do not fall within any split-region interval.",
       x = "{n_missing} unmatched feature{?s} found.",
       i = "Example:",
-      i = paste0("* ", preview_items),
+      preview_bullets,
       i = "Ensure split regions fully cover the annotation coordinates.",
       i = "Handle boundary-crossing features before calling {.fn process_gtf}."
     ),
@@ -503,6 +513,7 @@ process_gtf <- function(
 
   if (length(empty_idx) > 0L) {
     cli::cli_warn(
+      call = rlang::caller_env(),
       c(
         "{length(empty_idx)} lines had no matching attributes.",
         i = "Check your keep_attributes list."

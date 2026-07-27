@@ -50,9 +50,9 @@
     cli::cli_abort(
       call = rlang::caller_env(),
       c(
-        "{.arg {label}} contains {sum(overflowed)} value{?s} outside R's \\
+        "{.arg {label}} contains {sum(overflowed)} value{?s} outside R's 
          32-bit integer range (+/-{.val {max_int}}).",
-        i = "This usually means a coordinate is larger than a single \\
+        i = "This usually means a coordinate is larger than a single 
              chromosome/scaffold should be -- check the input file."
       )
     )
@@ -102,7 +102,7 @@
   if (is.null(file) == is.null(text)) {
     cli::cli_abort(
       call = rlang::caller_env(),
-      "Exactly one of {.arg file} or {.arg text} must be supplied."
+      c(i = "Exactly one of {.arg file} or {.arg text} must be supplied.")
     )
   }
 
@@ -247,8 +247,8 @@
   if (!endsWith(tolower(path), sprintf(".%s", tolower(label)))) {
     cli::cli_abort(c(
       "File extension does not match expected format for {label}.",
-      "i" = "Expected extension: {sprintf('.%s', tolower(label))}",
-      "x" = "Got: {path}"
+      i = "Expected extension: {sprintf('.%s', tolower(label))}",
+      x = "Got: {path}"
     ))
   }
 
@@ -279,7 +279,7 @@
         "Invalid {label} file format.",
         x = "Problematic lines: {invalid_idx}.",
         i = "Example: {example_bad}",
-        i = "Expected: {expected}"
+        v = "Expected: {expected}"
       ),
       class = "invalid_tab_file_error"
     )
