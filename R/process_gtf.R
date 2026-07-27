@@ -376,7 +376,7 @@ process_gtf <- function(
         x = "{n_dup} feature IDs matched multiple intervals.",
         i = "Affected IDs:",
         dup_bullets,
-        i = "Ensure the split-regions BED has no overlapping intervals per chromosome."
+        v = "Ensure the split-regions BED has no overlapping intervals per chromosome."
       )
     )
   }
@@ -428,8 +428,8 @@ process_gtf <- function(
       x = "{n_missing} unmatched feature{?s} found.",
       i = "Example:",
       preview_bullets,
-      i = "Ensure split regions fully cover the annotation coordinates.",
-      i = "Handle boundary-crossing features before calling {.fn process_gtf}."
+      "*" = "Ensure split regions fully cover the annotation coordinates.",
+      "*" = "Handle boundary-crossing features before calling {.fn process_gtf}."
     ),
     .envir = environment()
   )
