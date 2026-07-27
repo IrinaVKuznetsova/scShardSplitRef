@@ -14,11 +14,7 @@ Data frame with first 3 columns named Chr, RegionStart, RegionEnd
 (integer), plus any additional columns from the input file.
 }
 \description{
-Combines the structural validation performed by \code{\link[=.check_tab_file]{.check_tab_file()}} with
-the parsing performed by \code{\link[=.read_and_format_bed]{.read_and_format_bed()}}, reading the file from
-disk exactly once (via \code{\link[=.validate_tab_file_lines]{.validate_tab_file_lines()}}) and parsing the
-already-read, already-filtered lines with \code{read.table(text = ...)},
-instead of reading the whole file from disk a second time.
+Read, validate, and parse a BED file in a single pass
 }
 \examples{
 \dontrun{
