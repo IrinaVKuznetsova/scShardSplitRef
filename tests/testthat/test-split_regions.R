@@ -256,15 +256,48 @@ test_that(".process_single_region handles basic regions", {
     end = 1000L,
     stringsAsFactors = FALSE
   )
-  genes <- data.frame(
-    chr = character(0),
-    start = integer(0),
-    end = integer(0),
-    stringsAsFactors = FALSE
+  # merged_gene_ranges must be a named list keyed by chromosome (as produced
+  # by .merge_all_gene_ranges()), not a raw data.frame -- an empty list is
+  # the correct "no genes anywhere" representation.
+  merged_gene_ranges <- list()
+  result <- .process_single_region(
+    region,
+    merged_gene_ranges,
+    limit = 250L,
+    shift_by = 1L
   )
-  result <- .process_single_region(region, genes, limit = 250L, shift_by = 1L)
   expect_s3_class(result, "data.frame")
   expect_true(all(result$end - result$start <= 250L))
+})
+
+test_that(".process_single_region shifts boundaries away from real genes", {
+  # Regression test for a latent gap: every previous .process_single_region
+  # test passed an empty data.frame as `merged_gene_ranges`, which is not
+  # the shape the function actually expects (a named list keyed by
+  # chromosome). Because the gene set was empty, `df[["chr1"]]` silently
+  # returned NULL and fell back to "no genes", so gene avoidance was never
+  # actually exercised. This test uses the correct list shape with a real
+  # gene straddling the natural split point.
+  region <- data.frame(
+    chr = "chr1",
+    start = 0L,
+    end = 300L,
+    stringsAsFactors = FALSE
+  )
+  merged_gene_ranges <- list(
+    chr1 = data.frame(start = 140L, end = 160L)
+  )
+
+  result <- .process_single_region(
+    region,
+    merged_gene_ranges,
+    limit = 150L,
+    shift_by = 1L,
+    clearance = 1L
+  )
+
+  boundaries <- result$end[-nrow(result)]
+  expect_true(all(boundaries <= 139L | boundaries >= 161L))
 })
 
 test_that(".process_single_region handles centromeres", {
@@ -274,13 +307,13 @@ test_that(".process_single_region handles centromeres", {
     end = 1000L,
     stringsAsFactors = FALSE
   )
-  genes <- data.frame(
-    chr = character(0),
-    start = integer(0),
-    end = integer(0),
-    stringsAsFactors = FALSE
+  merged_gene_ranges <- list()
+  result <- .process_single_region(
+    region,
+    merged_gene_ranges,
+    limit = 250L,
+    shift_by = 1L
   )
-  result <- .process_single_region(region, genes, limit = 250L, shift_by = 1L)
   expect_true(any(result$start == 0L))
   expect_true(any(result$start == 100L))
 })
