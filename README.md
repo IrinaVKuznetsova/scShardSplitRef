@@ -114,9 +114,9 @@ The format of the centromere coordinates file is a tab-delimited 3-column file, 
 ## Usage Guide
 
 A step-by-step guide can be found in the vignettes:
-- **Toy example (algorithm):** a quick introduction to understand the **split algorithm**: [vignette toy](vignettes/scShardSplitRefDetailedAlgorithm.Rmd) 
-- **Real-world example: subset barley** *(diploid, chromosome length exceeds allowed size)* [vignette quickstart](vignettes/scShardSplitRef.Rmd)
-- **Real-world example: barley (Hordeum vulgare), wheat (Triticum aestivum) and faba bean (Vicia faba)** [the Tutorials.zip folder on the vignettes branch](https://github.com/IrinaVKuznetsova/scShardSplitRef/tree/vignettes/vignettes)
+- **Toy example (algorithm):** a quick introduction to understand the **split algorithm** [vignette toy](vignettes/scShardSplitRefDetailedAlgorithm.Rmd) 
+- **Real-world example: subset barley** [vignette quickstart](vignettes/scShardSplitRef.Rmd)
+- **Real-world example:** barley *(Hordeum vulgare)*, wheat *(Triticum aestivum)* and faba bean *(Vicia faba)* [the Tutorials.zip folder on the vignettes branch](https://github.com/IrinaVKuznetsova/scShardSplitRef/tree/vignettes/vignettes)
 
 
 > Note on parameter selection in *determine_split_regions()*. In real world scenarios users should consider picking  `clearance = 900 (2 x 150 bp reads with up to a 600 bp insert size)`, and `shift_by in the region of 1000 to 4000` to ensure the algorithm can easily walk through a whole gene if needed.
