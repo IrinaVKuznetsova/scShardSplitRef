@@ -115,8 +115,9 @@ The format of the centromere coordinates file is a tab-delimited 3-column file, 
 
 A step-by-step guide can be found in the vignettes:
 - **Toy example (algorithm):** a quick introduction to understand the **split algorithm**: [vignette toy](vignettes/scShardSplitRefDetailedAlgorithm.Rmd) 
-- **Real-world example: subset barley** *(diploid, chromosome length exceeds allowed size)* [vignette quickstart](vignettes/scShardSplitRef.Rmd) 
-- **Real-world example: XXX** *(hexaploid, chromosome length exceeds allowed size)* [tutorial XX](inst/)   **<-- TODO: place holder for Luca's testing species --!>**
+- **Real-world example: subset barley** *(diploid, chromosome length exceeds allowed size)* [vignette quickstart](vignettes/scShardSplitRef.Rmd)
+- **Real-world example: barley (Hordeum vulgare), wheat (Triticum aestivum) and faba bean (Vicia faba)** [the Tutorials.zip folder on the vignettes branch](https://github.com/IrinaVKuznetsova/scShardSplitRef/tree/vignettes/vignettes)
+
 
 > Note on parameter selection in *determine_split_regions()*. In real world scenarios users should consider picking  `clearance = 900 (2 x 150 bp reads with up to a 600 bp insert size)`, and `shift_by in the region of 1000 to 4000` to ensure the algorithm can easily walk through a whole gene if needed.
 
@@ -133,23 +134,21 @@ citation("scShardSplitRef")
 #> from package DESCRIPTION file
 #> To cite package 'scShardSplitRef' in publications use:
 #>
-#>   Kuznetsova I, Pembleton L, Curci L, Sparks A (????). _scShardSplitRef: Build
-#>   Custom Reference Genome for Single-Cell Multiome ATAC and Gene Expression Data
-#>   of Large-genome Species._. R package version 0.0.0.9000.
+#>   Kuznetsova I, Pembleton L, Curci L, Sparks A (????). _scShardSplitRef: gene-aware sharding of large chromosomes._. R package version 0.1.0
 #>
 #> A BibTeX entry for LaTeX users is
 #>
 #>   @Manual{,
 #>     title = {scShardSplitRef: Build Custom Reference Genome for Single-Cell Multiome ATAC and
-#> Gene Expression Data of Large-genome Species.},
+#> Gene Expression Data of Large-Genome Species.},
 #>     author = {Irina Kuznetsova and Luke Pembleton and Luca Curci and Adam H. Sparks},
-#>     note = {R package version 0.0.0.9000},
+#>     note = {R package version 0.1.0},
 #>   }
 ```
 
 ## License
 
-This project is licensed under the [GPL-3.0 license](LICENSE.md).  
+This project is licensed under the GPL-3 license.  
 
 ## Contributing
 
@@ -163,6 +162,6 @@ Remember that improving tools is important, but keeping them neat and not over-c
 ## Acknowledgements  
 GRDC funded this project through the Analytics for the Australian Grains Industry (AAGI) investment, CUR2210-005OPX (AAGI-CU).
 
-This work was supported by resources provided by the [Pawsey Supercomputing Research Centres](https://pawsey.org.au/) Nimbus Research Cloud (<https://doi.org/10.48569/v0j3-qd51>), with funding from the Australian Government and the Government of Western Australia.
+This work was supported by resources provided by the [Pawsey Supercomputing Research Centres](https://pawsey.org.au/); [Nimbus Research Cloud](<https://doi.org/10.48569/v0j3-qd51>), with funding from the Australian Government and the Government of Western Australia.
 
 This research used the Australian Research Data Commons (ARDC) ARDC Nectar Research Cloud Service [ARDC Nectar Research Cloud | Australian Research Data Commons](https://ardc.edu.au/services/ardc-nectar-research-cloud/). The ARDC is enabled by the Australian Government’s National Collaborative Research Infrastructure Strategy (NCRIS).
