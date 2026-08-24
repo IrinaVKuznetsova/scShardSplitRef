@@ -6,7 +6,7 @@ output: github_document
 
 ## **scShardSplitRef**  
 
-*scShardSplitRef* designed for researchers working with multiome single-cell data from species that require building a custom reference genome, particularly when one or more chromosomes/contigs in the reference FASTA exceed the Cell Ranger ARC limit of 536.8Mb (2\^29 bases). *scShardSplitRef* enables splitting of long chromosomes/contigs generating shorter fragments that are compitable with Cell Ranger ARC requirements. The *scShardSplitRef* package outputs GTF file containing the split chromosomes/contigs, which can be directly processed by `cellranger-arc mkref`. We also provide guidance on how to split a FASTA file used by `cellranger-arc mkref` using bedtools.
+*scShardSplitRef* designed for researchers working with multiome single-cell data from species that require building a custom reference genome, particularly when one or more chromosomes/contigs in the reference FASTA exceed the Cell Ranger ARC limit of 536.8Mb (2\^29 bases). *scShardSplitRef* enables splitting of long chromosomes/contigs generating shorter fragments that are compatible with Cell Ranger ARC requirements. The *scShardSplitRef* package outputs GTF file containing the split chromosomes/contigs, which can be directly processed by `cellranger-arc mkref`. We also provide guidance on how to split a FASTA file used by `cellranger-arc mkref` using bedtools.
 
 To familiarise yourself with the package and the workflow for preparing reference genome sequence (FASTA) and gene annotation (GTF) files for Cell Ranger ARC, we suggest starting with the algorithm [description](vignettes/scShardSplitRefDetailedAlgorithm.Rmd) and [a guided walk through](vignettes/scShardSplitRef.Rmd).  
 
@@ -55,7 +55,7 @@ library("knitr") # used for a kable table later in the document
 
 
 > **(x1) Note1:** If centromere coordinates are not available for your species, the second column of the BED-like file should be set to `0`. If centromere coordinates are available, the second column should be set to the centromere coordinate. 
-> {scShardSplitRef} will then check for any overlaps with genic regions and generate the correct GTF file that is compitable with `cellranger-arc mkref`.
+> {scShardSplitRef} will then check for any overlaps with genic regions and generate the correct GTF file that is compatible with `cellranger-arc mkref`.
 >
 > **(x2) Note2:** Please note that the FASTA file is not required for the package, but is used to demonstrate FASTA preparation for the Cell Ranger ARC command in the workflow description. It is not included in the repository due to the large file size; download from Ensembl.
 <br>
