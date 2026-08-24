@@ -28,7 +28,6 @@ Data frame, exactly as returned by \code{\link[utils:read.table]{utils::read.tab
 \description{
 All of the package's BED/GTF readers (\code{\link[=.read_bed_file]{.read_bed_file()}},
 \code{\link[=.read_gtf_file]{.read_gtf_file()}} in \code{determine_split_regions.R};
-\code{\link[=.read_and_format_bed]{.read_and_format_bed()}}, \code{\link[=.read_and_format_gtf]{.read_and_format_gtf()}},
 \code{\link[=.read_and_validate_bed]{.read_and_validate_bed()}}, \code{\link[=.read_and_validate_gtf]{.read_and_validate_gtf()}} here) call
 \code{utils::read.table()} with the same core options
 (\code{sep = "\\t"}, \code{header = FALSE}, \code{quote = ""}, \code{stringsAsFactors = FALSE}), differing only in whether they read from a file path or

@@ -14,11 +14,7 @@ Data frame with 9 columns named: Chr, source, feature, start,
 end, score, strand, frame, attribute (start/end coerced to integer).
 }
 \description{
-Combines the structural validation performed by \code{\link[=.check_tab_file]{.check_tab_file()}} with
-the parsing performed by \code{\link[=.read_and_format_gtf]{.read_and_format_gtf()}}, reading the file from
-disk exactly once (via \code{\link[=.validate_tab_file_lines]{.validate_tab_file_lines()}}) and parsing the
-already-read, already-filtered lines with \code{read.table(text = ...)},
-instead of reading the whole file from disk a second time.
+Read, validate, and parse a GTF file in a single pass
 }
 \examples{
 \dontrun{

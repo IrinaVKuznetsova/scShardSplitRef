@@ -65,7 +65,6 @@
 #'
 #' All of the package's BED/GTF readers ([.read_bed_file()],
 #' [.read_gtf_file()] in `determine_split_regions.R`;
-#' [.read_and_format_bed()], [.read_and_format_gtf()],
 #' [.read_and_validate_bed()], [.read_and_validate_gtf()] here) call
 #' `utils::read.table()` with the same core options
 #' (`sep = "\t"`, `header = FALSE`, `quote = ""`, `stringsAsFactors =
@@ -162,11 +161,6 @@
 .validate_inputs <- function(bed, gtf) {
   .check_files_exist(bed, gtf)
 
-  # .read_and_validate_bed()/.read_and_validate_gtf() validate and parse
-  # each file from a single readLines() pass (see their docs below) --
-  # this replaces a separate .check_tab_file() structural-validation pass
-  # followed by a second, independent read.table(file = path, ...) call,
-  # which read every file from disk twice.
   bed <- .read_and_validate_bed(bed)
   gtf <- .read_and_validate_gtf(gtf)
 
@@ -179,10 +173,12 @@
   return(list(bed = bed, gtf = gtf))
 }
 
-#' Check TAB-delimited file structure
+
+#' Validate a TAB-delimited file and return its data lines
 #'
-#' Validates that a file has the correct number of TAB-separated fields.
-#' Comment lines starting with '#' are skipped.
+#' Performs structural validation (i.e., extension check, comment/blank-line
+#' filtering, field-count range check), and returns the validated, filtered
+#' lines.
 #'
 #' @param path Character: file path to validate.
 #' @param min_fields Integer: minimum number of required fields per line.
@@ -190,51 +186,7 @@
 #'   for error messages.
 #' @param max_fields Integer or `NA`: maximum number of allowed fields.
 #'   If `NA` (default), no upper limit is enforced.
-#' @return Invisible NULL. Raises an error if validation fails.
-#'
-#' @details
-#' Reads all lines from the file, skips comments, then checks that each
-#' line has a field count in the valid range \[min_fields, max_fields\].
-#' Reports line numbers and examples of problematic lines.
-#'
-#' @examples
-#' \dontrun{
-#'   .check_tab_file(
-#'     "annotations.gtf",
-#'     min_fields = 9L,
-#'     label = "GTF"
-#'   )
-#' }
-#' @returns Invisible TRUE if valid, else errors if invalid.
-#' @dev
-.check_tab_file <- function(
-  path,
-  min_fields,
-  label,
-  max_fields = NA_integer_
-) {
-  .validate_tab_file_lines(path, min_fields, label, max_fields)
-  invisible(TRUE)
-}
-
-#' Validate a TAB-delimited file and return its data lines
-#'
-#' Does the same structural validation as [.check_tab_file()] (extension
-#' check, comment/blank-line filtering, field-count range check), but
-#' returns the validated, filtered lines instead of `invisible(TRUE)`.
-#'
-#' This exists so the combined read-and-validate functions
-#' ([.read_and_validate_bed()], [.read_and_validate_gtf()]) can parse the
-#' file from these already-read, already-filtered lines via
-#' `read.table(text = ...)` instead of reading the file from disk a second
-#' time. [.check_tab_file()] itself is kept as a separate, unchanged
-#' function (rather than refactored to call this and expose its result)
-#' so any existing direct callers/tests relying on its exact signature and
-#' `invisible(TRUE)` return are unaffected.
-#'
-#' @inheritParams .check_tab_file
-#'
-#' @return Character vector of validated data lines (comments and blank
+#' @returns Character vector of validated data lines (comments and blank
 #'   lines removed). Empty character vector if the file has no data lines.
 #'
 #' @dev
@@ -377,87 +329,7 @@
   return(invisible(TRUE))
 }
 
-#' Read and format GTF file
-#'
-#' Reads a GTF file and assigns standard column names. Comment lines are
-#' skipped. Assumes TAB-delimited format with no header.
-#'
-#' Kept unchanged, with its original path-based signature, for any direct
-#' callers/tests. [.validate_inputs()] no longer calls this directly --
-#' it uses [.read_and_validate_gtf()] instead, which validates and parses
-#' the file from a single `readLines()` pass rather than reading the file
-#' from disk once here and again in [.check_tab_file()].
-#'
-#' @param path Character: path to GTF file.
-#'
-#' @return Data frame with 9 columns named: Chr, source, feature, start,
-#'   end, score, strand, frame, attribute.
-#'
-#' @examples
-#' \dontrun{
-#'   gtf_df <- .read_and_format_gtf("annotations.gtf")
-#' }
-#'
-#' @dev
-.read_and_format_gtf <- function(path) {
-  gtf <- .read_tab_delimited(file = path, comment_char = "#")
-
-  colnames(gtf) <- c(
-    "Chr",
-    "source",
-    "feature",
-    "start",
-    "end",
-    "score",
-    "strand",
-    "frame",
-    "attribute"
-  )
-
-  gtf$start <- .coerce_integer_coord(gtf$start, "start")
-  gtf$end <- .coerce_integer_coord(gtf$end, "end")
-
-  return(gtf)
-}
-
-#' Read and format BED file
-#'
-#' Reads a BED file and assigns standard column names to the first three
-#' columns. Assumes TAB-delimited format with no header.
-#'
-#' Kept unchanged, with its original path-based signature, for any direct
-#' callers/tests. [.validate_inputs()] no longer calls this directly --
-#' it uses [.read_and_validate_bed()] instead, which validates and parses
-#' the file from a single `readLines()` pass rather than reading the file
-#' from disk once here and again in [.check_tab_file()].
-#'
-#' @param path Character: path to BED file.
-#'
-#' @return Data frame with first 3 columns named Chr, RegionStart, RegionEnd,
-#'   plus any additional columns from the input file.
-#'
-#' @examples
-#' \dontrun{
-#'   bed_df <- .read_and_format_bed("regions.bed")
-#' }
-#'
-#' @dev
-.read_and_format_bed <- function(path) {
-  bed <- .read_tab_delimited(file = path, comment_char = "#")
-
-  colnames(bed)[seq_len(3L)] <- c("Chr", "RegionStart", "RegionEnd")
-  bed$RegionStart <- .coerce_integer_coord(bed$RegionStart, "RegionStart")
-  bed$RegionEnd <- .coerce_integer_coord(bed$RegionEnd, "RegionEnd")
-  return(bed)
-}
-
 #' Read, validate, and parse a BED file in a single pass
-#'
-#' Combines the structural validation performed by [.check_tab_file()] with
-#' the parsing performed by [.read_and_format_bed()], reading the file from
-#' disk exactly once (via [.validate_tab_file_lines()]) and parsing the
-#' already-read, already-filtered lines with `read.table(text = ...)`,
-#' instead of reading the whole file from disk a second time.
 #'
 #' @param path Character: path to BED file.
 #'
@@ -482,12 +354,6 @@
 }
 
 #' Read, validate, and parse a GTF file in a single pass
-#'
-#' Combines the structural validation performed by [.check_tab_file()] with
-#' the parsing performed by [.read_and_format_gtf()], reading the file from
-#' disk exactly once (via [.validate_tab_file_lines()]) and parsing the
-#' already-read, already-filtered lines with `read.table(text = ...)`,
-#' instead of reading the whole file from disk a second time.
 #'
 #' @param path Character: path to GTF file.
 #'

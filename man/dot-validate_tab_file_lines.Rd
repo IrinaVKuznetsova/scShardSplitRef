@@ -22,18 +22,8 @@ Character vector of validated data lines (comments and blank
 lines removed). Empty character vector if the file has no data lines.
 }
 \description{
-Does the same structural validation as \code{\link[=.check_tab_file]{.check_tab_file()}} (extension
-check, comment/blank-line filtering, field-count range check), but
-returns the validated, filtered lines instead of \code{invisible(TRUE)}.
-}
-\details{
-This exists so the combined read-and-validate functions
-(\code{\link[=.read_and_validate_bed]{.read_and_validate_bed()}}, \code{\link[=.read_and_validate_gtf]{.read_and_validate_gtf()}}) can parse the
-file from these already-read, already-filtered lines via
-\code{read.table(text = ...)} instead of reading the file from disk a second
-time. \code{\link[=.check_tab_file]{.check_tab_file()}} itself is kept as a separate, unchanged
-function (rather than refactored to call this and expose its result)
-so any existing direct callers/tests relying on its exact signature and
-\code{invisible(TRUE)} return are unaffected.
+Performs structural validation (i.e., extension check, comment/blank-line
+filtering, field-count range check), and returns the validated, filtered
+lines.
 }
 \keyword{internal}
