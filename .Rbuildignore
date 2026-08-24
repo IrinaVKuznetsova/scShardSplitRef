@@ -118,3 +118,6 @@
 ^man/dot-read_and_validate_bed\.Rd$
 ^man/dot-read_and_validate_gtf\.Rd$
 ^man/dot-validate_bed_ranges\.Rd$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
