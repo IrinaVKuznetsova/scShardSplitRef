@@ -67,6 +67,10 @@
 ^[.]?air[.]toml$
 ^\.vscode$
 ^CODE_OF_CONDUCT\.md$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+^\.github$
 ^man/dot-validate_split_region_args\.Rd$
 ^man/dot-validate_scalar_integerish\.Rd$
 ^man/dot-inform_split_region_start\.Rd$
@@ -115,7 +119,3 @@
 ^man/dot-read_and_validate_bed\.Rd$
 ^man/dot-read_and_validate_gtf\.Rd$
 ^man/dot-validate_bed_ranges\.Rd$
-^_pkgdown\.yml$
-^docs$
-^pkgdown$
-^\.github$
