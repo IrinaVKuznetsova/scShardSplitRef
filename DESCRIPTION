@@ -24,7 +24,7 @@ Description: Splits chromosomes of large-genome species into smaller
     that would otherwise exceed the tool's chromosome size limits.
 License: GPL (>= 3)
 Depends: 
-    R (>= 4.3.0)
+    R (>= 4.4.0)
 Imports: 
     cli,
     rlang,
@@ -38,7 +38,7 @@ Suggests:
 VignetteBuilder: 
     knitr
 Config/Needs/build: moodymudskipper/devtag
-Config/roxygen2/version: 8.0.0
+Config/roxygen2/version: 8.1.1
 Config/testthat/edition: 3
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE, roclets = c("collate", "namespace", "rd",
