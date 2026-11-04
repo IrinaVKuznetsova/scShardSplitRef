@@ -8,6 +8,15 @@
 \description{
 Splits chromosomes of large-genome species into smaller shards that respect the maximum contig size supported by 10x Genomics' 'Cell Ranger ARC' reference builder, avoiding breaks inside gene bodies, and rewrites the corresponding 'GTF' annotation coordinates to match. This enables researchers to build custom 'Cell Ranger ARC' references for Multiome 'ATAC' and Gene Expression data from genomes that would otherwise exceed the tool's chromosome size limits.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://irinavkuznetsova.github.io/scShardSplitRef/}
+  \item \url{https://github.com/IrinaVKuznetsova/scShardSplitRef}
+  \item Report bugs at \url{https://github.com/IrinaVKuznetsova/scShardSplitRef/issues}
+}
+
+}
 \author{
 \strong{Maintainer}: Irina Kuznetsova \email{irina.kuznetsova@curtin.edu.au} (\href{https://orcid.org/0009-0001-5411-6063}{ORCID})
 
