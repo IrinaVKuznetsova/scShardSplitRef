@@ -214,18 +214,18 @@ get_split_reg <- determine_split_regions(
 
     ## Preparing split regions from
     ## /home/runner/work/_temp/Library/scShardSplitRef/extdata/morex3_subset_1H_2H.bed
-    ## and /tmp/RtmpctmxYy/file1c62cdf437f.gtf into
-    ## /tmp/RtmpctmxYy/split/morex3_subset_1H_2H_Split_Regions.bed (`limit` =
+    ## and /tmp/RtmptMvfQ9/file1bc45943f6e4.gtf into
+    ## /tmp/RtmptMvfQ9/split/morex3_subset_1H_2H_Split_Regions.bed (`limit` =
     ## 536870912, `shift_by` = 20, `clearance` = 20).
     ## Built 4 split intervals across 2 chromosomes and wrote them to
-    ## /tmp/RtmpctmxYy/split/morex3_subset_1H_2H_Split_Regions.bed.
+    ## /tmp/RtmptMvfQ9/split/morex3_subset_1H_2H_Split_Regions.bed.
 
 ``` r
 
 get_split_reg
 ```
 
-    ## [1] "/tmp/RtmpctmxYy/split/morex3_subset_1H_2H_Split_Regions.bed"
+    ## [1] "/tmp/RtmptMvfQ9/split/morex3_subset_1H_2H_Split_Regions.bed"
 
 **What does the generated BED file look like?\`**
 
@@ -275,14 +275,14 @@ and starts with
 print(output_file_name_dir)
 ```
 
-    ## [1] "/tmp/RtmpctmxYy/split/morex3_subset_1H_2H_Split_Regions.bed"
+    ## [1] "/tmp/RtmptMvfQ9/split/morex3_subset_1H_2H_Split_Regions.bed"
 
 ``` r
 
 print(tmp_gtf_path)
 ```
 
-    ## [1] "/tmp/RtmpctmxYy/file1c62cdf437f.gtf"
+    ## [1] "/tmp/RtmptMvfQ9/file1bc45943f6e4.gtf"
 
 ``` r
 
@@ -298,7 +298,7 @@ process_gtf(
     ## ℹ Validating inputs and reading files...
 
     ## All files loaded and validated successfully.
-    ## ℹ <environment>Finished writing processed GTF: /tmp/RtmpctmxYy/B1_FINAL_MODIFIED_GTF_subset_barley_3.gtf
+    ## ℹ <environment>Finished writing processed GTF: /tmp/RtmptMvfQ9/B1_FINAL_MODIFIED_GTF_subset_barley_3.gtf
 
 > The output file is in the GTF format. Note that the first column has
 > been reformatted, the regions are now split.  
@@ -321,7 +321,7 @@ processed_gtf <- read.table(file = gtf_modified, header = FALSE, sep = "\t")
 print(gtf_modified)
 ```
 
-    ## [1] "/tmp/RtmpctmxYy/B1_FINAL_MODIFIED_GTF_subset_barley_3.gtf"
+    ## [1] "/tmp/RtmptMvfQ9/B1_FINAL_MODIFIED_GTF_subset_barley_3.gtf"
 
 ``` r
 

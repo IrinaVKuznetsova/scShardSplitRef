@@ -312,14 +312,14 @@ intervals<a class="anchor" aria-label="anchor" href="#check-formatting-of-input-
 <span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Preparing split regions from</span></span>
 <span><span class="co">## <span style="color: #0000BB;">/home/runner/work/_temp/Library/scShardSplitRef/extdata/morex3_subset_1H_2H.bed</span></span></span>
-<span><span class="co">## and <span style="color: #0000BB;">/tmp/RtmpctmxYy/file1c62cdf437f.gtf</span> into</span></span>
-<span><span class="co">## <span style="color: #0000BB;">/tmp/RtmpctmxYy/split/morex3_subset_1H_2H_Split_Regions.bed</span> (`limit` =</span></span>
+<span><span class="co">## and <span style="color: #0000BB;">/tmp/RtmptMvfQ9/file1bc45943f6e4.gtf</span> into</span></span>
+<span><span class="co">## <span style="color: #0000BB;">/tmp/RtmptMvfQ9/split/morex3_subset_1H_2H_Split_Regions.bed</span> (`limit` =</span></span>
 <span><span class="co">## 536870912, `shift_by` = 20, `clearance` = 20).</span></span>
 <span><span class="co">## <span style="font-weight: bold;">Built 4 split intervals across 2 chromosomes and wrote them to</span></span></span>
-<span><span class="co">## <span style="color: #0000BB; font-weight: bold;">/tmp/RtmpctmxYy/split/morex3_subset_1H_2H_Split_Regions.bed</span><span style="font-weight: bold;">.</span></span></span></code></pre>
+<span><span class="co">## <span style="color: #0000BB; font-weight: bold;">/tmp/RtmptMvfQ9/split/morex3_subset_1H_2H_Split_Regions.bed</span><span style="font-weight: bold;">.</span></span></span></code></pre>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">get_split_reg</span></span></code></pre></div>
-<pre><code><span><span class="co">## [1] "/tmp/RtmpctmxYy/split/morex3_subset_1H_2H_Split_Regions.bed"</span></span></code></pre>
+<pre><code><span><span class="co">## [1] "/tmp/RtmptMvfQ9/split/morex3_subset_1H_2H_Split_Regions.bed"</span></span></code></pre>
 <details><summary><b>What does the generated BED file look like?`</b>
 </summary><div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bed_f</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span></span>
@@ -359,10 +359,10 @@ Format<a class="anchor" aria-label="anchor" href="#generate-gene-annotation-gtf-
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Process GTF file and write file to tempdir()</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">output_file_name_dir</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## [1] "/tmp/RtmpctmxYy/split/morex3_subset_1H_2H_Split_Regions.bed"</span></span></code></pre>
+<pre><code><span><span class="co">## [1] "/tmp/RtmptMvfQ9/split/morex3_subset_1H_2H_Split_Regions.bed"</span></span></code></pre>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">tmp_gtf_path</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## [1] "/tmp/RtmpctmxYy/file1c62cdf437f.gtf"</span></span></code></pre>
+<pre><code><span><span class="co">## [1] "/tmp/RtmptMvfQ9/file1bc45943f6e4.gtf"</span></span></code></pre>
 <div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/process_gtf.html">process_gtf</a></span><span class="op">(</span></span>
 <span>  split_regions_bed <span class="op">=</span> <span class="va">output_file_name_dir</span>,</span>
@@ -373,7 +373,7 @@ Format<a class="anchor" aria-label="anchor" href="#generate-gene-annotation-gtf-
 <span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #00BBBB;">ℹ</span> Validating inputs and reading files...</span></span></code></pre>
 <pre><code><span><span class="co">## All files loaded and validated successfully.</span></span>
-<span><span class="co">## <span style="color: #00BBBB;">ℹ</span> &lt;environment&gt;Finished writing processed GTF: /tmp/RtmpctmxYy/B1_FINAL_MODIFIED_GTF_subset_barley_3.gtf</span></span></code></pre>
+<span><span class="co">## <span style="color: #00BBBB;">ℹ</span> &lt;environment&gt;Finished writing processed GTF: /tmp/RtmptMvfQ9/B1_FINAL_MODIFIED_GTF_subset_barley_3.gtf</span></span></code></pre>
 <blockquote>
 <p>The output file is in the GTF format. Note that the first column has
 been reformatted, the regions are now split.<br>
@@ -392,7 +392,7 @@ position to the end of the chromosome.</p>
 <span></span>
 <span><span class="va">processed_gtf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.table</a></span><span class="op">(</span>file <span class="op">=</span> <span class="va">gtf_modified</span>, header <span class="op">=</span> <span class="cn">FALSE</span>, sep <span class="op">=</span> <span class="st">"\t"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">gtf_modified</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## [1] "/tmp/RtmpctmxYy/B1_FINAL_MODIFIED_GTF_subset_barley_3.gtf"</span></span></code></pre>
+<pre><code><span><span class="co">## [1] "/tmp/RtmptMvfQ9/B1_FINAL_MODIFIED_GTF_subset_barley_3.gtf"</span></span></code></pre>
 <div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">processed_gtf</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] 150638      9</span></span></code></pre>
