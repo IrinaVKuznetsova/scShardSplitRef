@@ -4,6 +4,9 @@
   "identifier": "scShardSplitRef",
   "description": "Splits chromosomes of large-genome species into smaller shards that respect the maximum contig size supported by 10x Genomics' 'Cell Ranger ARC' reference builder, avoiding breaks inside gene bodies, and rewrites the corresponding 'GTF' annotation coordinates to match. This enables researchers to build custom 'Cell Ranger ARC' references for Multiome 'ATAC' and Gene Expression data from genomes that would otherwise exceed the tool's chromosome size limits.",
   "name": "scShardSplitRef: Reference Genome Splitting for Single-Cell Multiome Data",
+  "relatedLink": "https://irinavkuznetsova.github.io/scShardSplitRef/",
+  "codeRepository": "https://github.com/IrinaVKuznetsova/scShardSplitRef",
+  "issueTracker": "https://github.com/IrinaVKuznetsova/scShardSplitRef/issues",
   "license": "https://spdx.org/licenses/GPL-3.0",
   "version": "0.1.0",
   "programmingLanguage": {
@@ -11,7 +14,7 @@
     "name": "R",
     "url": "https://r-project.org"
   },
-  "runtimePlatform": "R version 4.6.1 (2026-06-24)",
+  "runtimePlatform": "R version 4.6.2 (2026-10-29)",
   "provider": {
     "@id": "https://cran.r-project.org",
     "@type": "Organization",
@@ -121,7 +124,7 @@
       "@type": "SoftwareApplication",
       "identifier": "R",
       "name": "R",
-      "version": ">= 4.3.0"
+      "version": ">= 4.4.0"
     },
     "2": {
       "@type": "SoftwareApplication",
@@ -178,8 +181,7 @@
     },
     "SystemRequirements": null
   },
-  "fileSize": "4322.48KB",
-  "codeRepository": "https://github.com/IrinaVKuznetsova/scShardSplitRef",
+  "fileSize": "4322.924KB",
   "releaseNotes": "https://github.com/IrinaVKuznetsova/scShardSplitRef/blob/main/NEWS.md",
   "readme": "https://github.com/IrinaVKuznetsova/scShardSplitRef/blob/main/README.md"
 }
