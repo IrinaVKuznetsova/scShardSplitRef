@@ -102,5 +102,5 @@ process_gtf(
 )
 #> ℹ Validating inputs and reading files...
 #> All files loaded and validated successfully.
-#> ℹ <environment>Finished writing processed GTF: /tmp/RtmpPbDsLB/B1_FINAL_MODIFIED_GTF_Example_v1.0.gtf
+#> ℹ <environment>Finished writing processed GTF: /tmp/RtmptDsylN/B1_FINAL_MODIFIED_GTF_Example_v1.0.gtf
 ```

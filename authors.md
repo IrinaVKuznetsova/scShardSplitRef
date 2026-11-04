@@ -21,13 +21,17 @@
 
 ## Citation
 
+Source:
+[`DESCRIPTION`](https://github.com/IrinaVKuznetsova/scShardSplitRef/blob/main/DESCRIPTION)
+
 Kuznetsova I, Pembleton L, Curci L, Sparks A (2026). *scShardSplitRef:
 Reference Genome Splitting for Single-Cell Multiome Data*. R package
-version 0.1.0.
+version 0.1.0, <https://irinavkuznetsova.github.io/scShardSplitRef/>.
 
     @Manual{,
       title = {scShardSplitRef: Reference Genome Splitting for Single-Cell Multiome Data},
       author = {Irina Kuznetsova and Luke Pembleton and Luca Curci and Adam H. Sparks},
       year = {2026},
       note = {R package version 0.1.0},
+      url = {https://irinavkuznetsova.github.io/scShardSplitRef/},
     }

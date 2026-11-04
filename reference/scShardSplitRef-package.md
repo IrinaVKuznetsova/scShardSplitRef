@@ -8,6 +8,17 @@ researchers to build custom 'Cell Ranger ARC' references for Multiome
 'ATAC' and Gene Expression data from genomes that would otherwise exceed
 the tool's chromosome size limits.
 
+## See also
+
+Useful links:
+
+- <https://irinavkuznetsova.github.io/scShardSplitRef/>
+
+- <https://github.com/IrinaVKuznetsova/scShardSplitRef>
+
+- Report bugs at
+  <https://github.com/IrinaVKuznetsova/scShardSplitRef/issues>
+
 ## Author
 
 **Maintainer**: Irina Kuznetsova <irina.kuznetsova@curtin.edu.au>

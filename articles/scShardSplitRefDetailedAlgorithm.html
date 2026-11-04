@@ -43,6 +43,7 @@
 <li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json">
 </form></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/IrinaVKuznetsova/scShardSplitRef/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul>
 </div>
 
@@ -61,7 +62,7 @@
 Kuznetsova</h4>
             
       
-
+      <small class="dont-index">Source: <a href="https://github.com/IrinaVKuznetsova/scShardSplitRef/blob/main/vignettes/scShardSplitRefDetailedAlgorithm.Rmd" class="external-link"><code>vignettes/scShardSplitRefDetailedAlgorithm.Rmd</code></a></small>
       <div class="d-none name"><code>scShardSplitRefDetailedAlgorithm.Rmd</code></div>
     </div>
 
@@ -82,7 +83,7 @@ using toy data and explains the algorithm logic in detail.</p>
 <h3 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h3>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st">"scShardSplitRef"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://irinavkuznetsova.github.io/scShardSplitRef/" class="external-link">"scShardSplitRef"</a></span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="prerequisites">Prerequisites<a class="anchor" aria-label="anchor" href="#prerequisites"></a>
@@ -212,13 +213,13 @@ coordinate</p></li>
 <span><span class="co">#&gt; Preparing split regions from</span></span>
 <span><span class="co">#&gt; <span style="color: #0000BB;">/home/runner/work/_temp/Library/scShardSplitRef/extdata/AlgorithmToy.bed</span> and</span></span>
 <span><span class="co">#&gt; <span style="color: #0000BB;">/home/runner/work/_temp/Library/scShardSplitRef/extdata/AlgorithmToy.gtf</span> into</span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">/tmp/Rtmp5cDuyt/extdata/AlgorithmToy_DetermineSplitReg.bed</span> (`limit` = 540,</span></span>
+<span><span class="co">#&gt; <span style="color: #0000BB;">/tmp/Rtmp1Kmoan/extdata/AlgorithmToy_DetermineSplitReg.bed</span> (`limit` = 540,</span></span>
 <span><span class="co">#&gt; `shift_by` = 30, `clearance` = 40).</span></span>
 <span><span class="co">#&gt; <span style="font-weight: bold;">Built 21 split intervals across 7 chromosomes and wrote them to</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB; font-weight: bold;">/tmp/Rtmp5cDuyt/extdata/AlgorithmToy_DetermineSplitReg.bed</span><span style="font-weight: bold;">.</span></span></span>
+<span><span class="co">#&gt; <span style="color: #0000BB; font-weight: bold;">/tmp/Rtmp1Kmoan/extdata/AlgorithmToy_DetermineSplitReg.bed</span><span style="font-weight: bold;">.</span></span></span>
 <span></span>
 <span><span class="va">get_split_reg</span></span>
-<span><span class="co">#&gt; [1] "/tmp/Rtmp5cDuyt/extdata/AlgorithmToy_DetermineSplitReg.bed"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "/tmp/Rtmp1Kmoan/extdata/AlgorithmToy_DetermineSplitReg.bed"</span></span></code></pre></div>
 <p><br></p>
 </div>
 <div class="section level5">
@@ -592,7 +593,7 @@ containing split intervals as produced by
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Validating inputs and reading files...</span></span>
 <span><span class="co">#&gt; All files loaded and validated successfully.</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> &lt;environment&gt;Finished writing processed GTF: /tmp/Rtmp5cDuyt/B1_FINAL_MODIFIED_GTF_AlgorithmToyExample_v1.gtf</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> &lt;environment&gt;Finished writing processed GTF: /tmp/Rtmp1Kmoan/B1_FINAL_MODIFIED_GTF_AlgorithmToyExample_v1.gtf</span></span></code></pre></div>
 </div>
 </div>
 </div>
