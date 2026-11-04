@@ -112,13 +112,13 @@ get_split_reg <- determine_split_regions(
 #> Preparing split regions from
 #> /home/runner/work/_temp/Library/scShardSplitRef/extdata/AlgorithmToy.bed and
 #> /home/runner/work/_temp/Library/scShardSplitRef/extdata/AlgorithmToy.gtf into
-#> /tmp/Rtmp1Kmoan/extdata/AlgorithmToy_DetermineSplitReg.bed (`limit` = 540,
+#> /tmp/RtmpX1tybN/extdata/AlgorithmToy_DetermineSplitReg.bed (`limit` = 540,
 #> `shift_by` = 30, `clearance` = 40).
 #> Built 21 split intervals across 7 chromosomes and wrote them to
-#> /tmp/Rtmp1Kmoan/extdata/AlgorithmToy_DetermineSplitReg.bed.
+#> /tmp/RtmpX1tybN/extdata/AlgorithmToy_DetermineSplitReg.bed.
 
 get_split_reg
-#> [1] "/tmp/Rtmp1Kmoan/extdata/AlgorithmToy_DetermineSplitReg.bed"
+#> [1] "/tmp/RtmpX1tybN/extdata/AlgorithmToy_DetermineSplitReg.bed"
 ```
 
   
@@ -511,7 +511,7 @@ gtf_processed <- process_gtf(
 )
 #> ℹ Validating inputs and reading files...
 #> All files loaded and validated successfully.
-#> ℹ <environment>Finished writing processed GTF: /tmp/Rtmp1Kmoan/B1_FINAL_MODIFIED_GTF_AlgorithmToyExample_v1.gtf
+#> ℹ <environment>Finished writing processed GTF: /tmp/RtmpX1tybN/B1_FINAL_MODIFIED_GTF_AlgorithmToyExample_v1.gtf
 ```
 
 ## 3. Acknowledgements
