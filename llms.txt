@@ -172,7 +172,7 @@ citation("scShardSplitRef")
 
 ## License
 
-This project is licensed under the GPL-3 license.
+This project is licensed under the GPL (\>= 3) license.
 
 ## Contributing
 
