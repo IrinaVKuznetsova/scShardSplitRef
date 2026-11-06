@@ -112,13 +112,13 @@ get_split_reg <- determine_split_regions(
 #> Preparing split regions from
 #> /home/runner/work/_temp/Library/scShardSplitRef/extdata/AlgorithmToy.bed and
 #> /home/runner/work/_temp/Library/scShardSplitRef/extdata/AlgorithmToy.gtf into
-#> /tmp/RtmpbXuHAY/extdata/AlgorithmToy_DetermineSplitReg.bed (`limit` = 540,
+#> /tmp/RtmpPDOcKG/extdata/AlgorithmToy_DetermineSplitReg.bed (`limit` = 540,
 #> `shift_by` = 30, `clearance` = 40).
 #> Built 21 split intervals across 7 chromosomes and wrote them to
-#> /tmp/RtmpbXuHAY/extdata/AlgorithmToy_DetermineSplitReg.bed.
+#> /tmp/RtmpPDOcKG/extdata/AlgorithmToy_DetermineSplitReg.bed.
 
 get_split_reg
-#> [1] "/tmp/RtmpbXuHAY/extdata/AlgorithmToy_DetermineSplitReg.bed"
+#> [1] "/tmp/RtmpPDOcKG/extdata/AlgorithmToy_DetermineSplitReg.bed"
 ```
 
   
@@ -468,9 +468,9 @@ five_prime_utr[G6R]:  400-409
 ```
 
 > Note: in real world scenarios users should consider picking
-> `clearance = 900 (2 x 150 bp reads with up to a 600 bp insert size)`,
-> and `shift_by in the region of 1000 to 4000` to ensure the algorithm
-> can easily walk through a whole gene if needed.
+> `clearance = 900` (to exceed Illumina paired-end read lengths), and
+> `shift_by in the region of 1000 to 4000` to ensure the algorithm can
+> easily walk through a whole gene if needed.
 
 #### 2. Process a GTF file by assigning split-region sequence names
 
@@ -511,7 +511,7 @@ gtf_processed <- process_gtf(
 )
 #> ℹ Validating inputs and reading files...
 #> All files loaded and validated successfully.
-#> ℹ <environment>Finished writing processed GTF: /tmp/RtmpbXuHAY/B1_FINAL_MODIFIED_GTF_AlgorithmToyExample_v1.gtf
+#> ℹ <environment>Finished writing processed GTF: /tmp/RtmpPDOcKG/B1_FINAL_MODIFIED_GTF_AlgorithmToyExample_v1.gtf
 ```
 
 ## 3. Acknowledgements

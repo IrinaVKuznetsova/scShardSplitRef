@@ -107,8 +107,8 @@ The function performs the following steps:
 #> Preparing split regions from
 #> /home/runner/work/_temp/Library/scShardSplitRef/extdata/AlgorithmToy.bed and
 #> /home/runner/work/_temp/Library/scShardSplitRef/extdata/AlgorithmToy.gtf into
-#> /tmp/RtmpGo9qKK/split_regions.bed (`limit` = 536870912, `shift_by` = 1,
+#> /tmp/RtmpDNlYT8/split_regions.bed (`limit` = 536870912, `shift_by` = 1,
 #> `clearance` = 1).
 #> Built 10 split intervals across 7 chromosomes and wrote them to
-#> /tmp/RtmpGo9qKK/split_regions.bed.
+#> /tmp/RtmpDNlYT8/split_regions.bed.
 ```
